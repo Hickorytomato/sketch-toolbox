@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Sketch toolbox installer v1.0.0. Idempotent. Root: $SKETCH_ROOT (default /workspace/sketch).
-# Downloads the v1.0.0 release tarball, checks its sha256, installs scripts -> $ROOT/bin and tests -> $ROOT/design_tests,
+# Sketch toolbox installer v1.0.1. Idempotent. Root: $SKETCH_ROOT (default /workspace/sketch).
+# Downloads the v1.0.1 release tarball, checks its sha256, installs scripts -> $ROOT/bin and tests -> $ROOT/design_tests,
 # keeps your settings, removes scripts that are no longer in this version, then sets up the venv, Blender and PrusaSlicer.
 set -euo pipefail
-VER=1.0.0
+VER=1.0.1
 URL="https://github.com/Hickorytomato/sketch-toolbox/releases/download/v$VER/sketch-toolbox-$VER.tar.gz"
-SHA=1cd195f4274053570e3e49e9f37e11097d88aa8f7c9512cfc00e9321a269327d
+SHA=8f362b5230b252583c9d710f9f6abd51a2ffaa439e438617ac8bdced2bb24813
 ROOT=${SKETCH_ROOT:-/workspace/sketch}; mkdir -p "$ROOT/bin" "$ROOT/tools"
 TMP=$(mktemp -d); trap 'rm -rf "$TMP"' EXIT
 echo "downloading sketch-toolbox v$VER"

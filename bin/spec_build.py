@@ -52,6 +52,13 @@ for p in plist:
         try: s=s.edges("|Z").fillet(p["fillet"])
         except Exception: pass
     LOCAL[p["name"]]=s; P[p["name"]]=kit.place(s,p.get("rot",(0,0,0)),p.get("at",(0,0,0))); META[p["name"]]=dict(meta,_args=p.get("args",{}),**{k:p[k] for k in p if k not in("args","features")})
+# ---------- cutter parts: {"cut_from":["plate",..]} = a negative body (any kind) subtracted from those parts, never built itself.
+# Belt tunnels, windows, keyholes, V-slots, dovetail slots (dovetail kind with clear), relief cuts, serrations...
+for nm in [n for n in P if META[n].get("cut_from")]:
+    tgt=META[nm]["cut_from"]; tgt=[tgt] if isinstance(tgt,str) else tgt
+    for t_ in tgt: P[t_]=P[t_].cut(P[nm])
+    P.pop(nm); META.pop(nm); LOCAL.pop(nm)
+plist=[p for p in plist if not p.get("cut_from")]
 # ---------- joints (world space boolean ops) ----------
 jointrec=[]; welds=[]; fasteners=[]; copes=[]
 def big_halfspace(Pt,n,keep_sign):

@@ -1,0 +1,50 @@
+{
+ "name": "salt_shaker",
+ "title": "Tapered salt shaker with screw-on cap",
+ "domain": "print",
+ "units": "mm",
+ "ask": "I want a 3D-printed salt shaker with a tapered body and a screw-on cap with holes",
+ "values": {
+  "base_d": {"v": 60, "src": "assumed", "unit": "mm", "note": "body diameter at the bottom"},
+  "top_d": {"v": 44, "src": "assumed", "unit": "mm", "note": "body diameter where the shoulder starts"},
+  "body_h": {"v": 70, "src": "assumed", "unit": "mm", "note": "tapered body height"},
+  "neck_d": {"v": 26, "src": "assumed", "unit": "mm", "note": "neck diameter (thread root)"},
+  "wall": {"v": 2.0, "src": "assumed", "unit": "mm", "note": "wall thickness"},
+  "pitch": {"v": 3.0, "src": "assumed", "unit": "mm", "note": "thread pitch (coarse = prints clean)"},
+  "turns": {"v": 2, "src": "assumed", "unit": "", "note": "thread turns"},
+  "clear": {"v": 0.4, "src": "assumed", "unit": "mm", "note": "thread clearance for FDM"},
+  "holes": {"v": 5, "src": "assumed", "unit": "", "note": "pour holes in the cap (plus one in the middle)"},
+  "hole_d": {"v": 2.5, "src": "assumed", "unit": "mm", "note": "pour hole size"},
+  "filament": {"v": "PETG", "src": "assumed", "unit": "", "note": "food-contact friendlier than PLA; still not certified food safe"}
+ },
+ "derived": {
+  "td": "=pitch*0.4",
+  "tl": "=turns*pitch+pitch",
+  "shoulder_h": 12,
+  "neck_h": "=tl+5",
+  "H": "=body_h+shoulder_h+neck_h",
+  "cap_r": "=neck_d/2+td+clear+2.4",
+  "cap_top": 3.0,
+  "cap_h": "=tl+cap_top"
+ },
+ "parts": [
+  {"name": "body", "kind": "round", "material": "=filament", "finish": "plastic",
+   "args": {"segments": [{"h": "=body_h", "r1": "=base_d/2", "r2": "=top_d/2"},
+                         {"h": "=shoulder_h", "r1": "=top_d/2", "r2": "=neck_d/2"},
+                         {"h": "=neck_h", "r1": "=neck_d/2", "r2": "=neck_d/2"}],
+            "wall": "=wall", "open": "top", "floor": 2.4,
+            "threads": [{"side": "external", "r": "=neck_d/2", "z": "=H-tl-1", "pitch": "=pitch", "turns": "=turns", "depth": "=td"}]},
+   "at": ["=base_d/2", "=base_d/2", 0]},
+  {"name": "cap", "kind": "cylinder", "material": "=filament", "finish": "plastic", "print_orient": [180, 0, 0],
+   "args": {"r": "=cap_r", "h": "=cap_h",
+            "threads": [{"side": "internal", "r": "=neck_d/2", "z": 0, "pitch": "=pitch", "turns": "=turns", "depth": "=td", "clearance": "=clear"}],
+            "holes": [{"face": "top", "d": "=hole_d", "n": "=holes", "pcd": "=neck_d*0.45", "center": true, "depth": "=cap_top+0.5"}]},
+   "at": ["=base_d+cap_r+15", "=base_d/2", 0]}
+ ],
+ "joints": [],
+ "dims": [
+  {"label": "overall H", "v": "=H", "view": "front", "axis": "v"},
+  {"label": "base dia", "v": "=base_d", "view": "front", "axis": "h", "span": [0, "=base_d"]},
+  {"label": "cap dia", "v": "=2*cap_r", "view": "top", "axis": "h"}
+ ]
+}

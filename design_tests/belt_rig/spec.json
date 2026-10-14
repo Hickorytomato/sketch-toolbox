@@ -1,0 +1,30 @@
+{
+ "name": "belt_rig",
+ "title": "Curved belt plate with dovetail accessory, snap clip and key chain",
+ "domain": "print",
+ "units": "mm",
+ "ask": "a curved hip plate for my belt with a slide-on dovetail accessory, a carabiner clip and a short chain",
+ "values": {
+  "waist_r": {"v": 165, "src": "assumed", "unit": "mm", "note": "waist radius the plate curves to"},
+  "plate_t": {"v": 9, "src": "assumed", "unit": "mm", "note": "plate thickness"},
+  "plate_h": {"v": 60, "src": "assumed", "unit": "mm", "note": "plate height"},
+  "belt_w": {"v": 40, "src": "assumed", "unit": "mm", "note": "belt width (+2 mm clearance)"},
+  "dt_root": {"v": 12, "src": "assumed", "unit": "mm", "note": "dovetail root width"},
+  "dt_clear": {"v": 0.3, "src": "assumed", "unit": "mm", "note": "slide clearance per flank"},
+  "filament": {"v": "PETG", "src": "assumed", "unit": "", "note": "tough, a little flexible"}
+ },
+ "derived": {"yf": "=waist_r+plate_t"},
+ "parts": [
+  {"name": "hip_plate", "kind": "arc_plate", "material": "=filament", "args": {"r": "=waist_r", "t": "=plate_t", "h": "=plate_h", "angle": 34}},
+  {"name": "belt_tunnel", "kind": "arc_plate", "cut_from": "hip_plate", "args": {"r": "=waist_r+2.5", "t": 4, "h": "=belt_w+2", "angle": 40}, "at": [0, 0, "=(plate_h-belt_w-2)/2"]},
+  {"name": "dt_slot", "kind": "dovetail", "cut_from": "hip_plate", "args": {"L": "=plate_h+2", "root": "=dt_root", "depth": 4, "clear": "=dt_clear"}, "rot": [0, 0, 180], "at": [0, "=yf+0.01", -1]},
+  {"name": "accessory", "kind": "dovetail", "group": "hook", "material": "=filament", "args": {"L": 50, "root": "=dt_root", "depth": 4}, "rot": [0, 0, 180], "at": [0, "=yf", 8]},
+  {"name": "hook_back", "kind": "pbox", "group": "hook", "material": "=filament", "args": {"L": 24, "W": 4, "H": 50, "r": 1.5}, "at": [-12, "=yf-0.5", 8]},
+  {"name": "hook_fin", "kind": "prism", "group": "hook", "material": "=filament", "args": {"pts": [[0, 0], [22, 0], [22, 8], [6, 30], [0, 30]], "L": 8, "plane": "YZ", "r": 2}, "at": [-4, "=yf+3", 20]},
+  {"name": "clip", "kind": "path", "material": "=filament", "args": {"pts": [[0, 0], [9, 8], [9, 40], [0, 48], [-9, 40], [-9, 14]], "w": 4, "t": 6, "spline": true}, "at": [60, "=yf-20", 0]},
+  {"name": "eyelet", "kind": "ring", "material": "=filament", "args": {"R": 7.5, "r": 3, "flat": 0.6}, "at": [-60, "=yf", 3]},
+  {"name": "link{i}", "kind": "link", "material": "=filament", "repeat": {"var": "i", "n": 3}, "args": {"L": 12, "R": 6, "wire": 2}, "at": ["=-60-24-24*i", "=yf", 2]}
+ ],
+ "joints": [],
+ "dims": [{"label": "plate H", "v": "=plate_h", "view": "front", "axis": "v"}]
+}

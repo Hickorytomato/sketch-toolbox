@@ -6,7 +6,7 @@ Chat can't open HTML: send sketch.png / hero.png / spin.mp4 (+ model.stl). EVERY
 1. Onboarding: `tools_setup.py --have printer[,laser,router,plasma,saw,welder,hand] --printer <key> --filament PLA`
    -> machines.json, printers.json, profile.json. Printer only = printed parts in mm.
 2. Write `<project>/spec.json` (examples: design_tests/*/spec.json): `values` {v, src user|assumed|read, unit, note}, `derived` "=expr",
-   `parts` (kit kind, args, features, rot, at, group, repeat), `joints` (dado, rabbet, groove, lap, finger, mortise_tenon, miter, cope,
+   `parts` (kit kind, args, features, rot, at, group, repeat, cut_from), `joints` (dado, rabbet, groove, lap, finger, mortise_tenon, miter, cope,
    bolted, screws, glue, welded), `dims`, optional `print`, `render_rot`, `steps`. Unstated values are "assumed" and listed back.
 3. `design.sh <project> --sketch` (default, ~5 s): new vN + sketch.png (4-angle workbench), before_after.png, facts, assumptions, bed-fit WARN.
    `design.sh <project> --show`: hero.png (~15 s), spin.mp4 in background (2 slow laps, ~70 s; WOW_WAIT=1 waits), wearer review.
@@ -15,6 +15,14 @@ Chat can't open HTML: send sketch.png / hero.png / spin.mp4 (+ model.stl). EVERY
    true-shape nesting, G-code per machine, print G-code + 3MF, cope templates, hand-tool plan, drawings/BOM/quote PDFs, sanity.txt,
    FOR_<machine>/ folders + HOW_TO_USE.txt. Store-bought materials (dowel, rod, pipe, hardware) go on the shopping list, not the slicer.
 4. Changes: `spec.py set <project> k=v ...` (user value) | `assume` | `note` | `show`, then --sketch again. Never hand-edit model files.
+
+## Kit kinds added in v1.0.1 (see kit.py docstrings; samples design_tests/salt_shaker, belt_rig)
+round / cylinder / cone   revolved parts: segments [{h,r1,r2}] or profile [[r,z]], wall (hollow shell) + open/floor, threads
+                          [{side external|internal, r (neck/root radius, same on both mates), z, pitch, turns, depth, clearance 0.4}],
+                          holes [{face top|bottom, d, n, pcd, center, depth}], side_holes [{n,d,z,h}], knurl {n,depth}
+prism (any 2D outline + rounded corners, any plane)   dovetail (rail; clear>0 = slot cutter)   path (stroke along polyline/spline: clips)
+arc_plate (curved/rolled plate)   ring (torus eyelet, flat)   link (chain link)
+cut_from: ["part",..] on ANY part = negative body subtracted from those parts (tunnels, windows, keyholes, dovetail slots).
 
 ## Scripts
 spec_build.py + kit.py   spec -> CadQuery solids, model.glb (parts named preset__name), STEP, parts.json, steps.json

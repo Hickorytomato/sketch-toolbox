@@ -3,7 +3,7 @@ Local frame convention: length along +X, width along +Y, thickness/height along 
 axis along +X starting at origin, centered on Y/Z). Placement in the spec: rot [rx,ry,rz] degrees (applied X then Y then Z
 about the local origin) then at [x,y,z].
 Fab kinds: plate (metal sheet/plate), panel (plywood/MDF/acrylic sheet), board (dimensional lumber), tube_sq, pipe, angle,
-flatbar, gusset.  Print kinds (mm): pbox (rounded box), pcyl, shell (enclosure), bracket, clip, knob, hinge_leaf, boss, snap_hook, pfin (rounded tongue fin), phook (rounded J-hook). Helpers: soften(s,r) fillet-with-fallback, fin(), rounded_profile(). Small printed parts: ALWAYS soften edges (0.8-1.5 mm) - boxes read as blocks.
+flatbar, gusset.  Print kinds (mm): round|cylinder|cone (revolved, shells, threads, hole patterns), prism, dovetail, path, arc_plate, ring, link, pbox (rounded box), pcyl, shell (enclosure), bracket, clip, knob, hinge_leaf, boss, snap_hook, pfin (rounded tongue fin), phook (rounded J-hook). Helpers: soften(s,r) fillet-with-fallback, fin(), rounded_profile(). Small printed parts: ALWAYS soften edges (0.8-1.5 mm) - boxes read as blocks.
 Features on any part (local coords, on the top face unless 'face'): holes [{x,y,d,(depth)}], slots [{x1,y1,x2,y2,w}],
 cutouts [{x,y,w,h,r}], text [{x,y,s,txt,depth,(emboss),(face:auto|top -> auto moves text to the face the hero camera sees (+Y) and mirrors as needed)}], fillet r (vertical edges)."""
 import math, json, os
@@ -203,3 +203,138 @@ def phook(d=20,t=6,w=8,arm=25,**k):
     ring=cq.Workplane("YZ").circle(r+t).circle(r).extrude(w).translate((-w/2,arm,r+t)).cut(cq.Workplane("XY").box(w+2,r+t+1,2*(r+t)+2,centered=(True,False,False)).translate((0,arm-r-t-1,0)))
     return soften(a.union(ring),min(1.2,t*0.25)),dict(stock="print")
 KINDS.update(pfin=pfin,phook=phook)
+
+# ---------- round parts: revolved bodies, tapers, shells, screw threads, hole patterns (manifold3d, then sewn into a solid) ----------
+# Local frame: axis along +Z, centered on X/Y (x=y=0), bottom at z=0.
+#   cylinder(r,h) | cone(r1,r2,h) | round(segments=[{h,r1,r2},..] stacked bottom-up, or profile=[[r,z],..] outer outline)
+#   wall=W -> hollow shell (inner surface follows the outer one, W in from it); open "top"|"bottom"|"both"|"none"; floor=bottom/top thickness
+#   threads=[{side:"external"|"internal", z, r, pitch, turns, depth, clearance}]
+#     external: helical ridge ON a neck of radius r (r = thread root), sticking out by depth. Starts at height z.
+#     internal: the MATE of an external thread with the same r/pitch/depth: cuts a bore r+depth+clearance from z for the thread length
+#               (turns*pitch + pitch) and adds a ridge whose crest sits at r+clearance. clearance default 0.4 mm (FDM).
+#   holes=[{face:"top"|"bottom", d, n, pcd, center, depth, angle}] -> n holes on a circle of diameter pcd (+1 on the axis if center).
+SEG=96
+def _M(): import manifold3d; return manifold3d
+def _outline(segments=None,profile=None,r=None,r1=None,r2=None,h=None):
+    if profile: return [(float(a),float(b)) for a,b in profile]
+    if not segments: segments=[dict(h=h,r1=r1 if r1 is not None else r,r2=r2 if r2 is not None else (r1 if r1 is not None else r))]
+    pts=[]; z=0.0
+    for s in segments:
+        a=s.get("r1",s.get("r")); b=s.get("r2",a); pts.append((a,z)); z+=s["h"]; pts.append((b,z))
+    return pts
+def _r_at(pts,z):
+    for (a,za),(b,zb) in zip(pts,pts[1:]):
+        if za<=z<=zb and zb>za: return a+(b-a)*(z-za)/(zb-za)
+    return pts[0][0] if z<pts[0][1] else pts[-1][0]
+def _revolve(poly):
+    mf=_M(); cs=mf.CrossSection([[(max(r,0.0),z) for r,z in poly]]); return mf.Manifold.revolve(cs,SEG)
+def _ridge(r_base,r_tip,z0,pitch,turns,w_root,w_tip,n_per_turn=72):
+    """helical trapezoid ridge: base at r_base (buried in the wall), crest at r_tip; ends fade out over ~45 deg so they print clean."""
+    import trimesh; mf=_M()
+    n=max(int(turns*n_per_turn),12); A=np.linspace(0,2*np.pi*turns,n); V=[]; F=[]; fl=0.8
+    for a in A:
+        f=max(min(1,a/fl,(A[-1]-a)/fl),0.05); rt=r_base+(r_tip-r_base)*f; wr=w_root*max(f,0.4); wt=w_tip*max(f,0.4)
+        zc=z0+w_root/2+pitch*a/(2*np.pi)
+        V+=[(rr*np.cos(a),rr*np.sin(a),zz) for rr,zz in ((r_base,zc-wr/2),(rt,zc-wt/2),(rt,zc+wt/2),(r_base,zc+wr/2))]
+    for i in range(n-1):
+        for k in range(4):
+            a_,b_=i*4+k,i*4+(k+1)%4; F+=[[a_,a_+4,b_+4],[a_,b_+4,b_]]
+    e=(n-1)*4; F+=[[0,1,2],[0,2,3],[e,e+2,e+1],[e,e+3,e+2]]
+    t=trimesh.Trimesh(np.array(V),np.array(F),process=True)
+    if t.volume<0: t.invert()
+    return mf.Manifold(mf.Mesh(vert_properties=np.asarray(t.vertices,np.float32),tri_verts=np.asarray(t.faces,np.uint32)))
+def round_mesh(segments=None,profile=None,r=None,r1=None,r2=None,h=None,wall=0,open="top",floor=None,threads=(),holes=(),knurl=None,side_holes=()):
+    mf=_M(); M=mf.Manifold; pts=_outline(segments,profile,r,r1,r2,h); H=pts[-1][1]
+    body=_revolve([(0,pts[0][1])]+pts+[(0,H)])
+    if wall:
+        fl=wall if floor is None else floor
+        zb=pts[0][1]-1 if open in("bottom","both") else pts[0][1]+fl; zt=H+1 if open in("top","both") else H-fl
+        zs=sorted({zb,zt,*[z for _,z in pts if zb<z<zt]}); inner=[(max(_r_at(pts,min(max(z,0),H))-wall,0.3),z) for z in zs]
+        body=body-_revolve([(0,zb)]+inner+[(0,zt)])
+    for t in threads or ():
+        P_=t["pitch"]; n=t.get("turns",2); d=t.get("depth",P_*0.6); c=t.get("clearance",0.4); z0=t.get("z",0); r0=t["r"]
+        L=n*P_+P_; wr,wt=P_*0.6,P_*0.25
+        if t.get("side","external")=="external": body=body+_ridge(r0-0.6,r0+d,z0,P_,n,wr,wt)
+        else:
+            rb=r0+d+c; body=body-M.cylinder(L+0.02,rb,rb,SEG).translate([0,0,z0-0.01])
+            body=body+_ridge(rb+0.6,r0+c,z0+P_*0.25,P_,n,wr,wt)
+            if z0<=0.01: body=body-M.cylinder(1.0,rb+0.8,rb,SEG).translate([0,0,-0.01])   # lead-in chamfer at the mouth
+    for hp in holes or ():
+        cut=[]; n=int(hp.get("n",0)); rr=hp.get("pcd",0)/2; dd=hp["d"]; dep=hp.get("depth",H+2); a0=math.radians(hp.get("angle",0))
+        xy=[(rr*math.cos(a0+2*math.pi*i/n),rr*math.sin(a0+2*math.pi*i/n)) for i in range(n)]+([(0,0)] if hp.get("center") else [])
+        z=(H-dep) if hp.get("face","top")=="top" else -1
+        for x,y in xy: cut.append(M.cylinder(dep+1,dd/2,dd/2,24).translate([x,y,z]))
+        if cut: body=body-mf.Manifold.batch_boolean(cut,mf.OpType.Add)
+    if knurl:   # grip ribs: n round ribs of radius depth on the outer surface, z0..z1 (follow tapers)
+        n=int(knurl.get("n",40)); kd=knurl.get("depth",0.8); z0=knurl.get("z0",pts[0][1]); z1=knurl.get("z1",H); ra,rb_=_r_at(pts,z0+kd),_r_at(pts,z1-kd)
+        ball=lambda r_,z,a:M.sphere(kd,12).translate([r_*math.cos(a),r_*math.sin(a),z])
+        body=body+M.batch_boolean([M.batch_hull([ball(ra,z0+kd,2*math.pi*i/n),ball(rb_,z1-kd,2*math.pi*i/n)]) for i in range(n)],mf.OpType.Add)
+    for sh in side_holes or ():   # radial holes through the side wall: n around at height z; h>d makes a vertical slot window
+        n=int(sh.get("n",1)); dd=sh["d"]; z=sh["z"]; hh=max(sh.get("h",dd),dd); R_=max(r for r,_ in pts)+2
+        c=M.batch_hull([M.cylinder(R_,dd/2,dd/2,24).translate([0,0,0]).rotate([0,90,0]).translate([0,0,dz]) for dz in (-(hh-dd)/2,(hh-dd)/2)])
+        for i in range(n): body=body-c.rotate([0,0,sh.get("angle",0)+360*i/n]).translate([0,0,z])
+    return body
+def _sew(man):
+    import trimesh,tempfile
+    k=man.to_mesh(); t=trimesh.Trimesh(k.vert_properties[:,:3],k.tri_verts)
+    f=tempfile.NamedTemporaryFile(suffix=".stl",delete=False); t.export(f.name)
+    try: return mesh_to_solid(f.name,max_faces=10**7)
+    finally: os.unlink(f.name)
+def round_part(material="PLA",**a):
+    man=round_mesh(**{k:v for k,v in a.items() if k in("segments","profile","r","r1","r2","h","wall","open","floor","threads","holes","knurl","side_holes")})
+    sol=_sew(man); b=man.bounding_box()   # mesh_to_solid moves the bbox min to the origin: put the axis back on x=y=0
+    sol=sol.translate(cq.Vector(b[0],b[1],b[2]))
+    return cq.Workplane("XY").add(sol),dict(stock="print",round=True)
+def cylinder(r,h,**k): return round_part(r=r,h=h,**k)
+def cone(r1,r2,h,**k): return round_part(r1=r1,r2=r2,h=h,**k)
+KINDS.update(round=round_part,cylinder=cylinder,cone=cone)
+
+# ---------- profiles, rails, strokes, curved plates, rings, chain links (CadQuery, exact solids) ----------
+def _plane_pts(pts,plane): return cq.Workplane(plane).polyline([tuple(map(float,p)) for p in pts]).close()
+def prism(pts,L,plane="XY",r=0,**k):
+    """any 2D outline [[a,b],..] drawn on plane XY|XZ|YZ, extruded L along that plane's normal. r rounds every corner.
+    Wedges, gussets, detent bumps, gates, keyhole/V-slot cutters, dovetail rails..."""
+    w=_plane_pts(pts,plane)
+    if r:
+        try:
+            f=cq.Face.makeFromWires(w.wire().val()); f=f.fillet2D(r,f.Vertices())
+            return cq.Workplane(plane).add(f).toPending().extrude(L),dict(stock="print")
+        except Exception: pass
+    return w.extrude(L),dict(stock="print")
+def dovetail(L,root=12,depth=5,angle=60,clear=0,**k):
+    """dovetail rail along +Z (length L): narrow root (width root) at y=0, wide top at y=depth; angle = flank angle from the base.
+    clear>0 grows it on every flank -> use as a cutter (cut_from) to make the matching slot."""
+    u=depth/math.tan(math.radians(angle)); a=root/2+clear; b=root/2+u+clear
+    return cq.Workplane("XY").polyline([(-a,-0.01-clear*0),(a,-0.01),(b,depth+clear),(-b,depth+clear)]).close().extrude(L),dict(stock="print",rail=dict(root=root,depth=depth,angle=angle))
+def path(pts,w=4,t=6,spline=False,closed=False,**k):
+    """a stroke of width w along a polyline/spline [[x,y],..] in XY, extruded t along Z (round ends): flat clips, carabiners, J-hooks, frames."""
+    from shapely.geometry import LineString,Polygon
+    P=np.array(pts,float)
+    if spline and len(P)>2:
+        from scipy.interpolate import CubicSpline
+        s_=np.r_[0,np.cumsum(np.linalg.norm(np.diff(P,axis=0),axis=1))]; P=CubicSpline(s_,P,bc_type="periodic" if closed and np.allclose(P[0],P[-1]) else "not-a-knot")(np.linspace(0,s_[-1],max(40,len(P)*12)))
+    ln=LineString(np.vstack([P,P[:1]]) if closed else P); g=ln.buffer(w/2,quad_segs=12)
+    s=cq.Workplane("XY").polyline(list(g.exterior.coords)[:-1]).close().extrude(t)
+    for ring in g.interiors: s=s.cut(cq.Workplane("XY").polyline(list(ring.coords)[:-1]).close().extrude(t))
+    return s,dict(stock="print")
+def arc_plate(r,t,h,angle,**k):
+    """curved (bent/rolled) plate: inner radius r, thickness t, height h along Z, spanning angle degrees centred on +Y.
+    Axis at x=0,y=0, so the plate's inner face is at y=r. Hip plates, curved guards, rolled bands (angle 360 = full band)."""
+    if angle>=359.9: return cq.Workplane("XY").circle(r+t).circle(r).extrude(h),dict(stock="print",curved=True)
+    a0,a1=math.radians(90-angle/2),math.radians(90+angle/2); am=math.pi/2; R=r+t
+    w=(cq.Workplane("XY").moveTo(R*math.cos(a0),R*math.sin(a0)).threePointArc((R*math.cos(am),R*math.sin(am)),(R*math.cos(a1),R*math.sin(a1)))
+       .lineTo(r*math.cos(a1),r*math.sin(a1)).threePointArc((r*math.cos(am),r*math.sin(am)),(r*math.cos(a0),r*math.sin(a0))).close())
+    return w.extrude(h),dict(stock="print",curved=True,bend_r=r,arc_deg=angle)
+def ring(R,r,flat=0,**k):
+    """torus in the XY plane, centre at origin (major radius R, tube radius r): eyelets, hanging loops, O-ring style beads.
+    flat>0 trims that much off the bottom so it sits on the bed."""
+    s=cq.Workplane("XY").add(cq.Solid.makeTorus(R,r))
+    if flat: s=s.cut(cq.Workplane("XY").box(4*(R+r),4*(R+r),flat,centered=(True,True,False)).translate((0,0,-r)))
+    return s,dict(stock="print")
+def link(L=15,R=7.25,wire=2.25,**k):
+    """chain link: a round wire of radius `wire` swept around a stadium (straight length L, end radius R) in the XY plane, centred."""
+    pth=cq.Workplane("XY").slot2D(L+2*R,2*R).wires().val()
+    p0=pth.startPoint(); tg=pth.tangentAt(0)
+    prof=cq.Workplane(cq.Plane(origin=p0.toTuple(),xDir=(0,0,1),normal=tg.toTuple())).circle(wire)
+    return prof.sweep(cq.Workplane("XY").add(pth)),dict(stock="print")
+KINDS.update(prism=prism,dovetail=dovetail,path=path,arc_plate=arc_plate,ring=ring,link=link)
