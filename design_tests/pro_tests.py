@@ -17,7 +17,7 @@ def latest(p):
 def run(*a,env=ENV): return subprocess.run(list(a),capture_output=True,text=True,env=env)
 def build(p,env=ENV):
     run(f"{B}/design.sh",f"design_tests/{p}","--sketch",env=env); r=run(f"{B}/design.sh",f"design_tests/{p}","--final",env=env); return r.returncode,r.stdout+r.stderr
-WANT={"lumber_shelf":["cutday","coupon","prices","quote","revision","explode"],"steel_bracket":["cutday","coupon","prices","quote","revision","explode"],"salt_shaker":["coupon","prices","quote","revision","explode"],
+WANT={"vase_emboss":["prices","quote","revision","load","outputs"],"steel_groove":["revision","load","buy"],"lumber_shelf":["cutday","coupon","prices","quote","revision","explode","buy","load"],"steel_bracket":["cutday","coupon","prices","quote","revision","explode"],"salt_shaker":["coupon","prices","quote","revision","explode"],
       "mixed_table":["crossmachine","cutday","coupon","prices","quote","revision","explode"],"print_panels":["crossmachine","cutday","coupon","prices","quote","revision","explode"]}   # steering 2: mixed material / multi-machine
 PHONE={"cutday":"CUT_DAY/cut_day-1.png","coupon":"COUPONS/coupons-1.png","quote":"QUOTE/customer_quote-1.png","explode":"BUILD_STEPS/step_01.png"}
 # 1 ------------------------------------------------------------------
@@ -60,6 +60,17 @@ def xm_kerf(F): J(glob.glob(f"{F}/gcode_wood/*router.json")[0],lambda d:d.update
 def xm_bom(F):
     P=f"{os.path.dirname(F)}/parts.json"; J(P,lambda d:[r.update(names=[n for n in r.get("names",[]) if n!="bracket_2"]) for r in d["cutlist"]])
 def ex_img(F): os.remove(sorted(glob.glob(f"{F}/build_steps/*.png"))[0])
+def by_drop(F): J(f"{F}/customer_quote.json",lambda d:d["stock_bought"]["lines"].pop())
+def q_unflag(F): J(f"{F}/customer_quote.json",lambda d:[l.update(source=l["source"].replace("[SKETCH DEFAULT - not your price yet]","").strip() or "prices.json") for l in d["lines"]])
+def ex_overlap(F):
+    V=os.path.dirname(F)
+    def f(d):
+        s_=next(s_ for s_ in d["steps"] if len([l for l in s_["labels"] if l.get("label_box")])>=2); L_=[l for l in s_["labels"] if l.get("label_box")]; L_[1]["label_box"]=list(L_[0]["label_box"])
+    J(f"{V}/explode/explode.json",f)
+def ld_drop(F):
+    import loadnote; t_=open(f"{F}/HOW_TO_USE.txt").read(); open(f"{F}/HOW_TO_USE.txt","w").write(t_.replace(loadnote.NOTE,"Looks strong."))
+def ws_size(F): J(f"{F}/doc_meta.json",lambda d:d["welds"][0].update(elements=[e for e in d["welds"][0]["elements"] if e!="size"]))
+def ws_break(F): J(f"{F}/doc_meta.json",lambda d:d["welds"][0].update(elements=[e for e in d["welds"][0]["elements"] if e!="break_arrow"]))
 BRK=[("cut day: a cut missing",cut_drop,"lumber_shelf","does not match the BOM"),("cut day: kerf not from settings",cut_kerf,"lumber_shelf","not the saw kerf"),
      ("cut day: parts overlap on sheet",cut_overlap,"steel_bracket","overlap"),("cut day: tags differ from BOM",cut_tag,"lumber_shelf","tags differ"),
      ("coupon missing for a tight fit",cp_drop,"salt_shaker","no test coupon"),("coupon steps don't bracket the value",cp_steps,"salt_shaker","bracket"),
@@ -68,7 +79,10 @@ BRK=[("cut day: a cut missing",cut_drop,"lumber_shelf","does not match the BOM")
      ("revision letter wrong",rv_letter,"salt_shaker","revision letter"),("weld callouts != model",rv_weld,"steel_bracket","weld callout"),
      ("exploded tag not in BOM",ex_tag,"steel_bracket","not BOM tags"),("exploded image missing",ex_img,"lumber_shelf","step image"),
      ("cross-machine: plate holes off the top's holes",xm_move,"mixed_table","worst case needs"),("cross-machine: printed part has no bolt hole",xm_nohole,"print_panels","has no hole on the"),
-     ("cross-machine: router offset not applied",xm_kerf,"mixed_table","is not half of the router"),("cross-machine: part missing from the combined BOM",xm_bom,"print_panels","combined BOM")]
+     ("cross-machine: router offset not applied",xm_kerf,"mixed_table","is not half of the router"),("cross-machine: part missing from the combined BOM",xm_bom,"print_panels","combined BOM"),
+     ("v1.0.6 buy: a whole board dropped from the quote",by_drop,"lumber_shelf","not the whole stock"),("v1.0.6 Sketch default not flagged on the quote",q_unflag,"lumber_shelf","not flagged"),
+     ("v1.0.6 exploded labels overlap",ex_overlap,"mixed_table","overlapping label"),("v1.0.6 load note missing from HOW_TO_USE",ld_drop,"steel_bracket","lacks"),
+     ("v1.0.6 weld symbol without its size",ws_size,"steel_bracket","AWS A2.4 symbol missing"),("v1.0.6 bevel groove without the break arrow",ws_break,"steel_groove","AWS A2.4 symbol missing")]
 for name,fn,p,key in BRK:
     V=latest(p); T=f"{ROOT}/design_tests/_protamper"; shutil.rmtree(T,ignore_errors=True); os.makedirs(T)
     n=V.rsplit("/v",1)[1]; shutil.copytree(V,f"{T}/v{n}",ignore=shutil.ignore_patterns("ship")); shutil.copy(f"{V}/../spec.json",T)
@@ -137,4 +151,39 @@ finally:
         else: open(p_,"w").write(b_)
     shutil.rmtree(SD,ignore_errors=True)
 build("lumber_shelf")
+# 6 v1.0.6: measured tolerance coupon round trip + tools_setup --rates -----------------------------
+LJ=f"{B}/learned.json"; bak=open(LJ).read() if os.path.exists(LJ) else None
+try:
+    V=latest("mixed_table"); C=[c for c in json.load(open(f"{V}/fab/coupons.json"))["coupons"] if c["id"].startswith("tol_")]
+    rep(C,f"tolerance coupon(s) for the cross-machine joints: {[c['id'] for c in C]}")
+    if C:
+        c=C[0]; dd=c["drawn_dia"]; sp=c["drawn_spacing"]
+        r=run(PY,f"{B}/feedback.py","design_tests/mixed_table","--coupon",c["id"],"--dia",",".join(f"{dd+e:.4f}" for e in (0.002,0.003,0.001,0.002)),"--spacing",",".join(f"{sp+e:.4f}" for e in (0.004,-0.002,0.003,0.0)))
+        L_=json.load(open(LJ)) if os.path.exists(LJ) else {}; k=f'{c["machine"]}|*'
+        rep(r.returncode==0 and abs(L_.get(k,{}).get("tol_pos_in",{}).get("v",L_.get(k,{}).get("tol_pos_in",0)) if isinstance(L_.get(k,{}).get("tol_pos_in"),dict) else abs(L_.get(k,{}).get("tol_pos_in",0)))>0,f"feedback: {c['id']} measurements stored as {k} tol_pos_in/tol_size_in: {r.stdout.strip()[-120:]}")
+        r=run(PY,f"{B}/feedback.py","design_tests/mixed_table","--coupon",c["id"],"--dia","9,9,9,9","--spacing","1,1,1,1"); rep(r.returncode!=0,"feedback: nonsense tolerance readings refused")
+        rc,out=build("mixed_table"); rep(rc==0 and re.search(r"\[PASS\] crossmachine .*MEASURED tolerances for [^,]*"+c["machine"],out),f"cross-machine check uses the measured {c['machine']} tolerance")
+finally:
+    if bak is None:
+        if os.path.exists(LJ): os.remove(LJ)
+    else: open(LJ,"w").write(bak)
+build("mixed_table")
+SV={f:(open(f).read() if os.path.exists(f) else None) for f in (f"{B}/profile.json",f"{B}/machines.json",f"{B}/prices.json")}
+try:
+    r=run(PY,f"{B}/tools_setup.py","--rates","labor_rate=65","margin_pct=20","price_per_ft.2x4=0.95","confirm=all"); rep(r.returncode==0,"tools_setup --rates k=v")
+    rc,out=build("lumber_shelf"); V=latest("lumber_shelf"); q=json.load(open(f"{V}/fab/customer_quote.json"))
+    rep(rc==0 and not q.get("defaults_flagged") and not any("SKETCH DEFAULT" in (l.get("source") or "") for l in q["lines"]) and q["margin_pct"]==20,"after --rates confirm=all: no Sketch-default flags, margin 20%")
+    rep("SKETCH DEFAULTS IN THIS QUOTE" not in open(f"{V}/fab/HOW_TO_USE.txt").read(),"after --rates: HOW_TO_USE has no defaults warning")
+finally:
+    for f,t_ in SV.items():
+        if t_ is None:
+            if os.path.exists(f): os.remove(f)
+        else: open(f,"w").write(t_)
+rc,out=build("lumber_shelf"); V=latest("lumber_shelf"); q=json.load(open(f"{V}/fab/customer_quote.json"))
+rep(rc==0 and q.get("defaults_flagged") and "SKETCH DEFAULTS IN THIS QUOTE" in open(f"{V}/fab/HOW_TO_USE.txt").read(),"defaults back: quote + HOW_TO_USE flag them with the tools_setup.py --rates line")
+# 7 v1.0.6: output profiles (every profile gate-tested in profile_tests.py) + load note -------------
+r=run(PY,f"{ROOT}/design_tests/profile_tests.py"); rep(r.returncode==0,"profile_tests: "+r.stdout.strip().splitlines()[-1] if r.stdout.strip() else r.stderr[-200:])
+for p,need in (("steel_bracket",True),("salt_shaker",False),("lumber_shelf",True)):
+    V=latest(p); H=open(f"{V}/fab/HOW_TO_USE.txt").read(); import importlib; sys.path.insert(0,B); import loadnote
+    rep((loadnote.NOTE in H)==need,f"{p}: load note {'present' if need else 'absent'} in HOW_TO_USE")
 print(f"pro tests: {ok} ok, {bad} bad"); sys.exit(1 if bad else 0)
