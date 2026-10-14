@@ -124,6 +124,8 @@ pj=f"{V}/fab/print/print.json"
 if os.path.exists(pj):
     for r in json.load(open(pj))["parts"]:
         for p in r["pieces"]: print(f'[print] {p["name"]}: {p.get("time")}, {p.get("grams")} g, ~${p.get("cost")} filament')
+    pl=json.load(open(pj)).get("plates",[])
+    if pl: print(f'[print] {len(pl)} plate(s): '+"; ".join(f'plate_{x["plate"]} {x["filament"]} {len(x["parts"])} parts {x.get("time")}' for x in pl))
 print("[assumptions to confirm] "+(", ".join(a) if a else "none"))
 PYX
 log "package: $Z ($(du -h "$Z" | cut -f1))"

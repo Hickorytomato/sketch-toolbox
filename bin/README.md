@@ -31,7 +31,7 @@ props.py                 bottle(), belt(), mannequin(), save() for believable sc
 review.py                wearer review (PROJECT/wearer.json or geom.json "wearer"); exit 3 = REVISION REQUIRED, fix before showing
 spec_drawing.py          dimensioned hidden-line drawing     fabdocs.py  drawings.pdf, BOM, quote, build steps, sanity
 export_dxf.py, nest.py, gcode.py   flats -> DXF -> nested sheets -> plasma/laser/router .nc (starting points only)
-print3d.py               checks, orientation, split to bed with pins, PrusaSlicer G-code + 3MF, time/grams/cost (printers.json)
+print3d.py               checks, orientation, split to bed with pins, bed packing (plate_<n> per bed, --per-part/--both), PrusaSlicer G-code + 3MF, time/grams/cost (printers.json)
 cope.py, wood_plan.py    pipe cope templates, hand-tool plan          package_machines.py  FOR_<machine>/ folders
 import_file.py FILE PROJECT   STEP/IGES/STL/3MF/OBJ -> spec; DXF/SVG -> profile flat (--t, --domain); PDF/photo -> cleaned images:
                          read them with vision, write read.json, then `import_file.py --from-read read.json PROJECT`. Read values are src "read".

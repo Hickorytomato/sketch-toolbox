@@ -117,7 +117,7 @@ if os.path.exists(pj):   # printed parts: filament cost + ~$0.50/h machine time 
     for r_ in json.load(open(pj))["parts"]:
         for pc in r_["pieces"]:
             mat+=float(pc.get("cost") or 0); t_=pc.get("time") or ""; hh=sum(int(n)*{"d":24,"h":1,"m":1/60,"s":1/3600}[u] for n,u in _re.findall(r"(\d+)([dhms])",t_))
-            hrs["printing_machine"]=round(hrs.get("printing_machine",0)+hh,2); hrs["print_setup"]=round(hrs.get("print_setup",0)+0.1,2)
+            hrs["printing_machine"]=round(hrs.get("printing_machine",0)+hh,2); hrs["print_setup"]=round(hrs.get("print_setup",0)+0.1*(pc.get("share_of_plate",1)),2)
 pm=hrs.pop("printing_machine",0); lab=sum(hrs.values())*shop.get("labor_rate",75)+pm*0.5; mat=round(mat,2); sub=lab+mat; price=sub*(1+shop.get("margin_pct",25)/100)
 Q=dict(material_est=round(mat,2),printer_hours=pm,labor_hours=hrs,labor_est=round(lab),subtotal=round(sub),margin_pct=shop.get("margin_pct",25),price_est=round(price),note="ESTIMATE ONLY: edit bin/prices.json and machines.json 'shop'")
 json.dump(Q,open(f"{O}/quote.json","w"),indent=1)

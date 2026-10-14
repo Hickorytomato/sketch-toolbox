@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
-"""print3d.py VDIR OUTDIR [--printer KEY] [--filament PLA|PETG|TPU]
+"""print3d.py VDIR OUTDIR [--printer KEY] [--filament PLA|PETG|TPU] [--per-part | --both] [--gap MM]
 Full-size FDM pipeline for parts.json print_parts (printers.json profiles):
   orient -> printability checks (manifold/watertight, overhangs vs filament limit, thin walls by inward ray-cast, bed fit)
   -> split parts bigger than the bed into pieces with 2 alignment-pin holes per seam (print or use 3 mm dowel/filament pins)
   -> PrusaSlicer CLI: <part>.gcode + <part>.3mf, time, grams, cost  -> print.json + print_report.txt + preview PNG.
+BED PACKING (default): pieces sharing filament+supports+infill are packed footprint-aware (convex-hull outline, rotations in 15 deg steps,
+  --gap mm between parts, default 5) onto as few beds of the active printer as possible -> plate_<n>.gcode/.3mf + plate_<n>.png per bed.
+  --per-part slices every piece on its own (old behaviour); --both does plates and per-part files.
 Bambu printers: open the .3mf in Bambu Studio and re-slice there (G-code here is generic Marlin). ESTIMATES: check in your slicer."""
 import sys,os,json,re,subprocess,math,trimesh,numpy as np
 import manifold3d as mf, matplotlib
@@ -66,9 +69,17 @@ def split(m,bx,by,bz):
         pieces[i]=P; out.append(totm(P))
     return out,[dict(axis="xyz"[ax],at_mm=round(float(s_),1),pins=npins.get(s_,0),pin=(f'{rules["pin_d_mm"]} mm x {2*dep:.0f} mm (dowel, printed pin or filament)' if npins.get(s_) else
         f'none: walls too thin for {hd} mm pin holes - glue with CA/epoxy and add a printed splice plate, or thicken the walls to >= {hd+3:.0f} mm')) for s_ in seams]
+def _secs(s):
+    return sum(int(v)*{"d":86400,"h":3600,"m":60,"s":1}[u] for v,u in re.findall(r"(\d+)([dhms])",s))
+def _hms(x):
+    x=int(x or 0); return (f"{x//86400}d " if x>=86400 else "")+f"{x%86400//3600}h {x%3600//60}m"
+MODE="per-part" if "--per-part" in a else ("both" if "--both" in a else "plates")
+GAP=float(a[a.index("--gap")+1]) if "--gap" in a else 5.0
+EDGE=4.0   # keep parts this far from the bed edge (skirt runs 1 mm outside the parts)
 def slice_(stl,base,fil,sup,inf):
-    F=PR["filaments"][fil]; bx,by,bz=prn["bed"]
-    common=["--center",f"{bx/2},{by/2}","--bed-shape",f"0x0,{bx}x0,{bx}x{by},0x{by}","--max-print-height",str(bz),"--nozzle-diameter",str(prn["nozzle"]),
+    F=PR["filaments"][fil]; bx,by,bz=prn["bed"]; stls=stl if isinstance(stl,list) else [stl]
+    place=["--merge","--dont-arrange","--skirt-distance","1"] if isinstance(stl,list) else ["--center",f"{bx/2},{by/2}"]
+    common=place+["--bed-shape",f"0x0,{bx}x0,{bx}x{by},0x{by}","--max-print-height",str(bz),"--nozzle-diameter",str(prn["nozzle"]),
         "--layer-height","0.2","--perimeters","3","--fill-density",f"{inf}%","--filament-type",fil,"--temperature",str(F["temp"]),"--bed-temperature",str(F["bed"]),"--first-layer-temperature",str(F["temp"]),"--first-layer-bed-temperature",str(F["bed"]),
         "--filament-density",str(F["density"]),"--filament-cost",str(F["usd_per_kg"]),"--gcode-flavor",prn.get("flavor","marlin2")]+(["--support-material","--support-material-auto"] if sup else [])
     for k,v in prn.get("speeds",{}).items():   # per-printer speed profile (printers.json); without it PrusaSlicer's generic defaults inflate times ~2x
@@ -77,14 +88,15 @@ def slice_(stl,base,fil,sup,inf):
         if v is not None: common+=[f"--{k}",str(v)]
     info={}
     if not os.path.exists(PS): return dict(slicer_error="PrusaSlicer not installed")
-    r=subprocess.run([PS,"--export-gcode"]+common+["-o",base+".gcode",stl],capture_output=True,text=True,timeout=1200)
-    subprocess.run([PS,"--export-3mf"]+common+["-o",base+".3mf",stl],capture_output=True,text=True,timeout=600)
+    r=subprocess.run([PS,"--export-gcode"]+common+["-o",base+".gcode"]+stls,capture_output=True,text=True,timeout=1200)
+    subprocess.run([PS,"--export-3mf"]+common+["-o",base+".3mf"]+stls,capture_output=True,text=True,timeout=600)
     if not os.path.exists(base+".gcode"): return dict(slicer_error=(r.stdout+r.stderr)[-500:])
     t=open(base+".gcode",errors="ignore").read()
     for k,pat in(("time",r"estimated printing time \(normal mode\) = (.+)"),("grams",r"total filament used \[g\] = ([\d.]+)"),("cost",r"total filament cost = ([\d.]+)"),("meters",r"filament used \[mm\] = ([\d.]+)")):
         mt=re.search(pat,t); info[k]=mt.group(1).strip() if mt else None
     if info.get("meters"): info["meters"]=round(float(info["meters"])/1000,2)
     if info.get("grams") in (None,"0.00") and info.get("meters"): info["grams"]=round(info["meters"]*math.pi*0.875**2*F["density"],1)
+    tm=re.search(r"estimated printing time \(normal mode\) = (.+)",t); info["seconds"]=_secs(tm.group(1)) if tm else None
     info["3mf"]=os.path.exists(base+".3mf")
     if info["3mf"]:   # embed the exact slice profile (PETG temps, supports, speeds) so the 3MF re-opens with Sketch's settings, not the user's last profile
         try:
@@ -95,6 +107,7 @@ def slice_(stl,base,fil,sup,inf):
         except Exception as e: info["3mf_note"]=f"profile not embedded: {e}"
     return info
 res=dict(printer=prn["label"],printer_key=pk,parts=[],estimate_note="slicer estimates; verify in your own slicer before printing")
+JOBS=[]
 PREV={}  # identical parts (same base name, filament, volume) shown once with xN
 def _base(n): return re.sub(r'(_?[A-Z]?\d+|_[LRFB])$','',str(n))
 for pp in d.get("print_parts",[]):
@@ -107,11 +120,102 @@ for pp in d.get("print_parts",[]):
     rec=dict(name=pp["name"],filament=fil,size_mm=[round(float(v),1) for v in m.extents],fits_bed=bool(fits),checks=c,seams=seams,pieces=[])
     for i,pc in enumerate(pieces):
         nm=pp["name"]+(f"_part{i+1}of{len(pieces)}" if len(pieces)>1 else ""); pc.apply_translation(-pc.bounds[0]); stl=f"{O}/{nm}.stl"; pc.export(stl)
-        info=slice_(stl,f"{O}/{nm}",fil,c["needs_supports"],pp.get("infill",20)); rec["pieces"].append(dict(name=nm,stl=os.path.basename(stl),**info))
+        info=slice_(stl,f"{O}/{nm}",fil,c["needs_supports"],pp.get("infill",20)) if MODE!="plates" else {}
+        rec["pieces"].append(dict(name=nm,stl=os.path.basename(stl),**info))
+        JOBS.append(dict(name=nm,mesh=pc.copy(),fil=fil,sup=bool(c["needs_supports"]),inf=pp.get("infill",20),rec=rec["pieces"][-1]))
     res["parts"].append(rec)
     k=(_base(pp["name"]),fil,int(round(float(m.volume)/50)))
     if k in PREV: PREV[k][1]+=1
     else: PREV[k]=[(pp["name"],fil,m,len(pieces)),1]
+
+# ---------- bed packing ----------
+from shapely.geometry import MultiPoint, box as _box
+from shapely import affinity as _aff
+from shapely.ops import unary_union
+from shapely.prepared import prep
+def _foot(m): return MultiPoint(m.vertices[:,:2].tolist()).convex_hull
+def _pack(jobs,bx,by):
+    """try a few part orders, keep the one with fewest plates (then least spread on the last plate)"""
+    best=None
+    for key in (lambda j:-_foot(j["mesh"]).area, lambda j:-max(j["mesh"].extents[:2]), lambda j:-min(j["mesh"].extents[:2])):
+        r=_pack1(sorted(jobs,key=key),bx,by,5.0 if len(jobs)>12 else 2.5)
+        sc=(len(r),sum(g.area for _,_,g in r[-1]))
+        if best is None or sc<best[0]: best=(sc,r)
+        if len(r)==1: break
+    return best[1]
+def _pack1(jobs,bx,by,step):
+    """footprint-aware bottom-left packing; returns list of plates, each a list of (job,angle,dx,dy,poly)"""
+    W,H=bx-2*EDGE,by-2*EDGE; plates=[]
+    for j in jobs:
+        f0=_foot(j["mesh"]); opts=[]
+        for ang in range(0,180,15):
+            g=_aff.rotate(f0,ang,origin=(0,0)); b=g.bounds
+            if b[2]-b[0]<=W+1e-6 and b[3]-b[1]<=H+1e-6: opts.append((ang,g))
+        if not opts: opts=[(0,f0)]   # should not happen (oversize parts were split); place alone
+        put=None
+        for P in plates:
+            U=unary_union([q[2].buffer(GAP,join_style=2) for q in P]); pu=prep(U)
+            xs=sorted({0.0}|{q[2].bounds[2]+GAP for q in P}); ys=sorted({0.0}|{q[2].bounds[3]+GAP for q in P})
+            xs=sorted(set(xs)|set(np.arange(0,W,step))); ys=sorted(set(ys)|set(np.arange(0,H,step)))
+            best=None
+            for ang,g in opts:
+                b=g.bounds; w,h=b[2]-b[0],b[3]-b[1]
+                for y in ys:
+                    if y+h>H+1e-6: break
+                    for x in xs:
+                        if x+w>W+1e-6: break
+                        cand=_aff.translate(g,x-b[0],y-b[1])
+                        if pu.intersects(cand): continue
+                        # slide down/left while free
+                        for _ in range(2):
+                            for axis in (1,0):
+                                lo,hi=0.0,(cand.bounds[1] if axis else cand.bounds[0])
+                                while hi-lo>0.5:
+                                    mid=(lo+hi)/2; t=_aff.translate(cand,0 if axis else -mid,-mid if axis else 0)
+                                    if not pu.intersects(t) and t.bounds[axis]>=-1e-6: lo=mid
+                                    else: hi=mid
+                                cand=_aff.translate(cand,0 if axis else -lo,-lo if axis else 0)
+                        sc=(cand.bounds[3],cand.bounds[2])
+                        if best is None or sc<best[0]: best=(sc,ang,cand)
+                        break
+            if best: put=(P,best); break
+        ang,g=(best[1],best[2]) if put else (opts[0][0],_aff.translate(opts[0][1],-opts[0][1].bounds[0],-opts[0][1].bounds[1]))
+        if put: P=put[0]
+        else: P=[]; plates.append(P)
+        P.append((j,ang,g))
+    out=[]
+    for P in plates: out.append([(j,ang,g) for j,ang,g in P])
+    return out
+def _plate_png(path,P,bx,by,title):
+    fig,ax=plt.subplots(figsize=(6,6*by/bx+0.4)); ax.add_patch(plt.Rectangle((0,0),bx,by,fill=False,lw=2,ec="k"))
+    used=0
+    for j,ang,g in P:
+        gg=_aff.translate(g,EDGE,EDGE); xy=np.array(gg.exterior.coords); ax.fill(xy[:,0],xy[:,1],fc="#d9822b",ec="#7a4510",alpha=.85)
+        c=gg.centroid; ax.text(c.x,c.y,j["name"],ha="center",va="center",fontsize=7); used+=g.area
+    ax.set_xlim(-5,bx+5); ax.set_ylim(-5,by+5); ax.set_aspect("equal"); ax.set_title(f"{title}\n{100*used/(bx*by):.0f}% of bed used",fontsize=10)
+    fig.tight_layout(); fig.savefig(path,dpi=90); plt.close(fig); return round(100*used/(bx*by),1)
+res["mode"]=MODE; res["plates"]=[]; res["gap_mm"]=GAP
+if MODE!="per-part" and JOBS:
+    bx,by,bz=prn["bed"]; grp={}
+    for j in JOBS: grp.setdefault((j["fil"],j["sup"],j["inf"]),[]).append(j)
+    import shutil,glob; shutil.rmtree(f"{O}/plates",ignore_errors=True); [os.remove(f) for f in glob.glob(f"{O}/plate_*.*")]   # no stale plates from an earlier run
+    os.makedirs(f"{O}/plates",exist_ok=True); n=0
+    for (fil,sup,inf),js in grp.items():
+        for P in _pack(js,bx,by):
+            n+=1; stls=[]
+            for j,ang,g in P:
+                m=j["mesh"].copy(); m.apply_transform(trimesh.transformations.rotation_matrix(math.radians(ang),(0,0,1)))
+                m.apply_translation([0,0,-m.bounds[0][2]]); f=_foot(m); m.apply_translation([g.bounds[0]-f.bounds[0]+EDGE,g.bounds[1]-f.bounds[1]+EDGE,0])
+                st=f"{O}/plates/plate{n}_{j['name']}.stl"; m.export(st); stls.append(st); j["rec"]["plate"]=n
+            base=f"{O}/plate_{n}"; info=slice_(stls,base,fil,sup,inf)
+            util=_plate_png(base+".png",P,bx,by,f"PLATE {n} - {fil}, {inf}% infill{', supports' if sup else ''} - {len(P)} parts ({prn['label']})")
+            if MODE=="plates":   # share the plate's slicer totals out to its pieces by volume (quote/review/summary read per-piece numbers)
+                vt=sum(abs(float(j["mesh"].volume)) for j,_,_ in P) or 1
+                for j,_,_ in P:
+                    f_=abs(float(j["mesh"].volume))/vt; sec=(info.get("seconds") or 0)*f_
+                    j["rec"].update(time=_hms(sec)+f" {int(sec)%60}s",grams=round(float(info.get("grams") or 0)*f_,2),cost=round(float(info.get("cost") or 0)*f_,2),
+                        **({"slicer_error":info["slicer_error"]} if info.get("slicer_error") else {}),share_of_plate=round(f_,3),gcode=f"plate_{n}.gcode")
+            res["plates"].append(dict(plate=n,filament=fil,supports=sup,infill=inf,parts=[j["name"] for j,_,_ in P],bed_used_pct=util,gcode=f"plate_{n}.gcode",png=f"plate_{n}.png",**info))
 items=list(PREV.values()); n=max(1,len(items)); nc=min(4,n); nr=math.ceil(n/nc)
 fig=plt.figure(figsize=(4.2*nc,4.0*nr+0.6))
 fig.suptitle(f"3D PRINT PARTS - {sum(c for _,c in items)} prints, {len(items)} unique  (printer: {prn['label']})",fontsize=13,weight="bold")
@@ -131,5 +235,14 @@ for r in res["parts"]:
     if c.get("bodies",1)>1: L.append(f'  WARNING: {c["bodies"]} separate shells in one part -> pieces are NOT joined (floating island / loose piece); fix the model unless it is meant to print as separate pieces')
     L.append(f'  thinnest wall ~{c["min_wall_mm"]} mm; {c["thin_pct"]}% of surface under {rules["min_wall_mm"]} mm'+(" -> THICKEN" if c["thin_walls"] else " OK"))
     for s in r["seams"]: L.append(f'  seam at {s["axis"]}={s["at_mm"]} mm: '+(f'{s["pins"]} alignment pins {s["pin"]} + CA glue' if s["pins"] else s["pin"]))
-    for p in r["pieces"]: L.append(f'  {p["name"]}: {p.get("time")}  {p.get("grams")} g  ~${p.get("cost")}  gcode+3mf: {p.get("3mf")} {p.get("slicer_error","")}')
+    for p in r["pieces"]:
+        if MODE=="plates": L.append(f'  {p["name"]}: on plate {p.get("plate")} (~{p.get("time")}, {p.get("grams")} g share)'); continue
+        L.append(f'  {p["name"]}: {p.get("time")}  {p.get("grams")} g  ~${p.get("cost")}  gcode+3mf: {p.get("3mf")} {p.get("slicer_error","")}')
+if res["plates"]:
+    PL=res["plates"]; npc=sum(len(p["parts"]) for p in PL); tot=sum(p.get("seconds") or 0 for p in PL)
+    g=sum(float(p.get("grams") or 0) for p in PL); cst=sum(float(p.get("cost") or 0) for p in PL)
+    L+=["",f"PLATES: {len(PL)} bed{'s' if len(PL)!=1 else ''} for {npc} pieces (packed, {GAP:g} mm gap) - total {_hms(tot)}, {g:.0f} g, ~${cst:.2f}"]
+    for p in PL: L.append(f'  plate_{p["plate"]}: {p["filament"]}, {p["infill"]}% infill{", supports" if p["supports"] else ""}, {len(p["parts"])} parts ({", ".join(p["parts"])}), {p["bed_used_pct"]}% of bed - {p.get("time")}  {p.get("grams")} g  ~${p.get("cost")} {p.get("slicer_error","")}')
+    L.append("  files: plate_<n>.gcode + plate_<n>.3mf + plate_<n>.png (layout). Per-part files: rerun with --per-part (or --both).")
+json.dump(res,open(f"{O}/print.json","w"),indent=1,default=float)
 open(f"{O}/print_report.txt","w").write("\n".join(L)+"\n"); print("\n".join(L))

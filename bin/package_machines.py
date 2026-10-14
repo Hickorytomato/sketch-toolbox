@@ -2,7 +2,7 @@
 """package_machines.py VDIR FABDIR [--for printer,laser,plasma,router,hand]
 STAGE 3: re-package the build files per machine / program the owner actually uses, plus HOW_TO_USE.txt (which file goes into
 which program). Default --for = machines enabled in bin/machines.json (+ hand, always).
-  FOR_3D_PRINTER/  <part>.3mf (PrusaSlicer project WITH Sketch's settings; Bambu Studio & Orca open it, re-slice there), <part>.gcode
+  FOR_3D_PRINTER/  plate_<n>.3mf/.gcode (packed beds) + <part>.3mf (PrusaSlicer project WITH Sketch's settings; Bambu Studio & Orca open it, re-slice there), <part>.gcode
                    (PrusaSlicer, Marlin-flavor, for the configured printer only), <part>.stl (Cura / any slicer)
   FOR_LASER_LightBurn/  <part>.svg (true size, inches; layer colors: red=CUT, black fill=ENGRAVE, blue=SCORE) + .dxf (same layers/ACI colors)
                    + laser .nc if made
@@ -24,9 +24,10 @@ def cp(srcs,dst):
     return n
 # ---------- printer
 if "printer" in FOR and prints:
-    D=f"{F}/FOR_3D_PRINTER"; cp([f"{F}/print/*.3mf",f"{F}/print/*.gcode",f"{F}/print/*.stl",f"{F}/print/print_report.txt",f"{F}/print/print_preview.png"],D); made.append(D)
+    D=f"{F}/FOR_3D_PRINTER"; cp([f"{F}/print/*.3mf",f"{F}/print/*.gcode",f"{F}/print/*.stl",f"{F}/print/print_report.txt",f"{F}/print/print_preview.png",f"{F}/print/plate_*.png"],D); made.append(D)
     pr=M.get("printer",{})
     how+=["3D PRINTER  (FOR_3D_PRINTER/)",
+     "  plate_<n>.*:   one file per print bed, parts already packed (plate_<n>.png shows the layout). <part>.stl = single parts (per-part .3mf/.gcode too when built with print3d.py --per-part or --both).",
      "  PrusaSlicer:   open <part>.3mf -> Sketch's settings (filament, layer, infill, supports, orientation) load with it. Check, then Slice.",
      "  Bambu Studio / OrcaSlicer: open <part>.3mf (geometry + orientation come in), pick YOUR printer + filament profile, Slice. Do not send the .gcode to a Bambu.",
      "  Cura:          open <part>.stl, set the material/infill listed in print_report.txt, Slice.",
