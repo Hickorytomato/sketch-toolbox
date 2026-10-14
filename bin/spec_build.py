@@ -159,8 +159,17 @@ for j in JL:
         P[j["branch"]]=P[j["branch"]].cut(cyl); META[j["branch"]].setdefault("ends",[]).append("coped")
         copes.append(dict(branch=j["branch"],header_od=od,branch_od=META[j["branch"]]["od"],angle=j.get("angle",90),ends=1))
     elif t=="bolted":
+        def _proc(nm):
+            m_=META.get(nm,{}); mt=str(m_.get("material","steel")).lower()
+            return "print" if m_.get("stock")=="print" else "wood" if any(k in mt for k in ("ply","wood","pine","oak","maple","birch","mdf","cedar","walnut","lumber")) else "plastic" if any(k in mt for k in ("acrylic","hdpe")) else "metal"
+        _pr=[_proc(nm) for nm in j["parts"]]
+        if len(set(_pr))>1 and not j.get("tapped"):
+            # parts come off different machines: loose-fit holes + drill the softer part through the other at assembly (v1.0.5 cross-machine finding)
+            j.setdefault("fit","loose"); rk={"print":0,"metal":1,"plastic":2,"wood":3}
+            tpl=min(j["parts"],key=lambda n:rk[_proc(n)]); j.setdefault("match_drill",dict(template=tpl,drill=[n for n in j["parts"] if n!=tpl]))
+            rec["fit"]=j["fit"]; rec["match_drill"]=j["match_drill"]
         if not j.get("d"):   # hole size from the clearance / tap table, never guessed
-            _dd,_src=(rules.tap_for(j.get("bolt","")) if j.get("tapped") else rules.clearance_for(j.get("bolt",""),U))
+            _dd,_src=(rules.tap_for(j.get("bolt","")) if j.get("tapped") else rules.clearance_for(j.get("bolt",""),U,j.get("fit","close")))
             if _dd is None: raise SystemExit(f"bolted joint: no table size for '{j.get('bolt')}' - give d or a standard bolt (e.g. 3/8-16, M8)")
             j["d"]=_dd/toin; rec["d"]=j["d"]; rec["d_src"]=_src
         d=np.array(j.get("axis",[0,0,1]),float); d/=np.linalg.norm(d); at=np.array(j["at"],float)

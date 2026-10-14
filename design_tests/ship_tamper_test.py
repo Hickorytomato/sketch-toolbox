@@ -49,8 +49,8 @@ T=[("drawing value != spec",dimval,"V",True,"spec gives"),("drawing dim typed in
    ("file edited after build (no regen)",edit_noregen,"F",False,"changed after"),("extra file not from toolbox",extra,"F",False,"not made by the toolbox")]
 ok=0
 for name,fn,where,rg,key in T:
-    P=f"{ROOT}/design_tests/_tamper"; shutil.rmtree(P,ignore_errors=True); os.makedirs(P); shutil.copytree(SRC,f"{P}/v1"); shutil.copy(f"{SRC}/../spec.json",P)
-    shutil.rmtree(f"{P}/v1/ship",ignore_errors=True); V=f"{P}/v1"; F=f"{V}/fab"
+    P=f"{ROOT}/design_tests/_tamper"; shutil.rmtree(P,ignore_errors=True); os.makedirs(P); shutil.copytree(SRC,f"{P}/{os.path.basename(SRC)}"); shutil.copy(f"{SRC}/../spec.json",P)
+    shutil.rmtree(f"{P}/{os.path.basename(SRC)}/ship",ignore_errors=True); V=f"{P}/{os.path.basename(SRC)}"; F=f"{V}/fab"
     fn(V if where=="V" else F)
     if rg: regen(F)
     r=subprocess.run([PY,SHIP,P],capture_output=True,text=True,env=dict(os.environ,SKETCH_ROOT=ROOT)); out=r.stdout+r.stderr
@@ -58,7 +58,8 @@ for name,fn,where,rg,key in T:
     good=r.returncode==1 and any(key in l for l in fl) and not os.path.exists(f"{V}/ship")
     ok+=good; print(("BLOCKED " if good else "NOT BLOCKED ")+f"{name}: "+(fl[0][:170] if fl else out[-300:]))
 # control: untouched copy ships
-P=f"{ROOT}/design_tests/_tamper"; shutil.rmtree(P); os.makedirs(P); shutil.copytree(SRC,f"{P}/v1"); shutil.copy(f"{SRC}/../spec.json",P); shutil.rmtree(f"{P}/v1/ship",ignore_errors=True)
+P=f"{ROOT}/design_tests/_tamper"; shutil.rmtree(P); os.makedirs(P); shutil.copytree(SRC,f"{P}/{os.path.basename(SRC)}"); shutil.copy(f"{SRC}/../spec.json",P); shutil.rmtree(f"{P}/{os.path.basename(SRC)}/ship",ignore_errors=True)
 r=subprocess.run([PY,SHIP,P],capture_output=True,text=True,env=dict(os.environ,SKETCH_ROOT=ROOT)); print("control:",r.stdout.strip().splitlines()[-1][:120]); shutil.rmtree(P)
-print(f"{ok}/{len(T)} tampers blocked")
-sys.exit(0 if ok==len(T) else 1)
+ctl=r.returncode==0 and "[SHIPPED]" in r.stdout
+print(f"{ok}/{len(T)} tampers blocked; untouched control {'ships' if ctl else 'DOES NOT SHIP (test invalid)'}")
+sys.exit(0 if ok==len(T) and ctl else 1)

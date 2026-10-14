@@ -168,7 +168,122 @@ def gate_explode(d,F,res):
         if n<len(E["steps"])+1: res("explode","build_steps.pdf","FAIL",f"build_steps.pdf has {n} pages for {len(E['steps'])} step pictures"); ok=False
     except Exception: pass
     if ok: res("explode","build_steps.pdf","PASS",f'{len(E["steps"])} exploded step picture(s), tags match the BOM ({len(shown-{""})} tagged parts), rendered in {E.get("seconds","?")} s')
-GATES=[gate_cutday,gate_coupons,gate_learn,gate_prices,gate_quote,gate_revision,gate_explode]
+# ---- cross-machine fit: parts made on different machines must line up after each machine's kerf/tolerance
+# position / diameter tolerance per process, inches (Sketch defaults - typical hobby/small-shop CNC; measure yours)
+XTOL={"plasma":(0.030,0.030),"laser":(0.008,0.005),"router":(0.010,0.005),"drill":(1/32,0.005),
+      "printer":(0.2/25.4,0.2/25.4),"hand":(1/32,0.005),"_src":"Sketch default process tolerances (position, hole size)"}
+def _procs(d,F):
+    """part -> list of (machine, process) that can make it, from the shipped programs"""
+    P={}
+    for gj in glob.glob(f"{F}/gcode_*/*.json"):
+        try: g=json.load(open(gj))
+        except Exception: continue
+        hs=g.get("holes") or []
+        if isinstance(hs,str):
+            import ast
+            try: hs=ast.literal_eval(hs)
+            except Exception: hs=[]
+        for nm in g.get("parts",[]):
+            act={h.get("action") for h in hs if h.get("part")==nm}
+            P.setdefault(nm,[]).append((g.get("machine",g.get("type")),"drill" if "drill" in act else g.get("type"),g))
+    for pp in d.get("print_parts",[]): P.setdefault(pp["name"],[]).append(("printer","printer",None))
+    return P
+def _hole_at(V,nm,at,ax,dnom):
+    import numpy as np, trimesh
+    p=f"{V}/stl/{nm}.stl"
+    if not os.path.exists(p): return None,"no STL"
+    m=trimesh.load(p,force="mesh"); ax=np.array(ax,float); ax/=np.linalg.norm(ax); at=np.array(at,float)
+    best=None
+    pr=(m.vertices-at)@ax; lo,hi=pr.min(),pr.max()
+    for f in [0.5]+[i/20 for i in range(1,20)]:
+        o=at+ax*(lo+(hi-lo)*f); sec=m.section(plane_origin=o,plane_normal=ax)
+        if sec is None: continue
+        pl,T=sec.to_2D() if hasattr(sec,"to_2D") else sec.to_planar()
+        for poly in pl.polygons_full:
+            for ring in poly.interiors:
+                from shapely.geometry import Polygon as SP
+                h=SP(ring); c2=np.array([h.centroid.x,h.centroid.y,0,1.0]); c3=(T@c2)[:3]
+                off=c3-o; off-=ax*(off@ax); dd=2*(h.area/np.pi)**0.5
+                # distance from the bolt line
+                q=c3-at; q-=ax*(q@ax); dist=float(np.linalg.norm(q))
+                if dist<1.5*dnom and (best is None or dist<best[2]): best=(c3,dd,dist)
+        if best: break
+    return best,None
+def gate_crossmachine(d,F,res):
+    import numpy as np
+    V=os.path.dirname(F); U=d.get("params",{}).get("units","in"); toin=1 if U=="in" else 1/25.4; fmt=(lambda v:f"{v:.3f} in") if U=="in" else (lambda v:f"{v*25.4:.2f} mm")
+    P=_procs(d,F); types={pr for v in P.values() for _,pr,_g in v}-{"drill"}
+    mach={m for v in P.values() for m,_,_ in v}
+    if len(mach)<2: return
+    ok=True; n=0; worst=None
+    # 1. holes / mating features across machines
+    for j in d.get("jointrec",[]):
+        if j.get("type")!="bolted": continue
+        ps=j.get("parts",[]); procs=[P.get(p,[("hand","hand",None)]) for p in ps]
+        if len({tuple(sorted({m for m,_,_ in pr})) for pr in procs})<2: continue
+        hs=[h for h in d.get("hole_specs",[]) if set(h.get("parts",[]))==set(ps)]
+        b=(hs[0].get("dia_in") if hs else None)
+        if not b: res("crossmachine",j.get("bolt","?"),"FAIL",f"bolt size unknown for {ps}: can't check the fit"); ok=False; continue
+        got=[]
+        for nm,pr in zip(ps,procs):
+            h,err=_hole_at(V,nm,j["at"],j.get("axis",[0,0,1]),j.get("d",b/toin))
+            if not h: res("crossmachine",nm,"FAIL",f"{nm} has no hole on the {j.get('bolt')} line at {j['at']} ({err or 'not found in the model'}): it can't be bolted to {', '.join(x for x in ps if x!=nm)}"); ok=False; got=None; break
+            rts=sorted({(m+(" + hand drill" if p_=="drill" else ""),p_) for m,p_,_ in pr})
+            got.append(dict(part=nm,c=h[0],d=h[1]*toin,off=h[2]*toin,routes=[(hw,p_,XTOL.get(p_,XTOL["hand"])[0],XTOL.get(p_,XTOL["hand"])[1]) for hw,p_ in rts],
+                            dt=max(XTOL.get(p_,XTOL["hand"])[1] for _,p_ in rts),how="/".join(hw for hw,_ in rts)))
+        if not got: continue
+        n+=1
+        for g in got:
+            if g["d"]-g["dt"]<=b: res("crossmachine",g["part"],"FAIL",f'{g["part"]} hole {fmt(g["d"])} ({g["how"]}, size tol ±{fmt(g["dt"])}) can be smaller than the {fmt(b)} bolt: open it'); ok=False
+        md=next((h.get("match_drill") for h in hs if h.get("match_drill")),None)
+        plan=(open(f"{F}/hand_tool_plan.txt").read() if os.path.exists(f"{F}/hand_tool_plan.txt") else "")
+        for i in range(len(got)):
+            for k in range(i+1,len(got)):
+                a,c=got[i],got[k]; q=(a["c"]-c["c"]); ax=np.array(j.get("axis",[0,0,1]),float); ax/=np.linalg.norm(ax); q-=ax*(q@ax)
+                mis=float(np.linalg.norm(q))*toin
+                for ra in a["routes"]:
+                    for rc in c["routes"]:
+                        room=((a["d"]-ra[3]-b)+(c["d"]-rc[3]-b))/2
+                        # match-drilled at assembly: the drilled part takes its hole position from the other part (only when the plan says so)
+                        matched=bool(md) and "MATCH-DRILL" in plan and any(x["part"] in md.get("drill",[]) and r_[1]=="drill" and y["part"]==md.get("template") for x,r_,y in ((a,ra,c),(c,rc,a)))
+                        need=mis if matched else mis+ra[2]+rc[2]
+                        cand=(need-room,a["part"],c["part"],mis,room,need,ra[0]+(" (match-drilled)" if matched and a["part"]!=md.get("template") else ""),rc[0]+(" (match-drilled)" if matched and c["part"]!=md.get("template") else ""))
+                        worst=max(worst or (-9,),cand)
+                        if need>room+1e-6: res("crossmachine",f'{a["part"]}+{c["part"]}',"FAIL",f'{j.get("bolt")} at {j["at"]}: holes in {a["part"]} ({ra[0]}) and {c["part"]} ({rc[0]}) are {fmt(mis)} apart in the model; with position tolerance ±{fmt(ra[2])} / ±{fmt(rc[2])} the worst case needs {fmt(need)} of clearance but the holes give {fmt(room)}. Line the holes up, open them to loose fit, or match-drill.'); ok=False
+    # 2. kerf per machine + material
+    seen={}
+    for gj in sorted(glob.glob(f"{F}/gcode_*/*.json")):
+        g=json.load(open(gj)); k=(g.get("machine"),g.get("material"),g.get("thickness"))
+        exp=(g.get("tool_dia",0)/2) if g.get("type")=="router" else (g.get("kerf",0)/2)
+        if not g.get("kerf_src") or abs(g.get("comp",-1)-exp)>1e-4: res("crossmachine",os.path.basename(gj),"FAIL",f'{os.path.basename(gj)}: offset {g.get("comp")} is not half of the {g.get("machine")} kerf/bit {g.get("kerf")} for {g.get("material")}'); ok=False
+        seen[k]=(g.get("comp"),g.get("kerf_src"))
+    # 3. one combined BOM / cut list / cost
+    names={f["name"] for f in d.get("flats",[])}|{p["name"] for p in d.get("print_parts",[])}
+    inbom={n_ for r in d.get("cutlist",[]) for n_ in (r.get("names") or [])}
+    if names-inbom: res("crossmachine","bom","FAIL",f"parts missing from the one combined BOM: {sorted(names-inbom)}"); ok=False
+    try:
+        import csv; rows=list(csv.DictReader(open(f"{F}/bom.csv"))); marks={r_["mark"] for r_ in rows}
+        miss={r["mark"] for r in d["cutlist"] if r.get("mark")!="HW"}-marks
+        if miss: res("crossmachine","bom.csv","FAIL",f"bom.csv lacks rows {sorted(miss)}: the BOM must cover every machine's parts"); ok=False
+        Q=json.load(open(f"{F}/quote.json")); CQ=json.load(open(f"{F}/customer_quote.json")) if os.path.exists(f"{F}/customer_quote.json") else {}
+        if CQ:
+            cm={(li.get("machine") or "").split()[0] for li in CQ.get("lines",CQ.get("items",[])) if li.get("machine")}
+    except Exception as e: res("crossmachine","bom","FAIL",f"combined BOM/cost unreadable: {e}"); ok=False
+    if os.path.exists(f"{F}/cut_day.json"):
+        C=json.load(open(f"{F}/cut_day.json")); txt=json.dumps(C)
+        lost=[x for x in names if x not in txt and x not in {p["name"] for p in d.get("print_parts",[])}]
+        if lost: res("crossmachine","cut_day.json","FAIL",f"cut-day sheet misses parts from one machine: {sorted(lost)}"); ok=False
+    # 4. send list grouped by machine
+    sl=f"{V}/ship/send_list.txt"
+    if os.path.exists(sl):
+        MF=("PRINTER","LASER","ROUTER","PLASMA","HAND_TOOLS"); order=[l.split("/")[0] for l in open(sl) if "/" in l.split("  ->")[0] and l.split("/")[0] in MF]
+        runs=[k for i,k in enumerate(order) if i==0 or order[i-1]!=k]
+        if len(runs)!=len(set(runs)): res("crossmachine","send_list.txt","FAIL",f"send list mixes machines: {' > '.join(runs)} (each machine's files must be together)"); ok=False
+    if ok:
+        w=f'; tightest {worst[1]}+{worst[2]} ({worst[6]} / {worst[7]}): {fmt(worst[3])} offset + tolerances uses {fmt(worst[5])} of {fmt(worst[4])} clearance' if worst else ""
+        res("crossmachine","all machines","PASS",f'{n} bolted joint(s) across {"/".join(sorted(mach))} line up after kerf + {XTOL["_src"].lower()}{w}; kerf per machine+material: '+", ".join(f"{k[0]} {k[1]} {k[2]:g}: {v[0]:g}" for k,v in seen.items())+"; one BOM/cut list/cost; send list grouped by machine")
+
+GATES=[gate_crossmachine,gate_cutday,gate_coupons,gate_learn,gate_prices,gate_quote,gate_revision,gate_explode]
 def gate(ctx):
     for g in GATES:
         try: g(ctx["d"],ctx["F"],ctx["res"])

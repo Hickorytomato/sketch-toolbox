@@ -16,6 +16,8 @@ want pass  lumber_shelf                      # v1.0.4: 2x4/2x8 shelf, actual siz
 want pass  steel_bracket                     # v1.0.4: welded plate bracket, weld schedule (side/filler/prep), 1/2 bolt holes from the table -> DRILL
 want pass  bent_tab                          # v1.0.4: bent 10 ga tab, flat blank from BA (K estimate), hole-to-bend 2.5T+R
 want pass  plant_stand                       # welded angle stand
+want pass  mixed_table                       # v1.0.5 steering: plasma/laser steel plates + legs welded, router plywood top, bolted across machines
+want pass  print_panels                      # v1.0.5 steering: printed PETG brackets bolted to laser/router plywood panels (mm)
 want block ply_nominal "23/32"               # 3/4 plywood drawn at 0.750 nominal
 $P design_tests/ship_tamper_test.py || bad=$((bad+1))
 $P design_tests/rules_tests.py | tail -1; [ ${PIPESTATUS[0]} = 0 ] || bad=$((bad+1))   # every new FAIL rule: break blocks, clean ships

@@ -49,7 +49,7 @@ def thickness(m,n=2500):
     """inward ray from each surface sample; only counts as wall thickness when it lands on an opposite-facing wall
     (normals within ~45 deg of antiparallel) - grazing hits at edges/fillets are not walls"""
     n=int(max(n,min(80000,m.area/0.5)))   # >= 2 samples per mm2 so small thin features (petals) are seen
-    pts,fi=trimesh.sample.sample_surface_even(m,n); nrm=m.face_normals[fi]
+    pts,fi=trimesh.sample.sample_surface_even(m,n,seed=1055); nrm=m.face_normals[fi]   # seeded: same mesh -> same verdict (salt_shaker flaked)
     loc,ri,ti=m.ray.intersects_location(pts-nrm*1e-3,-nrm,multiple_hits=False)
     th=np.full(len(pts),np.inf); opp=(m.face_normals[ti]*nrm[ri]).sum(1)<-0.7
     th[ri[opp]]=np.linalg.norm(loc[opp]-pts[ri[opp]],axis=1)
@@ -234,13 +234,13 @@ for nj in glob.glob(f"{F}/nest_*/nest.json"):
             if pts:
                 xs=[q[0] for q in pts]; ys=[q[1] for q in pts]
                 if min(xs)<-1e-3 or min(ys)<-1e-3 or max(xs)>W+1e-3 or max(ys)>H+1e-3: res("cut",p["name"],"FAIL",f"{p['name']} sticks out of sheet {G['name']} ({W:g}x{H:g})"); okc=False
-    # nested count vs BOM, per material+thickness
+    # nested count vs BOM, per material+thickness, over ALL nest files (mixed builds have one nest per machine class)
     by={}
-    for G in N["groups"]:
+    for G in [g for nj_ in glob.glob(f"{F}/nest_*/nest.json") for g in json.load(open(nj_))["groups"]]:
         for p in G["parts"]: by.setdefault((G["material"],float(G["thickness"])),set()).add(base_(p["name"]))
     fl={}
     for f_ in d["flats"]: fl.setdefault((f_.get("material","steel"),float(f_.get("thickness",0))),set()).add(f_["name"])
-    for k,names in fl.items():
+    for k,names in (fl.items() if nj==sorted(glob.glob(f"{F}/nest_*/nest.json"))[0] else []):
         got=by.get(k,set()); bom=sum(r["qty"] for r in d["cutlist"] if set(r.get("names",[]))&names)
         if got!=names or len(got)!=bom: res("cut",f"{k[0]} {k[1]:g}","FAIL",f"nested {len(got)} parts but the BOM has {bom} of {k[0]} {k[1]:g}"+(f" (missing: {', '.join(sorted(names-got))})" if names-got else "")+(f" (extra: {', '.join(sorted(got-names))})" if got-names else "")); okc=False
     for dx in glob.glob(f"{F}/nest_{cls}/*.dxf")+glob.glob(f"{F}/dxf_{cls}/*.dxf"):

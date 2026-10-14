@@ -11,7 +11,7 @@ Where prices come from:
   NOT scrape them: it gives you a search link per item to check by hand, and you can paste a product link into price_links.json.
 Polite: robots.txt honoured, >= 3 s between requests, <= 12 requests per build, 8 s timeout, cache 7 days (bin/price_cache.json).
 Any failure -> that line keeps its prices.json price, labelled with why."""
-import sys,os,json,re,time,urllib.request,urllib.parse,urllib.robotparser,datetime,html
+import sys,os,json,re,time,urllib.request,urllib.error,urllib.parse,urllib.robotparser,datetime,html
 B=os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0,B); import ref
 V,O=sys.argv[1],sys.argv[2]; REFRESH="--refresh" in sys.argv
 PROF=ref.profile(); ON=bool(PROF.get("live_prices")) or os.environ.get("SKETCH_LIVE_PRICES")=="1"
@@ -30,8 +30,11 @@ def search_links(q):
 nreq=[0]; last=[0.0]
 def allowed(url):
     try:
-        u=urllib.parse.urlparse(url); rp=urllib.robotparser.RobotFileParser(f"{u.scheme}://{u.netloc}/robots.txt"); rp.read(); return rp.can_fetch(UA,url)
-    except Exception: return True   # no robots.txt reachable: the page fetch itself decides
+        u=urllib.parse.urlparse(url); rp=urllib.robotparser.RobotFileParser()
+        try: txt=urllib.request.urlopen(urllib.request.Request(f"{u.scheme}://{u.netloc}/robots.txt",headers={"User-Agent":UA}),timeout=5).read(200000).decode("utf-8","replace")
+        except urllib.error.HTTPError as e: return e.code not in(401,403)   # 404 = no rules
+        rp.parse(txt.splitlines()); return rp.can_fetch(UA,url)
+    except Exception: return True   # robots.txt unreachable: the page fetch itself (8 s timeout) decides
 def parse_price(t):
     for m in re.finditer(r'<script[^>]*application/ld\+json[^>]*>(.*?)</script>',t,re.S|re.I):
         try: j=json.loads(m.group(1).strip())

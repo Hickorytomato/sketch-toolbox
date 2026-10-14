@@ -13,7 +13,11 @@ def frac(v):
 L=[f"HAND-TOOL / SHOP PLAN - {d.get('title')}   (units {U}"+("; measure your actual plywood thickness and update the spec)" if any(rules.mcls(f.get("material"))=="plywood" for f in d["flats"]) else ")"),f"Build {d.get('build_id','?')}   All sizes are FINISHED SIZES (cut to the line; no extra for planing unless noted).",""]
 for fl_ in d.get("flags",[]): L.append("!! "+fl_)
 for sf in rules.safety(d,F): L.append("!! "+sf)
-if d.get("flags") or rules.safety(d,F): L.append("")
+_md={}
+for h in d.get("hole_specs",[]):
+    if h.get("match_drill"): _md.setdefault((h["match_drill"]["template"],tuple(h["match_drill"]["drill"]),h["d_in"],h["bolt"]),0); _md[(h["match_drill"]["template"],tuple(h["match_drill"]["drill"]),h["d_in"],h["bolt"])]+=1
+for (tp,dr,dd,bo),n_ in _md.items(): L.append(f"!! MATCH-DRILL: {tp} and {', '.join(dr)} come off different machines. Clamp {tp} in its final place on {', '.join(dr)} and drill the {n_} hole(s) for the {bo} ({dd:.3f} in) through {tp}'s holes, so they line up exactly. Holes are loose-fit for the same reason.")
+if d.get("flags") or rules.safety(d,F) or _md: L.append("")
 _buy=[r for r in d.get("cutlist",[]) if "BUY" in str(r.get("notes",""))]
 if _buy:
     L.append("0. BUY (store-bought - not printed or cut from sheet):")

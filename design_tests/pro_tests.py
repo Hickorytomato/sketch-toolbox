@@ -17,7 +17,8 @@ def latest(p):
 def run(*a,env=ENV): return subprocess.run(list(a),capture_output=True,text=True,env=env)
 def build(p,env=ENV):
     run(f"{B}/design.sh",f"design_tests/{p}","--sketch",env=env); r=run(f"{B}/design.sh",f"design_tests/{p}","--final",env=env); return r.returncode,r.stdout+r.stderr
-WANT={"lumber_shelf":["cutday","coupon","prices","quote","revision","explode"],"steel_bracket":["cutday","coupon","prices","quote","revision","explode"],"salt_shaker":["coupon","prices","quote","revision","explode"]}
+WANT={"lumber_shelf":["cutday","coupon","prices","quote","revision","explode"],"steel_bracket":["cutday","coupon","prices","quote","revision","explode"],"salt_shaker":["coupon","prices","quote","revision","explode"],
+      "mixed_table":["crossmachine","cutday","coupon","prices","quote","revision","explode"],"print_panels":["crossmachine","cutday","coupon","prices","quote","revision","explode"]}   # steering 2: mixed material / multi-machine
 PHONE={"cutday":"CUT_DAY/cut_day-1.png","coupon":"COUPONS/coupons-1.png","quote":"QUOTE/customer_quote-1.png","explode":"BUILD_STEPS/step_01.png"}
 # 1 ------------------------------------------------------------------
 for p,areas in WANT.items():
@@ -50,6 +51,14 @@ def rv_letter(F): J(f"{F}/doc_meta.json",lambda d:d.update(rev="A"))
 def rv_weld(F): J(f"{F}/doc_meta.json",lambda d:d["welds"].pop())
 def ex_tag(F):
     V=os.path.dirname(F); J(f"{V}/explode/explode.json",lambda d:[l.update(tag="Q7") for s in d["steps"] for l in s["labels"]][:0])
+def _stl(F,nm,fn):
+    import trimesh; p=f"{os.path.dirname(F)}/stl/{nm}.stl"; m=trimesh.load(p,force="mesh"); m=fn(m); m.export(p)
+def xm_move(F): _stl(F,"mount_FL",lambda m:(m.apply_translation([0.1,0,0]),m)[1])          # plate holes 0.1 in off the top's holes
+def xm_nohole(F):
+    import trimesh; _stl(F,"bracket_1",lambda m:trimesh.creation.box(bounds=m.bounds))      # printed bracket without its bolt holes
+def xm_kerf(F): J(glob.glob(f"{F}/gcode_wood/*router.json")[0],lambda d:d.update(comp=0.0))  # router program without bit offset
+def xm_bom(F):
+    P=f"{os.path.dirname(F)}/parts.json"; J(P,lambda d:[r.update(names=[n for n in r.get("names",[]) if n!="bracket_2"]) for r in d["cutlist"]])
 def ex_img(F): os.remove(sorted(glob.glob(f"{F}/build_steps/*.png"))[0])
 BRK=[("cut day: a cut missing",cut_drop,"lumber_shelf","does not match the BOM"),("cut day: kerf not from settings",cut_kerf,"lumber_shelf","not the saw kerf"),
      ("cut day: parts overlap on sheet",cut_overlap,"steel_bracket","overlap"),("cut day: tags differ from BOM",cut_tag,"lumber_shelf","tags differ"),
@@ -57,7 +66,9 @@ BRK=[("cut day: a cut missing",cut_drop,"lumber_shelf","does not match the BOM")
      ("quote total wrong",q_total,"steel_bracket","total"),("quote line != BOM price",q_line,"lumber_shelf","differs from the priced BOM"),
      ("quote shop not from profile",q_shop,"salt_shaker","not the ones in your profile"),("fake dated store price",pr_fake,"lumber_shelf","dated store price"),
      ("revision letter wrong",rv_letter,"salt_shaker","revision letter"),("weld callouts != model",rv_weld,"steel_bracket","weld callout"),
-     ("exploded tag not in BOM",ex_tag,"steel_bracket","not BOM tags"),("exploded image missing",ex_img,"lumber_shelf","step image")]
+     ("exploded tag not in BOM",ex_tag,"steel_bracket","not BOM tags"),("exploded image missing",ex_img,"lumber_shelf","step image"),
+     ("cross-machine: plate holes off the top's holes",xm_move,"mixed_table","worst case needs"),("cross-machine: printed part has no bolt hole",xm_nohole,"print_panels","has no hole on the"),
+     ("cross-machine: router offset not applied",xm_kerf,"mixed_table","is not half of the router"),("cross-machine: part missing from the combined BOM",xm_bom,"print_panels","combined BOM")]
 for name,fn,p,key in BRK:
     V=latest(p); T=f"{ROOT}/design_tests/_protamper"; shutil.rmtree(T,ignore_errors=True); os.makedirs(T)
     n=V.rsplit("/v",1)[1]; shutil.copytree(V,f"{T}/v{n}",ignore=shutil.ignore_patterns("ship")); shutil.copy(f"{V}/../spec.json",T)
@@ -68,6 +79,17 @@ for name,fn,p,key in BRK:
     good=r.returncode==1 and any(key in l for l in fl) and not os.path.exists(f"{T}/v{n}/ship")
     rep(good,f"break blocks: {name}"+("" if good else f" -> {fl[:2] or r.stdout[-200:]}"))
     shutil.rmtree(T,ignore_errors=True)
+# 2b mixed builds: exploded steps label material + machine, show bolts and welds --------------
+for p,mach,weld in (("mixed_table",("router","plasma"),True),("print_panels",("3D print","router"),False)):
+    V=latest(p)
+    if not V: rep(False,f"{p}: no shipped build"); continue
+    E=json.load(open(f"{V}/explode/explode.json")); pr=[l.get("proc","") for s_ in E["steps"] for l in s_["labels"]]
+    for m_ in mach: rep(any(m_ in x for x in pr),f"{p}: exploded labels name the machine '{m_}'")
+    rep(all(x and " - " in x for x in pr),f"{p}: every exploded part label says material - machine ({len(pr)} labels)")
+    rep(any(s_.get("bolts") for s_ in E["steps"]),f"{p}: bolts drawn in the exploded steps ({max(len(s_.get('bolts',[])) for s_ in E['steps'])} max/step)")
+    if weld: rep(any(s_.get("welds") for s_ in E["steps"]),f"{p}: welds listed on the step that makes them")
+    sl=open(f"{V}/ship/send_list.txt").read(); fo=[l.split("/")[0] for l in sl.splitlines() if l.split("/")[0] in ("PRINTER","LASER","ROUTER","PLASMA")]
+    rep(len(set(fo))>=2 and [k for i,k in enumerate(fo) if i==0 or fo[i-1]!=k]==list(dict.fromkeys(fo)),f"{p}: send_list groups files by machine ({' > '.join(dict.fromkeys(fo))})")
 # 3 ------------------------------------------------------------------
 LJ=f"{B}/learned.json"; bak=open(LJ).read() if os.path.exists(LJ) else None
 try:

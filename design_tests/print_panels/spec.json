@@ -1,0 +1,241 @@
+{
+ "name": "print_panels",
+ "title": "Laser-cut plywood panels joined by printed corner brackets",
+ "domain": "wood",
+ "units": "mm",
+ "ask": "two plywood panels at 90 degrees held by 3D-printed brackets and M4 screws",
+ "values": {
+  "PL": {
+   "v": 200,
+   "src": "user",
+   "unit": "mm",
+   "note": "panel length"
+  },
+  "PW": {
+   "v": 150,
+   "src": "user",
+   "unit": "mm",
+   "note": "base depth"
+  },
+  "PH": {
+   "v": 150,
+   "src": "user",
+   "unit": "mm",
+   "note": "back height"
+  },
+  "pt": {
+   "v": 6,
+   "src": "assumed",
+   "unit": "mm",
+   "note": "6 mm plywood"
+  },
+  "Y0": {
+   "v": 40,
+   "src": "assumed",
+   "unit": "mm",
+   "note": "back panel front face position"
+  },
+  "BL": {
+   "v": 30,
+   "src": "assumed",
+   "unit": "mm",
+   "note": "bracket leg length"
+  },
+  "BW": {
+   "v": 20,
+   "src": "assumed",
+   "unit": "mm",
+   "note": "bracket width"
+  },
+  "bt": {
+   "v": 5,
+   "src": "assumed",
+   "unit": "mm",
+   "note": "bracket wall"
+  },
+  "filament": {
+   "v": "PETG",
+   "src": "assumed",
+   "unit": "",
+   "note": "tough"
+  }
+ },
+ "derived": {},
+ "parts": [
+  {
+   "name": "panel_base",
+   "kind": "panel",
+   "material": "plywood",
+   "label": "Base panel",
+   "args": {
+    "L": "=PL",
+    "W": "=PW",
+    "t": "=pt"
+   },
+   "at": [
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "name": "panel_back",
+   "kind": "panel",
+   "material": "plywood",
+   "label": "Back panel",
+   "args": {
+    "L": "=PL",
+    "W": "=PH",
+    "t": "=pt"
+   },
+   "rot": [
+    90,
+    0,
+    0
+   ],
+   "at": [
+    0,
+    "=Y0",
+    "=pt"
+   ]
+  },
+  {
+   "name": "bracket_1",
+   "kind": "bracket",
+   "material": "=filament",
+   "label": "Corner bracket",
+   "args": {
+    "L": "=BL",
+    "W": "=BW",
+    "H": "=BL",
+    "t": "=bt",
+    "fillet": 4
+   },
+   "rot": [
+    0,
+    0,
+    90
+   ],
+   "at": [
+    60,
+    "=Y0",
+    "=pt"
+   ]
+  },
+  {
+   "name": "bracket_2",
+   "kind": "bracket",
+   "material": "=filament",
+   "label": "Corner bracket",
+   "args": {
+    "L": "=BL",
+    "W": "=BW",
+    "H": "=BL",
+    "t": "=bt",
+    "fillet": 4
+   },
+   "rot": [
+    0,
+    0,
+    90
+   ],
+   "at": [
+    160,
+    "=Y0",
+    "=pt"
+   ]
+  }
+ ],
+ "joints": [
+  {
+   "type": "bolted",
+   "parts": [
+    "bracket_1",
+    "panel_base"
+   ],
+   "at": [
+    50,
+    "=Y0+BL*0.6",
+    0
+   ],
+   "axis": [
+    0,
+    0,
+    1
+   ],
+   "bolt": "M4 x 16 zinc socket head cap screw + nut",
+   "qty": 1
+  },
+  {
+   "type": "bolted",
+   "parts": [
+    "bracket_1",
+    "panel_back"
+   ],
+   "at": [
+    50,
+    "=Y0",
+    "=pt+BL*0.6"
+   ],
+   "axis": [
+    0,
+    1,
+    0
+   ],
+   "bolt": "M4 x 16 zinc socket head cap screw + nut",
+   "qty": 1
+  },
+  {
+   "type": "bolted",
+   "parts": [
+    "bracket_2",
+    "panel_base"
+   ],
+   "at": [
+    150,
+    "=Y0+BL*0.6",
+    0
+   ],
+   "axis": [
+    0,
+    0,
+    1
+   ],
+   "bolt": "M4 x 16 zinc socket head cap screw + nut",
+   "qty": 1
+  },
+  {
+   "type": "bolted",
+   "parts": [
+    "bracket_2",
+    "panel_back"
+   ],
+   "at": [
+    150,
+    "=Y0",
+    "=pt+BL*0.6"
+   ],
+   "axis": [
+    0,
+    1,
+    0
+   ],
+   "bolt": "M4 x 16 zinc socket head cap screw + nut",
+   "qty": 1
+  }
+ ],
+ "dims": [
+  {
+   "label": "length",
+   "v": "=PL",
+   "view": "top",
+   "axis": "h"
+  },
+  {
+   "label": "depth",
+   "v": "=PW",
+   "view": "top",
+   "axis": "v"
+  }
+ ]
+}
