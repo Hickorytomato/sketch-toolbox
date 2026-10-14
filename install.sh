@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Sketch toolbox installer v1.0.5. Idempotent. Root: $SKETCH_ROOT (default /workspace/sketch).
+# Sketch toolbox installer v1.0.5.1 (toolbox v1.0.5; fixes settings merge). Idempotent. Root: $SKETCH_ROOT (default /workspace/sketch).
 # Downloads the v1.0.5 release tarball, checks its sha256, installs scripts -> $ROOT/bin and tests -> $ROOT/design_tests,
 # keeps your settings, removes scripts that are no longer in this version, then sets up the venv, Blender and PrusaSlicer.
 set -euo pipefail
@@ -43,7 +43,9 @@ def merge(user,new):   # owner's values always win; only brand-new default keys 
     return user
 for f,txt in saved.items():
     p=os.path.join(binp,f)
-    try: open(p,"w").write(json.dumps(merge(json.loads(txt),json.load(open(p))),indent=1) if os.path.exists(p) else txt)
+    try:
+        out=json.dumps(merge(json.loads(txt),json.load(open(p))),indent=1) if os.path.exists(p) else txt   # read the new defaults BEFORE truncating the file
+        open(p,"w").write(out)
     except Exception: open(p,"w").write(txt)   # unparseable -> keep owner's file untouched
     print("kept your",f)
 for d in (binp,os.path.join(root,"design_tests")):
