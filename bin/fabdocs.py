@@ -163,19 +163,19 @@ if d.get("welds"):
             if kind=="fillet":
                 c.line(sx,y,sx,y+sg*12); c.line(sx,y+sg*12,sx+12,y); el.append(("fillet",sg))
             else:
-                if g in("v","flare-v"): c.line(sx-6,y+sg*12,sx,y); c.line(sx+6,y+sg*12,sx,y)
-                elif g in("bevel","flare-bevel"): c.line(sx,y,sx,y+sg*12); c.line(sx,y,sx+9,y+sg*12)
+                if g in("v","flare-v"): c.line(sx-10,y+sg*16,sx,y); c.line(sx+10,y+sg*16,sx,y)
+                elif g in("bevel","flare-bevel"): c.line(sx,y,sx,y+sg*16); c.line(sx,y,sx+12,y+sg*16)
                 elif g=="square": c.line(sx-2,y,sx-2,y+sg*12); c.line(sx+2,y,sx+2,y+sg*12)
                 elif g=="u": cy=y+sg*10; c.line(sx,y,sx,y+sg*4); c.arc(sx-6,cy-6,sx+6,cy+6,0 if sg<0 else 180,180)
                 elif g=="j": c.line(sx,y,sx,y+sg*12); c.line(sx,y+sg*6,sx+6,y+sg*12)
                 el.append((g,sg))
                 c.setFont("Helvetica",6.5)
-                if w.get("groove_angle"): c.drawCentredString(sx+2,y+sg*22-(2 if sg<0 else 0),f'{w["groove_angle"]}°'); el.append("angle")
-                if w.get("root_opening"): c.drawCentredString(sx,y+sg*(5 if sg>0 else 8),str(w["root_opening"])); el.append("root")
+                if w.get("groove_angle"): c.drawCentredString(sx+3,y+sg*25-(3 if sg<0 else 0),f'{w["groove_angle"]}°'); el.append("angle")
+                if w.get("root_opening"): c.setFont("Helvetica",5.5); c.drawCentredString(sx+(4 if "bevel" in g else 0),y+sg*(10 if sg>0 else 14),str(w["root_opening"])); el.append("root")
             c.setFont("Helvetica",7)
             sz=str(w.get("size") or "")
             if kind=="groove" and w.get("depth"): sz=f'{sz}({w["depth"]})' if sz else f'({w["depth"]})'
-            if sz: c.drawRightString(sx-4,y+(3 if sg>0 else -9),sz); el.append("size")
+            if sz: c.drawRightString(sx-(12 if kind=="groove" else 4),y+(3 if sg>0 else -9),sz); el.append("size")
             L=w.get("seg_len") and (f'{w["seg_len"]}-{w["pitch"]}' if w.get("pitch") else str(w["seg_len"]))
             if L: c.drawString(sx+16,y+(3 if sg>0 else -9),L); el.append("length")
             if w.get("contour")=="flush": c.line(sx-3,y+sg*15,sx+12,y+sg*15); el.append("flush")
@@ -192,7 +192,7 @@ if d.get("welds"):
     y=PH-1.3*inch
     for wi,w in enumerate(d["welds"]):
         c.setFont("Helvetica-Bold",9); c.drawString(0.3*inch,y-3,f"W{wi+1}")
-        el=sym(0.9*inch,y,f'{w["part"]}: {w["weld"]}  (~{w["weld_in"]}" of weld) · {w.get("side","arrow")} side{"s" if w.get("side")=="both" else ""} · filler {w.get("filler","?")} · {w.get("prep","")}'[:150],w); y-=40
+        el=sym(0.9*inch,y,f'{w["part"]}: {w["weld"]}  (~{w["weld_in"]}" of weld) · {w.get("side","arrow")} side{"s" if w.get("side")=="both" else ""} · filler {w.get("filler","?")} · {w.get("prep","")}'[:150],w); y-=52
         META["welds"].append(dict(id=f"W{wi+1}",part=w["part"],type=w.get("type","fillet"),groove=w.get("groove"),side=w.get("side","arrow"),size=w.get("size"),filler=w.get("filler"),all_around=bool(w.get("all_around")),field=bool(w.get("field")),elements=[e if isinstance(e,str) else f"{e[0]}:{'arrow' if e[1]<0 else 'other'}" for e in el]))
         if y<1.2*inch: c.showPage(); header(c,"Weld schedule (cont.)"); y=PH-1.3*inch
     c.setFont("Helvetica-Oblique",8); c.drawString(0.9*inch,1.1*inch,"AWS A2.4 symbols from the model: below the line = arrow side, above = other side; no length = full joint; no size on a groove = CJP. Your WPS governs.")

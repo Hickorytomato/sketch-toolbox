@@ -80,7 +80,10 @@ def filler_for(mats):
     if "stainless" in c and c&{"steel","galvanized"}: return F["CS-to-SS"],"carbon steel to stainless"
     if "stainless" in c: return (F["316"],"316") if any("316" in str(m) for m in mats) else (F["304"],"304/304L stainless")
     return F["mild steel"],"mild steel"
-def prep_for(t_in,kind):
+def prep_for(t_in,kind,groove=None):
+    p_=_prep_for(t_in,kind)
+    return re.sub(r"single-V [\d-]+ deg","single-bevel 45 deg (bevel the member the arrow points to)",p_) if groove and "bevel" in groove else p_
+def _prep_for(t_in,kind):
     tm=t_in*25.4
     if "fillet" in kind: return "fillet: square edges, fit tight (gap 1/16 in max), clean to bright metal"
     for r in SR()["weld_prep"]:
@@ -225,6 +228,7 @@ def enrich(out,spec,META,JL,U,STOCK):
             w.update(groove=gs,groove_angle=int(ang[1]) if ang else (None if gs in("square",) else (45 if "bevel" in gs else 60)),
                      root_opening=ro[1] if ro else None,depth=dp[1] if dp else None,break_arrow=gs in("bevel","j","flare-bevel"),
                      back_weld="back weld" in txt or "backing" in txt or "back-gouge" in txt)
+            w["prep"]=prep_for(w.get("t_min_in") or 0.125,kind,gs)
             if w["cjp"]: w["size"]=None   # A2.4: CJP groove with no size shown = complete joint penetration
         w["field"]="field" in txt; w["contour"]="flush" if "flush" in txt else "convex" if "convex" in txt else None
         if w["cjp"]: w["flag"]="CJP weld: needs a qualified WPS and backing/back-gouge - not certified by Sketch"
@@ -793,12 +797,12 @@ def gate(C):
     if W:
         mw=meta.get("welds",[]); miss=[];side=[];fil=[];prep=[];allr=[];inter=[]
         for k_,w in enumerate(W):
-            if not all(w.get(x) for x in ("type","size","length_in","side")): miss.append(w["part"])
+            if not all(w.get(x) or (x=="size" and w.get("cjp") and w.get("type")=="groove") for x in ("type","size","length_in","side")): miss.append(w["part"])
             sy=next((q for q in mw if q.get("part")==w["part"]),None)
             if not sy or sy.get("side")!=w.get("side"): side.append(f'{w["part"]}: model {w.get("side")}, drawing {sy and sy.get("side")}')
             f_,_=filler_for(w.get("base",["steel","steel"]))
             if w.get("filler")!=f_ or (w.get("filler") or "~") not in PLAN: fil.append(f'{w["part"]}: {w.get("filler")} (table: {f_}{"" if (w.get("filler") or "~") in PLAN else ", not in the plan"})')
-            if not w.get("prep") or w["prep"]!=prep_for(w.get("t_min_in") or 0.125,w.get("type","fillet")): prep.append(w["part"])
+            if not w.get("prep") or w["prep"]!=prep_for(w.get("t_min_in") or 0.125,w.get("type","fillet"),w.get("groove")): prep.append(w["part"])
             m_=re.search(r"(\d+)\D+deg",str(w.get("prep","")))
             if m_ and int(m_[1])<45: r(187,"WARN",w["part"],"bevel included angle under 45-50°")
             if not w.get("all_around") and "tube" in " ".join(str(b) for b in w.get("base",[])): allr.append(w["part"])
