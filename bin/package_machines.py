@@ -127,6 +127,12 @@ if any(m_ in FOR for m_ in ("plasma","laser","router")) and d.get("flats"): _x.a
 if d.get("stock_plan"): _x.append(f'TIP: saw kerf {d["saw_kerf"]["kerf_in"]:.3f} in ({d["saw_kerf"]["src"]}): set your saw with tools_setup.py --saw "<your saw>" [--saw-kerf <measured>].')
 if any(str(p_.get("material","")).upper() in("ABS","ASA","PC") for p_ in d.get("print_parts",[])): _x.append("TIP: ABS/ASA/PC warp without an enclosure: print in an enclosure, add a brim/skirt, keep drafts off.")
 _x+=["TIP: "+t_ for _,t_ in _rules.tips(d,F)]
+_x=list(_x)+[("SHOP CORRECTION APPLIED: " if x["applied"] else "Shop correction NOT applied: ")+f'{x["key"]} {x.get("was","")} -> {x["learned"]} for {x["value"]} ({x["machine"]}|{x["material"]}; {x["why"]})' for x in d.get("learned_applied",[])]
+_x+=["FIT-TEST FIRST: coupons.pdf has small test pieces for the tight fits in this build; tell Sketch the result with bin/feedback.py (see each coupon)."] if os.path.exists(f"{F}/coupons.json") and json.load(open(f"{F}/coupons.json"))["coupons"] else []
+if os.path.exists(f"{F}/live_prices.json"):
+    _lp=json.load(open(f"{F}/live_prices.json")); _x+=["PRICES: "+_lp.get("note","")]
+    _x+=[f"  check {k[:50]}: "+" | ".join(f"{st} {u}" for st,u in v.items()) for k,v in list(_lp.get("search",{}).items())[:6]]
+_x+=["CUT DAY: cut_day.pdf = numbered cut order + tick-off checklist + sheet diagrams + offcuts (tags match the BOM marks)."] if os.path.exists(f"{F}/cut_day.pdf") else []
 open(f"{F}/HOW_TO_USE.txt","w").write(f"WHICH FILE GOES INTO WHICH PROGRAM - {d.get('title')}\nBuild {d.get('build_id','?')}\nPackaged for: {', '.join(FOR)}\n\n"+("\n".join(_x)+"\n\n" if _x else "")+"\n".join(how)+"\n")
 for m_ in made: print("[machine]",m_)
 print("[howto]",f"{F}/HOW_TO_USE.txt")

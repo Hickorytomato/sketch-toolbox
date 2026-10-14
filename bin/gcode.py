@@ -92,7 +92,7 @@ for mname in wanted:
                 st,body=circle_ops(hx,hy,r,True,lead,cw=False)   # holes CCW
                 fd=m["feed_ipm"]*(0.6 if t=="plasma" and dd<1.0 else 1)   # catalog #83: holes < 1 in at ~60% speed
                 if fd!=m["feed_ipm"]: body=[f"G1 F{fd:.0f}"]+body
-                cut(st,body,f'{p["name"]} hole d{dd:.3f}'); segs.append(("circle",(hx,hy),r)); HOLES.append(dict(part=p["name"],d=round(dd,4),action="cut",feed=fd))
+                cut(st,body,f'{p["name"]} hole d{dd:.5f}'); segs.append(("circle",(hx,hy),r)); HOLES.append(dict(part=p["name"],d=round(dd,4),action="cut",feed=fd))
             from shapely.geometry import Polygon as _SP, LinearRing as _LR
             for ip in gm.get("inner_poly",[]):   # interior cutouts: offset inward, CCW
                 P_=_SP(ip).buffer(-comp,join_style=2)
@@ -107,7 +107,7 @@ for mname in wanted:
                 pocket(p,pk)
             if "circle" in gm["outer"]:
                 cx,cy,r=gm["outer"]["circle"]; st,body=circle_ops(cx,cy,r+comp,False,lead,cw=True)   # outer CW
-                cut(st,body,f'{p["name"]} outer d{2*r:.3f}'); segs.append(("circle",(cx,cy),r+comp))
+                cut(st,body,f'{p["name"]} outer d{2*r:.5f}'); segs.append(("circle",(cx,cy),r+comp))
             else:
                 pts=poly_offset(gm["outer"]["poly"],comp)
                 from shapely.geometry import LinearRing

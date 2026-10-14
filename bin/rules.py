@@ -48,6 +48,12 @@ def clearance_for(bolt,U="in",fit="close"):
     """clearance hole (inches) for a bolt description from the tap/clearance table (75% table 'close' column / ISO 273 medium)"""
     S=SR(); b=str(bolt)
     m=re.search(r"\bM(\d+)",b)
+    if fit=="loose":   # parts made on different machines: room for each machine's position error (ISO 273 coarse / ASME B18.2.8 loose)
+        if m and S["iso273_clearance_mm"].get("coarse_series",{}).get(f"M{m[1]}"):
+            mm=S["iso273_clearance_mm"]["coarse_series"][f"M{m[1]}"]; return mm/25.4,f"ISO 273 coarse (loose) M{m[1]} {mm} mm ({S['iso273_clearance_mm']['src3']})"
+        L=S.get("inch_clearance_loose_in",{})
+        for k in sorted([k for k in L if not k.startswith("_")],key=len,reverse=True):
+            if re.search(r"(^|[^\d/#])"+re.escape(k)+r"(-|\s|\"|$)",b): return L[k],f"{k} loose-fit clearance {L[k]} in ({L['_src']})"
     if m:
         k=f"M{m[1]}"; mm=S["iso273_clearance_mm"]["medium_series"].get(k)
         if mm: return mm/25.4,f"ISO 273 medium {k} {mm} mm ({S['iso273_clearance_mm']['src']})"
@@ -187,7 +193,7 @@ def enrich(out,spec,META,JL,U,STOCK):
             r["pipe"]=dict(nps=nps[1] if nps else "?",sched="40" if "sch40" in r["material"] else "80" if "sch80" in r["material"] else "?",od_in=od)
             r["notes"]=(r.get("notes","")+"; " if r.get("notes") else "")+f'NPS {r["pipe"]["nps"]} sch {r["pipe"]["sched"]} = {od:.3f} in OD'
         if r.get("stock")=="sheet_good" or "plywood" in str(r["material"]):
-            r["thickness_in"]=m0.get("t")
+            r["thickness_in"]=round(float(m0["t"])*toin,4) if m0.get("t") else None   # was raw model units (6 for 6 mm)
     # weld schedule
     def thk(nm):
         m=META.get(nm,{})
@@ -219,7 +225,7 @@ def enrich(out,spec,META,JL,U,STOCK):
         if j.get("type")=="bolted":
             dd=float(j["d"]); need,src=clearance_for(j.get("bolt",""),U)
             hs.append(dict(parts=j["parts"],d_in=round(dd*toin,4),bolt=j.get("bolt"),clearance_in=need,src=src,dia_in=bolt_dia(j.get("bolt","")),
-                           tapped=bool(j.get("tapped")),engage_into=j.get("tapped_into"),engage_len_in=j.get("engage_len") and float(j["engage_len"])*toin))
+                           tapped=bool(j.get("tapped")),engage_into=j.get("tapped_into"),engage_len_in=j.get("engage_len") and float(j["engage_len"])*toin,fit=j.get("fit","close"),match_drill=j.get("match_drill")))
     out["hole_specs"]=hs
     # bent parts: blank length (BA = A*pi/180*(R+K*T)), K flagged as estimate
     for fl in out["flats"]:
@@ -801,7 +807,7 @@ def gate(C):
         r(37,"PASS" if ("plasma" not in P or "Grind plasma-cut faces" in PLAN) else "WARN","weld prep","grind plasma-cut weld faces note" if ("plasma" not in P or "Grind plasma-cut faces" in PLAN) else "no note to grind plasma-cut weld faces")
     # ===== safety by material + process
     if "galvanized" in Mt:
-        hz="zinc" in PLAN.lower() and "ventilat" in PLAN.lower()
+        hz=bool(re.search(r"zinc (oxide )?fume|grind the zinc",PLAN.lower())) and "ventilat" in PLAN.lower()   # not bare "zinc": hardware names / shop links say zinc too
         if W:
             for i in (173,238): r(i,"PASS" if hz else "FAIL","galvanized","galvanized weld: grind/ventilate warning in the plan" if hz else "galvanized steel welded with no zinc-fume warning in the plan")
         if {"plasma","laser"}&P:
@@ -947,3 +953,12 @@ if __name__=="__main__" and "--coverage" in sys.argv:
     print(Counter(v[0] for v in st.values()))
     for i,(k,why) in st.items():
         if k=="skipped" or "-v" in sys.argv: print(i,cat()[i]["check_type"],cat()[i]["severity"],k,why,"|",cat()[i]["failure"])
+
+def part_tags(d):
+    """BOM tag per part name: mark + number in the order of the BOM row's names (A1, A2 ...). Same everywhere: cut day, plan, exploded steps."""
+    T={}
+    for r in d.get("cutlist",[]):
+        if r.get("mark")=="HW": continue
+        ns=r.get("names") or [r["part"]]
+        for i,n in enumerate(ns): T[n]=f'{r["mark"]}{i+1}' if len(ns)>1 or r.get("names") else r["mark"]
+    return T

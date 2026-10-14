@@ -15,6 +15,23 @@ for _k in("printer","filament"):   # assumed printer/filament follow the owner's
     _e=spec["values"].get(_k)
     if isinstance(_e,dict) and _e.get("src")!="user" and PROF.get(_k): _e["v"]=PROF[_k]
 vals={k:(v["v"] if isinstance(v,dict) else v) for k,v in spec["values"].items()}
+# ---- shop learning (bin/learned.json via feedback.py): the owner's measured fits replace ASSUMED values (user-typed values win)
+import learn
+LEARNED=[]; _fil=str(vals.get("filament") or "PLA")
+def _learn_val(name,machine,material,key,why):
+    e=spec["values"].get(name); L=learn.get(machine,material).get(key)
+    if L is None or not isinstance(e,dict): return
+    if e.get("src")=="user": LEARNED.append(dict(key=key,machine=machine,material=material,value=name,learned=L,kept=e["v"],applied=False,why="you typed this value in the spec, so it wins")); return
+    LEARNED.append(dict(key=key,machine=machine,material=material,value=name,was=vals[name],learned=L,applied=True,why=why)); vals[name]=L; e["v"]=L; e["src"]="learned"
+_thr=set()
+for _p in spec.get("parts",[]):
+    for _t in (_p.get("args",{}).get("threads") or []):
+        _c=_t.get("clearance")
+        if _t.get("side")=="internal" and isinstance(_c,str) and re.fullmatch(r"=\w+",_c): _thr.add(_c[1:])
+for _n in _thr: _learn_val(_n,"printer",_fil,"thread_clearance_mm","thread coupon / feedback")
+if spec.get("domain")=="print":
+    for _n,_e in spec["values"].items():
+        if "clear" in _n and _n not in _thr and isinstance(_e,dict) and _e.get("unit")=="mm": _learn_val(_n,"printer",_fil,"slot_clearance_mm","slot coupon / feedback")
 NS=dict(math=math,STOCK=kit.STOCK,**{k:getattr(math,k) for k in("pi","sqrt","sin","cos","tan","radians","degrees","atan2","floor","ceil")})
 def ev(x):
     if isinstance(x,str) and x.startswith("="):
@@ -89,6 +106,16 @@ for j in JL:
     j=ev(j); t=j["type"]; rec=dict(j)
     if t in("dado","rabbet","groove","housing"):
         cl=j.get("clear",0.01 if U=="in" else 0.2); tool=P[j["from"]].val()
+        _mat=META.get(j["from"],{}).get("material") or next((p_.get("material") for p_ in plist if p_["name"]==j["from"]),"plywood")
+        _mach="router" if json.load(open(f"{B}/machines.json")).get("router",{}).get("enabled") else "saw"
+        _L=learn.get(_mach,_mat).get("dado_clear_in")
+        if _L is not None:
+            if "clear" in j: LEARNED.append(dict(key="dado_clear_in",machine=_mach,material=_mat,value=f'joint {j["into"]}<-{j["from"]}',learned=_L,kept=cl,applied=False,why="clearance set on the joint in the spec, so it wins"))
+            else:
+                _new=_L if U=="in" else _L*25.4
+                if not any(x.get("key")=="dado_clear_in" and x.get("applied") for x in LEARNED): LEARNED.append(dict(key="dado_clear_in",machine=_mach,material=_mat,value="dado clearance (all dados)",was=cl,learned=_L,applied=True,why="dado coupon / feedback"))
+                cl=_new
+        rec["clear_used"]=cl
         bb=tool.BoundingBox()   # 'from' part must overlap 'into' by the dado depth; cut its footprint + clearance
         ib=P[j["into"]].val().BoundingBox(); th=min((ib.xlen,0),(ib.ylen,1),(ib.zlen,2))[1]   # don't grow into the depth axis
         gr=[2*cl if k!=th else 0 for k in range(3)]
@@ -132,8 +159,17 @@ for j in JL:
         P[j["branch"]]=P[j["branch"]].cut(cyl); META[j["branch"]].setdefault("ends",[]).append("coped")
         copes.append(dict(branch=j["branch"],header_od=od,branch_od=META[j["branch"]]["od"],angle=j.get("angle",90),ends=1))
     elif t=="bolted":
+        def _proc(nm):
+            m_=META.get(nm,{}); mt=str(m_.get("material","steel")).lower()
+            return "print" if m_.get("stock")=="print" else "wood" if any(k in mt for k in ("ply","wood","pine","oak","maple","birch","mdf","cedar","walnut","lumber")) else "plastic" if any(k in mt for k in ("acrylic","hdpe")) else "metal"
+        _pr=[_proc(nm) for nm in j["parts"]]
+        if len(set(_pr))>1 and not j.get("tapped"):
+            # parts come off different machines: loose-fit holes + drill the softer part through the other at assembly (v1.0.5 cross-machine finding)
+            j.setdefault("fit","loose"); rk={"print":0,"metal":1,"plastic":2,"wood":3}
+            tpl=min(j["parts"],key=lambda n:rk[_proc(n)]); j.setdefault("match_drill",dict(template=tpl,drill=[n for n in j["parts"] if n!=tpl]))
+            rec["fit"]=j["fit"]; rec["match_drill"]=j["match_drill"]
         if not j.get("d"):   # hole size from the clearance / tap table, never guessed
-            _dd,_src=(rules.tap_for(j.get("bolt","")) if j.get("tapped") else rules.clearance_for(j.get("bolt",""),U))
+            _dd,_src=(rules.tap_for(j.get("bolt","")) if j.get("tapped") else rules.clearance_for(j.get("bolt",""),U,j.get("fit","close")))
             if _dd is None: raise SystemExit(f"bolted joint: no table size for '{j.get('bolt')}' - give d or a standard bolt (e.g. 3/8-16, M8)")
             j["d"]=_dd/toin; rec["d"]=j["d"]; rec["d_src"]=_src
         d=np.array(j.get("axis",[0,0,1]),float); d/=np.linalg.norm(d); at=np.array(j["at"],float)
@@ -331,6 +367,7 @@ out["dims"]=[dict(expr=dm["v"],label=dm.get("label",""),value=round(float(ev(dm[
 out["spec_values"]={k:dict(v=vals.get(k),src=SRC[k],unit=(spec["values"][k].get("unit","") if isinstance(spec["values"][k],dict) else ""),note=(spec["values"][k].get("note","") if isinstance(spec["values"][k],dict) else "")) for k in SRC}
 out["title"]=spec.get("title"); out["domain"]=spec.get("domain")
 out=rules.enrich(out,spec,META,jointrec,U,kit.STOCK)
+out["learned_applied"]=LEARNED
 json.dump(out,open(f"{V}/parts.json","w"),indent=1,default=float)
 VERB={"print":"Printing","wood":"Fitting","metal":"Fitting"}.get(spec.get("domain"),"Adding")
 stp=spec.get("steps") or []
@@ -341,5 +378,6 @@ for p in plist:
     seen.add(nm); stp.append([nm,(f"Printing the {nm.replace('_',' ')}" if p.get("group") else f'{VERB} the {p.get("label",nm).lower()}' + ("s" if sum(1 for q in plist if q.get("label")==p.get("label") and p.get("label"))>1 else ""))])
 json.dump(stp,open(f"{V}/steps.json","w"))
 A=[f'{k} = {v["v"]} {v.get("unit","")}  ({v.get("note","")})' for k,v in spec["values"].items() if isinstance(v,dict) and v.get("src")=="assumed"]
+A+=["SHOP CORRECTION APPLIED: "+(f'{x["value"]} {x["was"]} -> {x["learned"]} ({x["key"]}, {x["machine"]}|{x["material"]}, from {x["why"]})' if x["applied"] else f'NOT applied: {x["key"]}={x["learned"]} for {x["value"]} ({x["why"]})') for x in LEARNED]
 open(f"{V}/assumptions.txt","w").write("\n".join(A)+"\n")
 print(f"{V}: {len(P)} parts, {len(flats)} flats, {len(printparts)} print parts, {len(welds)} welds, weight ~{tw:.1f} lb")

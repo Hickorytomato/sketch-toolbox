@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# Sketch toolbox installer v1.0.4. Idempotent. Root: $SKETCH_ROOT (default /workspace/sketch).
-# Downloads the v1.0.4 release tarball, checks its sha256, installs scripts -> $ROOT/bin and tests -> $ROOT/design_tests,
+# Sketch toolbox installer v1.0.5. Idempotent. Root: $SKETCH_ROOT (default /workspace/sketch).
+# Downloads the v1.0.5 release tarball, checks its sha256, installs scripts -> $ROOT/bin and tests -> $ROOT/design_tests,
 # keeps your settings, removes scripts that are no longer in this version, then sets up the venv, Blender and PrusaSlicer.
 set -euo pipefail
-VER=1.0.4
+VER=1.0.5
 URL="https://github.com/Hickorytomato/sketch-toolbox/releases/download/v$VER/sketch-toolbox-$VER.tar.gz"
 SHA=425e62405498bb3197d026d88fff8de34183b82330da8e2535d12173f5a2fcca
 ROOT=${SKETCH_ROOT:-/workspace/sketch}; mkdir -p "$ROOT/bin" "$ROOT/tools"
@@ -23,7 +23,7 @@ curl -fsSL -o "$TMP/tb.tar.gz" "$URL"
 python3 - "$TMP/tb.tar.gz" "$ROOT" <<'PY'
 import sys,tarfile,os,json
 src,root=sys.argv[1],sys.argv[2]
-USER=("prices.json","printers.json","machines.json","profile.json","taste.json","stock.json","ref_user.json")   # owner-edited settings (ref_user.json = shop-reference overrides)
+USER=("prices.json","printers.json","machines.json","profile.json","taste.json","stock.json","ref_user.json","learned.json","price_links.json","price_cache.json")   # owner-edited settings (ref_user = shop-reference overrides, learned = feedback.py corrections, price_* = live prices)
 saved={}
 for f in USER:
     p=os.path.join(root,"bin",f)

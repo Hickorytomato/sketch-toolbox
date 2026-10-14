@@ -1,0 +1,412 @@
+{
+ "name": "mixed_table",
+ "title": "Table: plasma-cut steel leg mounts + router-cut plywood top",
+ "domain": "metal",
+ "units": "in",
+ "ask": "steel-leg table with a plywood top bolted to plasma-cut mount plates",
+ "values": {
+  "TL": {
+   "v": 36,
+   "src": "user",
+   "unit": "in",
+   "note": "top length"
+  },
+  "TW": {
+   "v": 24,
+   "src": "user",
+   "unit": "in",
+   "note": "top width"
+  },
+  "H": {
+   "v": 28,
+   "src": "user",
+   "unit": "in",
+   "note": "table height"
+  },
+  "tt": {
+   "v": 0.719,
+   "src": "assumed",
+   "unit": "in",
+   "note": "3/4 plywood actual 23/32"
+  },
+  "pt": {
+   "v": 0.1875,
+   "src": "assumed",
+   "unit": "in",
+   "note": "3/16 plate"
+  },
+  "P": {
+   "v": 4,
+   "src": "assumed",
+   "unit": "in",
+   "note": "mount plate size"
+  },
+  "finish": {
+   "v": "powder coat, black (steel); wipe-on polyurethane (top)",
+   "src": "assumed",
+   "unit": "",
+   "note": "finish"
+  }
+ },
+ "derived": {},
+ "parts": [
+  {
+   "name": "top",
+   "kind": "panel",
+   "material": "plywood",
+   "label": "Top",
+   "args": {
+    "L": "=TL",
+    "W": "=TW",
+    "t": "=tt"
+   },
+   "at": [
+    0,
+    0,
+    "=H-tt"
+   ]
+  },
+  {
+   "name": "mount_FL",
+   "kind": "plate",
+   "material": "steel",
+   "label": "Leg mount plate",
+   "args": {
+    "L": "=P",
+    "W": "=P",
+    "t": "=pt"
+   },
+   "at": [
+    1,
+    1,
+    "=H-tt-pt"
+   ]
+  },
+  {
+   "name": "leg_FL",
+   "kind": "tube_sq",
+   "material": "steel",
+   "label": "Leg",
+   "args": {
+    "L": "=H-tt-pt",
+    "size": "1.5x1.5x11ga"
+   },
+   "rot": [
+    0,
+    -90,
+    0
+   ],
+   "at": [
+    3,
+    3,
+    0
+   ]
+  },
+  {
+   "name": "mount_FR",
+   "kind": "plate",
+   "material": "steel",
+   "label": "Leg mount plate",
+   "args": {
+    "L": "=P",
+    "W": "=P",
+    "t": "=pt"
+   },
+   "at": [
+    31,
+    1,
+    "=H-tt-pt"
+   ]
+  },
+  {
+   "name": "leg_FR",
+   "kind": "tube_sq",
+   "material": "steel",
+   "label": "Leg",
+   "args": {
+    "L": "=H-tt-pt",
+    "size": "1.5x1.5x11ga"
+   },
+   "rot": [
+    0,
+    -90,
+    0
+   ],
+   "at": [
+    33,
+    3,
+    0
+   ]
+  },
+  {
+   "name": "mount_BL",
+   "kind": "plate",
+   "material": "steel",
+   "label": "Leg mount plate",
+   "args": {
+    "L": "=P",
+    "W": "=P",
+    "t": "=pt"
+   },
+   "at": [
+    1,
+    19,
+    "=H-tt-pt"
+   ]
+  },
+  {
+   "name": "leg_BL",
+   "kind": "tube_sq",
+   "material": "steel",
+   "label": "Leg",
+   "args": {
+    "L": "=H-tt-pt",
+    "size": "1.5x1.5x11ga"
+   },
+   "rot": [
+    0,
+    -90,
+    0
+   ],
+   "at": [
+    3,
+    21,
+    0
+   ]
+  },
+  {
+   "name": "mount_BR",
+   "kind": "plate",
+   "material": "steel",
+   "label": "Leg mount plate",
+   "args": {
+    "L": "=P",
+    "W": "=P",
+    "t": "=pt"
+   },
+   "at": [
+    31,
+    19,
+    "=H-tt-pt"
+   ]
+  },
+  {
+   "name": "leg_BR",
+   "kind": "tube_sq",
+   "material": "steel",
+   "label": "Leg",
+   "args": {
+    "L": "=H-tt-pt",
+    "size": "1.5x1.5x11ga"
+   },
+   "rot": [
+    0,
+    -90,
+    0
+   ],
+   "at": [
+    33,
+    21,
+    0
+   ]
+  }
+ ],
+ "joints": [
+  {
+   "type": "welded",
+   "a": "leg_FL",
+   "b": "mount_FL",
+   "weld": "1/8 fillet all around"
+  },
+  {
+   "type": "bolted",
+   "parts": [
+    "mount_FL",
+    "top"
+   ],
+   "at": [
+    1.6,
+    4.4,
+    "=H-tt/2"
+   ],
+   "axis": [
+    0,
+    0,
+    1
+   ],
+   "bolt": "1/4-20 x 1-1/2 in grade 5 zinc hex bolt",
+   "qty": 1
+  },
+  {
+   "type": "bolted",
+   "parts": [
+    "mount_FL",
+    "top"
+   ],
+   "at": [
+    4.4,
+    1.6,
+    "=H-tt/2"
+   ],
+   "axis": [
+    0,
+    0,
+    1
+   ],
+   "bolt": "1/4-20 x 1-1/2 in grade 5 zinc hex bolt",
+   "qty": 1
+  },
+  {
+   "type": "welded",
+   "a": "leg_FR",
+   "b": "mount_FR",
+   "weld": "1/8 fillet all around"
+  },
+  {
+   "type": "bolted",
+   "parts": [
+    "mount_FR",
+    "top"
+   ],
+   "at": [
+    31.6,
+    4.4,
+    "=H-tt/2"
+   ],
+   "axis": [
+    0,
+    0,
+    1
+   ],
+   "bolt": "1/4-20 x 1-1/2 in grade 5 zinc hex bolt",
+   "qty": 1
+  },
+  {
+   "type": "bolted",
+   "parts": [
+    "mount_FR",
+    "top"
+   ],
+   "at": [
+    34.4,
+    1.6,
+    "=H-tt/2"
+   ],
+   "axis": [
+    0,
+    0,
+    1
+   ],
+   "bolt": "1/4-20 x 1-1/2 in grade 5 zinc hex bolt",
+   "qty": 1
+  },
+  {
+   "type": "welded",
+   "a": "leg_BL",
+   "b": "mount_BL",
+   "weld": "1/8 fillet all around"
+  },
+  {
+   "type": "bolted",
+   "parts": [
+    "mount_BL",
+    "top"
+   ],
+   "at": [
+    1.6,
+    22.4,
+    "=H-tt/2"
+   ],
+   "axis": [
+    0,
+    0,
+    1
+   ],
+   "bolt": "1/4-20 x 1-1/2 in grade 5 zinc hex bolt",
+   "qty": 1
+  },
+  {
+   "type": "bolted",
+   "parts": [
+    "mount_BL",
+    "top"
+   ],
+   "at": [
+    4.4,
+    19.6,
+    "=H-tt/2"
+   ],
+   "axis": [
+    0,
+    0,
+    1
+   ],
+   "bolt": "1/4-20 x 1-1/2 in grade 5 zinc hex bolt",
+   "qty": 1
+  },
+  {
+   "type": "welded",
+   "a": "leg_BR",
+   "b": "mount_BR",
+   "weld": "1/8 fillet all around"
+  },
+  {
+   "type": "bolted",
+   "parts": [
+    "mount_BR",
+    "top"
+   ],
+   "at": [
+    31.6,
+    22.4,
+    "=H-tt/2"
+   ],
+   "axis": [
+    0,
+    0,
+    1
+   ],
+   "bolt": "1/4-20 x 1-1/2 in grade 5 zinc hex bolt",
+   "qty": 1
+  },
+  {
+   "type": "bolted",
+   "parts": [
+    "mount_BR",
+    "top"
+   ],
+   "at": [
+    34.4,
+    19.6,
+    "=H-tt/2"
+   ],
+   "axis": [
+    0,
+    0,
+    1
+   ],
+   "bolt": "1/4-20 x 1-1/2 in grade 5 zinc hex bolt",
+   "qty": 1
+  }
+ ],
+ "dims": [
+  {
+   "label": "length",
+   "v": "=TL",
+   "view": "top",
+   "axis": "h"
+  },
+  {
+   "label": "width",
+   "v": "=TW",
+   "view": "top",
+   "axis": "v"
+  },
+  {
+   "label": "height",
+   "v": "=H",
+   "view": "front",
+   "axis": "v"
+  }
+ ]
+}

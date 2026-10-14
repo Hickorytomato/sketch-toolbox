@@ -13,12 +13,17 @@ def frac(v):
 L=[f"HAND-TOOL / SHOP PLAN - {d.get('title')}   (units {U}"+("; measure your actual plywood thickness and update the spec)" if any(rules.mcls(f.get("material"))=="plywood" for f in d["flats"]) else ")"),f"Build {d.get('build_id','?')}   All sizes are FINISHED SIZES (cut to the line; no extra for planing unless noted).",""]
 for fl_ in d.get("flags",[]): L.append("!! "+fl_)
 for sf in rules.safety(d,F): L.append("!! "+sf)
-if d.get("flags") or rules.safety(d,F): L.append("")
+_md={}
+for h in d.get("hole_specs",[]):
+    if h.get("match_drill"): _md.setdefault((h["match_drill"]["template"],tuple(h["match_drill"]["drill"]),h["d_in"],h["bolt"]),0); _md[(h["match_drill"]["template"],tuple(h["match_drill"]["drill"]),h["d_in"],h["bolt"])]+=1
+for (tp,dr,dd,bo),n_ in _md.items(): L.append(f"!! MATCH-DRILL: {tp} and {', '.join(dr)} come off different machines. Clamp {tp} in its final place on {', '.join(dr)} and drill the {n_} hole(s) for the {bo} ({dd:.3f} in) through {tp}'s holes, so they line up exactly. Holes are loose-fit for the same reason.")
+if d.get("flags") or rules.safety(d,F) or _md: L.append("")
 _buy=[r for r in d.get("cutlist",[]) if "BUY" in str(r.get("notes",""))]
 if _buy:
     L.append("0. BUY (store-bought - not printed or cut from sheet):")
     for r in _buy: L.append(f'   - {r["qty"]} x {r["part"]}: {r["material"]}, {r["length"]}  ({r.get("est. cost","")})')
     L.append("")
+TAG=rules.part_tags(d)
 SP=d.get("stock_plan") or []
 if SP:
     sk=d.get("saw_kerf",{}); L.append(f'LUMBER CUT LIST (kerf {sk.get("kerf_in",0):.3f} in per cut from: {sk.get("src","?")}). Grain runs along the length of every board.')
@@ -26,13 +31,13 @@ if SP:
         tot=sum(b["stock"] for b in st_["boards"]); used=sum(sum(p_[1] for p_ in b["parts"]) for b in st_["boards"])
         L.append(f'   {st_["section"]}: buy {len(st_["boards"])} board(s) - yield {100*used/max(tot,1e-9):.0f}%')
         for k,b in enumerate(st_["boards"]):
-            L.append(f'     board {k+1}: {b["stock"]/12:g} ft ({b["stock"]:g} in) -> '+", ".join(f'{n} {l:.3f}"{frac(l)}' for n,l in b["parts"])+f'  [+{len(b["parts"])} kerf = {b["used_with_kerf"]:.3f} in, offcut {b["offcut"]:.2f} in]'+(f' ({b["note"]})' if b.get("note") else ""))
+            L.append(f'     board {k+1}: {b["stock"]/12:g} ft ({b["stock"]:g} in) -> '+", ".join(f'[{TAG.get(n,"?")}] {n} {l:.3f}"{frac(l)}' for n,l in b["parts"])+f'  [+{len(b["parts"])} kerf = {b["used_with_kerf"]:.3f} in, offcut {b["offcut"]:.2f} in]'+(f' ({b["note"]})' if b.get("note") else ""))
     L.append("")
 if d["flats"]:
   L.append("Sheet parts: face grain runs along each part's first (long) dimension." if d.get("domain")=="wood" else "")
   L.append("1. BREAK DOWN THE SHEETS (circular saw + straightedge or table saw). Rip to width first, then crosscut to length:" if d.get("domain")=="wood" else "1. FLAT PARTS (plasma/laser files in FOR_*/, or lay out, saw and drill by hand):")
   for f in sorted(d["flats"],key=lambda f:-f["w"]*f["h"]):
-    L.append(f'   - {f["name"]:10} {f3(max(f["w"],f["h"]))}{frac(max(f["w"],f["h"]))} x {f3(min(f["w"],f["h"]))}{frac(min(f["w"],f["h"]))}  from {f.get("thickness")} {f.get("material")}')
+    L.append(f'   - {f["name"]:10} {f3(max(f["w"],f["h"]))}{frac(max(f["w"],f["h"]))} x {f3(min(f["w"],f["h"]))}{frac(min(f["w"],f["h"]))}  from {f.get("thickness")} {f.get("material")}  [tag {TAG.get(f["name"],"?")}]')
 pk=[(f,p) for f in d["flats"] for p in f.get("pockets",[])]
 if pk:
     L+=["","2. LAY OUT AND CUT THE DADOS / RABBETS (mark both edges of each with a knife, test-fit with an offcut):"]
