@@ -216,13 +216,15 @@ if os.path.exists(pj):
     for r_ in json.load(open(pj))["parts"]:
         for pc in r_["pieces"]: SRC_.append(dict(line=f'filament {pc["name"]}',usd=float(pc.get("cost") or 0),source="PrusaSlicer (print.json)"))
 SRC_.append(dict(line="labor",usd=round(lab),source=f'machines.json shop labor_rate {shop.get("labor_rate",75)}/h; hours: cut minutes from gcode*/*.json (nest + G-code), other hours per-part rates in machines.json shop'))
-Q=dict(build_id=BID,sources=SRC_,material_est=round(mat,2),printer_hours=pm,labor_hours=hrs,labor_est=round(lab),subtotal=round(sub),margin_pct=shop.get("margin_pct",25),price_est=round(price),note="ESTIMATE ONLY: edit bin/prices.json and machines.json 'shop'")
+import buy as _buy; BUY=_buy.stock_buy(d,O)   # v1.0.6: whole boards/sheets/drops you actually buy, with offcuts
+Q=dict(build_id=BID,sources=SRC_,stock_bought=BUY,material_est=round(mat,2),printer_hours=pm,labor_hours=hrs,labor_est=round(lab),subtotal=round(sub),margin_pct=shop.get("margin_pct",25),price_est=round(price),note="ESTIMATE ONLY: edit bin/prices.json and machines.json 'shop'")
 json.dump(Q,open(f"{O}/quote.json","w"),indent=1)
 # ---- shopping list: everything you buy (store-bought stock, hardware, sheet goods/lumber/metal to cut from)
 with open(f"{O}/shopping_list.csv","w",newline="") as fh:
     w=csv.writer(fh); w.writerow(["item","qty","size","why","est. cost"])
+    for l_ in BUY["lines"]: w.writerow([l_["item"],l_["qty"],"whole stock",f'uses {l_["used"]}; offcut {l_["offcut"]}',"" if l_["usd"] is None else f'~${l_["usd"]:.2f}'])
     for r_ in d["cutlist"]:
-        if r_.get("stock")=="print": continue
+        if r_.get("stock")=="print" or (r_.get("mark") in BUY["covered"] and r_.get("stock")!="buy"): continue
         why="hardware" if r_.get("mark")=="HW" else ("buy as-is" if r_.get("stock")=="buy" else f'raw stock for {", ".join(r_.get("names",[]))}')
         w.writerow([r_["material"] if r_.get("mark")=="HW" or r_.get("stock")=="buy" else f'{r_["material"]} ({r_["part"]})',r_["qty"],r_.get("length",""),why,r_.get("est. cost","")])
 # ---- BOM csv + pdf
@@ -235,7 +237,12 @@ c.setFont("Helvetica",8)
 for r in d["cutlist"]:
     y-=13
     for x,h in zip(X,cols): c.drawString(x*inch,y,str(r.get(h,""))[:24 if h in("notes","finish") else 22])
-y-=24; c.setFont("Helvetica-Bold",10); c.drawString(0.5*inch,y,f"Total weight ~{tw:.1f} lb    Material ~${mat}"); y-=20
+if BUY["lines"]:
+    y-=22; c.setFont("Helvetica-Bold",9); c.drawString(0.5*inch,y,"STOCK TO BUY (whole boards / sheets / plate drops) - used - offcut"); c.setFont("Helvetica",8)
+    for l_ in BUY["lines"]:
+        y-=12; c.drawString(0.5*inch,y,f'{l_["qty"]} x {l_["item"]}'[:60]); c.drawString(4.3*inch,y,f'uses {l_["used"]}'[:44]); c.drawString(7.0*inch,y,("" if l_["usd"] is None else f'${l_["usd"]:.2f}')+(f'  (offcut {l_["offcut"]})' if len(l_["offcut"])<30 else "")[:40])
+    y-=12; c.setFont("Helvetica-Oblique",8); c.drawString(0.5*inch,y,f'Whole stock ${BUY["total"]:.2f} vs ${sum(float(r_.get("cost_usd") or 0) for r_ in d["cutlist"] if r_.get("mark") in BUY["covered"]):.2f} for the length/area used; the customer quote bills whole stock.')
+y-=24; c.setFont("Helvetica-Bold",10); c.drawString(0.5*inch,y,f"Total weight ~{tw:.1f} lb    Material ~${mat} (used)"+(f'  /  ~${round(mat-sum(float(r_.get("cost_usd") or 0) for r_ in d["cutlist"] if r_.get("mark") in BUY["covered"])+BUY["total"],2)} (whole stock bought)' if BUY["lines"] else "")); y-=20
 c.setFont("Helvetica",9)
 for k,v in hrs.items(): c.drawString(0.7*inch,y,f"{k.replace('_',' ')}: {v} h"); y-=12
 c.setFont("Helvetica-Bold",10); y-=6

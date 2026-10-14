@@ -13,7 +13,11 @@ PROF=ref.profile(); SHOP=PROF.get("shop",{}) or {}
 LP=json.load(open(f"{O}/live_prices.json")) if os.path.exists(f"{O}/live_prices.json") else {}
 RATE=SH.get("machine_rate_per_h",{}); LR=float(SH.get("labor_rate",75)); MG=float(SH.get("margin_pct",25))
 L=[]   # (section, description, qty, unit, rate, amount, source)
+import buy as _buy; BUY=_buy.stock_buy(d,O); COV={f'{r["part"]} ({r["material"]}) x{r["qty"]}' for r in d["cutlist"] if r.get("mark") in BUY["covered"] and r.get("stock")!="buy"}
+for l in BUY["lines"]:   # v1.0.6: bill the whole stock bought, not just the length used
+    L.append(("Materials",f'{l["item"]} (offcut {l["offcut"]})' if len(l["offcut"])<34 else l["item"]+f' (uses {l["used"]})',l["qty"],"ea",l["each"],l["usd"],l["source"]))
 for s in Q["sources"]:
+    if s["line"] in COV: continue
     if s["line"]=="labor" or s["line"].startswith("filament ") and False: continue
     if s["line"]=="labor": continue
     if s["usd"]==0 and "slicer" in s["source"]: continue   # printed parts are priced by their filament lines
@@ -44,6 +48,15 @@ for t,h in sorted(mach.items()):
 lh={k:v for k,v in Q.get("labor_hours",{}).items() if k!="cutting"}
 for k,h in lh.items():
     if h: L.append(("Labor",k.replace("_"," "),round(h,2),"h",LR,round(h*LR,2),"machines.json shop labor_rate x hours (shop per-part rates)"))
+import defaults as _df   # v1.0.6: flag every rate/price that is still a Sketch default
+def _isdef(sec,desc,src):
+    if sec=="Materials": return _df.src_default(src)
+    if sec=="Machine time": return _df.is_default("machine_rate."+desc.split()[0],RATE.get(desc.split()[0],0))
+    if sec=="Labor": return _df.is_default("labor_rate",LR)
+    return False
+DEF=[i for i,x in enumerate(L) if x[5] is not None and _isdef(x[0],x[1],x[6])]
+L=[(a_,b_,q_,u_,r_,am_,s_+(" [SKETCH DEFAULT - not your price yet]" if i in DEF else "")) for i,(a_,b_,q_,u_,r_,am_,s_) in enumerate(L)]
+MGDEF=_df.is_default("margin_pct",MG)
 sub=round(sum(x[5] for x in L if x[5] is not None),2); mg=round(sub*MG/100,2)
 tax_pct=SHOP.get("tax_pct"); tax=round((sub+mg)*float(tax_pct)/100,2) if tax_pct is not None else None
 total=round(sub+mg+(tax or 0),2)
@@ -53,7 +66,7 @@ today=datetime.date.today(); vd=int(SHOP.get("valid_days",30)); valid=today+date
 terms=SHOP.get("terms") or "This is an estimate. Final price is confirmed in writing before work starts. Materials are priced on the date shown and may change."
 qn=f'Q-{d.get("build_id","x")}-{today.strftime("%y%m%d")}'
 out=dict(quote_no=qn,date=str(today),valid_until=str(valid),valid_days=vd,build_id=d.get("build_id"),shop=SHOP,lines=[dict(section=a,desc=b,qty=c,unit=u,rate=r,amount=am,source=s) for a,b,c,u,r,am,s in L],
-         alternates_not_billed=ALT,subtotal=sub,margin_pct=MG,margin=mg,tax_pct=tax_pct,tax=tax,total=total,lead_time=lead,terms=terms,estimate=True,unpriced=[x[1] for x in L if x[5] is None])
+         alternates_not_billed=ALT,stock_bought=BUY,subtotal=sub,margin_pct=MG,margin=mg,tax_pct=tax_pct,tax=tax,total=total,lead_time=lead,terms=terms,estimate=True,defaults_flagged=[L[i][1] for i in DEF]+(["margin_pct"] if MGDEF else []),set_rates_cmd=_df.SET,unpriced=[x[1] for x in L if x[5] is None])
 json.dump(out,open(f"{O}/customer_quote.json","w"),indent=1)
 from reportlab.lib.pagesizes import letter; from reportlab.pdfgen import canvas; from reportlab.lib.units import inch; from reportlab.lib.utils import ImageReader
 from reportlab.lib.colors import HexColor,black
@@ -71,19 +84,32 @@ def top():
     c.setFont("Helvetica",9)
     for i,t in enumerate((f"Quote {qn}",f"Date {today}",f"Valid until {valid} ({vd} days)",f"Page {pg[0]}")): c.drawRightString(PW-0.5*inch,y-14-11*i,t)
     return PH-1.55*inch
-y=top(); c.setFont("Helvetica-Bold",10); c.drawString(0.5*inch,y,"For: ________________________________"); c.drawString(4.2*inch,y,"Project: "+(d.get("title") or "")[:45]); y-=22
+y=top(); c.setFont("Helvetica-Bold",10); c.drawString(0.5*inch,y,"For: ________________________________"); y0=y
+for i_,tl in enumerate(textwrap.wrap("Project: "+(d.get("title") or ""),48) or ["Project:"]): c.drawString(4.2*inch,y0-12*i_,tl)
+y=y0-12*max(1,len(textwrap.wrap("Project: "+(d.get("title") or ""),48)))-10
 c.setFont("Helvetica-Bold",9)
 for x,t in ((0.5,"Item"),(4.5,"Qty"),(5.2,"Rate"),(6.3,"Amount")): c.drawString(x*inch,y,t)
 y-=4; c.line(0.5*inch,y,PW-0.5*inch,y); y-=12; sec=None
 for a,b,q,u,r,am,s in L:
     if y<1.9*inch: c.showPage(); y=top()
     if a!=sec: c.setFont("Helvetica-Bold",9.5); c.drawString(0.5*inch,y,a); y-=12; sec=a
-    c.setFont("Helvetica",9); c.drawString(0.65*inch,y,b[:62]); c.drawString(4.5*inch,y,f"{q:g} {u}"); c.drawString(5.2*inch,y,"-" if r is None else f"${r:,.2f}"); c.drawRightString(7.2*inch,y,"not priced" if am is None else f"${am:,.2f}")
-    c.setFont("Helvetica",6.5); c.drawString(0.65*inch,y-8,("source: "+s)[:120]); y-=20
+    bl=textwrap.wrap(b,60) or [""]
+    c.setFont("Helvetica",9); c.drawString(0.65*inch,y,bl[0]); c.drawString(4.5*inch,y,f"{q:g} {u}"); c.drawString(5.2*inch,y,"-" if r is None else f"${r:,.2f}"); c.drawRightString(7.2*inch,y,"not priced" if am is None else f"${am:,.2f}")
+    if "SKETCH DEFAULT" in s: c.setFillColor(HexColor("#c0392b")); c.setFont("Helvetica-Bold",9); c.drawString(7.25*inch,y,"*"); c.setFillColor(black); c.setFont("Helvetica",9)
+    for tl in bl[1:]: y-=10; c.drawString(0.75*inch,y,tl)
+    c.setFont("Helvetica",6.5)
+    for tl in textwrap.wrap("source: "+s,135)[:3]: y-=8; c.drawString(0.65*inch,y,tl)
+    y-=12
 y-=4; c.line(4.4*inch,y,PW-0.5*inch,y); y-=14
-for t,v in (("Subtotal",sub),(f"Shop overhead & margin ({MG:g}%)",mg),(f"Tax ({tax_pct:g}%)" if tax_pct is not None else "Tax (rate not set: ________ )",tax),("TOTAL (estimate)",total)):
+for t,v in (("Subtotal",sub),(f"Shop overhead & margin ({MG:g}%){' *' if MGDEF else ''}",mg),(f"Tax ({tax_pct:g}%)" if tax_pct is not None else "Tax (rate not set: ________ )",tax),("TOTAL (estimate)",total)):
     c.setFont("Helvetica-Bold" if t.startswith("TOTAL") else "Helvetica",10 if t.startswith("TOTAL") else 9); c.drawString(4.4*inch,y,t); c.drawRightString(7.2*inch,y,"________" if v is None else f"${v:,.2f}"); y-=14
-if out["unpriced"]: c.setFont("Helvetica-Oblique",8); c.drawString(0.5*inch,y,f'Not priced yet (not in the total): {", ".join(out["unpriced"])[:110]}'); y-=12
+if out["defaults_flagged"]:
+    c.setFillColor(HexColor("#c0392b")); c.setFont("Helvetica-Bold",8)
+    c.drawString(0.5*inch,y,f'* {len(out["defaults_flagged"])} rate(s)/price(s) are SKETCH DEFAULTS, not your shop\'s numbers. Set yours (1 minute): {_df.SET}'); y-=12; c.setFillColor(black)
+if out["unpriced"]:
+    c.setFont("Helvetica-Oblique",8)
+    for tl in textwrap.wrap(f'Not priced yet (not in the total): {"; ".join(out["unpriced"])}',125): c.drawString(0.5*inch,y,tl); y-=10
+    y-=2
 y-=8; c.setFont("Helvetica-Bold",9.5); c.drawString(0.5*inch,y,"Lead time"); c.setFont("Helvetica",9); y-=12
 for tl in textwrap.wrap(lead,110): c.drawString(0.5*inch,y,tl); y-=11
 y-=4; c.setFont("Helvetica-Bold",9.5); c.drawString(0.5*inch,y,"Terms"); c.setFont("Helvetica",9); y-=12
