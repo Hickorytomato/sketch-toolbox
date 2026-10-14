@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Sketch toolbox installer v1.0.6 (fast first sketch: light deps first, heavy tools in the background). Idempotent. Root: $SKETCH_ROOT (default /workspace/sketch).
+# Sketch toolbox installer v1.0.6.1 (toolbox v1.0.6; adds embreex/earcut/lxml that trimesh needs; fast first sketch: light deps first, heavy tools in the background). Idempotent. Root: $SKETCH_ROOT (default /workspace/sketch).
 # Downloads the v1.0.5 release tarball, checks its sha256, installs scripts -> $ROOT/bin and tests -> $ROOT/design_tests,
 # keeps your settings, removes scripts that are no longer in this version, sets up the light venv deps, then installs
 # PrusaSlicer, Blender and the PDF/video libs in the background (bin/install_heavy.sh; SKETCH_INSTALL_WAIT=1 = wait for them).
@@ -57,8 +57,8 @@ PY
 PY="$ROOT/.venv/bin/python"
 [ -x "$PY" ] || python3 -m venv "$ROOT/.venv"
 # v1.0.6 FAST FIRST SKETCH: only what design.sh --sketch needs, now; the heavy parts (slicer, Blender renders, video, PDFs) in the background
-"$PY" -c "import trimesh,matplotlib,PIL,scipy,ezdxf,shapely,cadquery,manifold3d,rtree,networkx,fast_simplification,pymeshfix" 2>/dev/null || \
-  "$PY" -m pip install -q trimesh matplotlib pillow numpy scipy ezdxf shapely cadquery manifold3d rtree networkx fast_simplification pymeshfix
+"$PY" -c "import trimesh,matplotlib,PIL,scipy,ezdxf,shapely,cadquery,manifold3d,rtree,networkx,fast_simplification,pymeshfix,embreex,mapbox_earcut,lxml,imageio_ffmpeg" 2>/dev/null || \
+  "$PY" -m pip install -q trimesh matplotlib pillow numpy scipy ezdxf shapely cadquery manifold3d rtree networkx fast_simplification pymeshfix embreex mapbox_earcut lxml imageio-ffmpeg   # embreex: fast ray tests (without it trimesh falls back to a ray tracer that runs out of memory in the ship gate); earcut/lxml: trimesh polygons + 3MF
 echo "python deps for --sketch ok"
 echo "Sketch toolbox ready at $ROOT: design.sh <project> --sketch works now"
 if [ "${SKETCH_INSTALL_WAIT:-0}" = 1 ]; then bash "$ROOT/bin/install_heavy.sh"
