@@ -120,7 +120,7 @@ if "hand" in FOR:
 how+=["CAD  (step/): .step opens in Fusion, SolidWorks, Onshape, FreeCAD; model.stl in anything.","",
       "EVERYTHING IS AN ESTIMATE: simulate G-code, dry-run, check prints in your slicer, verify dimensions before cutting."]
 sys.path.insert(0,os.path.dirname(os.path.abspath(__file__))); import rules as _rules
-_x=[]
+_x=[f"!! LOAD: {d['load_note']}"] if d.get("load_note") else []
 for fl_ in d.get("flags",[]): _x.append("!! "+fl_)
 for sf in _rules.safety(d,F): _x.append("!! "+sf)
 if any(m_ in FOR for m_ in ("plasma","laser","router")) and d.get("flats"): _x.append("TIP: do a test cut and measure kerf: cut a 2 in square with no kerf comp, measure it, run tools_setup.py --kerf-test <machine> <material> <thickness> --drawn 2 --measured <yours>.")

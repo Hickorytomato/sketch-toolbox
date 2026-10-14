@@ -202,7 +202,19 @@ def custom_stl(file,**k):
             t=tempfile.NamedTemporaryFile(suffix=".stl",delete=False); trimesh.util.concatenate(r[0]).export(t.name); f=t.name
     except Exception: pass
     s,meta=imported(f,**k); meta["section"]=f"custom {os.path.basename(file)}"; return s,meta
-KINDS.update(imported=imported,profile=profile,custom_stl=custom_stl,bent_plate=bent_plate)
+def relief_vase(r,h,wall,floor=2.0,relief=(),res=0.3,**k):
+    """v1.0.6 round vase/cup/cylinder (open top) with images/text embossed (+depth) or debossed (-depth) INTO its outer wall.
+    relief: [{text|image, angle (deg, 90 = hero side), z, w, h (mm), depth (mm, + raised / - sunk), invert, blur}] - see relief.py.
+    One watertight displaced mesh: no boolean fuse, small memory. Origin = axis at the bottom (like cylinder)."""
+    import relief as _rl, tempfile
+    relief=[dict(x,image=_path(x["image"])) if x.get("image") else dict(x) for x in relief]
+    m,info=_rl.relief_vase(r,h,wall,floor,relief,res)
+    t=tempfile.NamedTemporaryFile(suffix="_relief.stl",delete=False); m.export(t.name)
+    s,meta=imported(t.name,**{k_:v for k_,v in k.items() if k_ in("material","stock")})
+    lo=m.bounds[0]; s=s.translate(cq.Vector(*map(float,lo)))
+    meta.update(stock="print",section=f"relief vase r{r:g} x {h:g} ({len(info['bands'])} relief(s))",mesh_file=t.name,mesh_offset=[float(x) for x in lo],relief_bands=[dict(b,R=float(r)) for b in info["bands"]],relief_info=info)
+    return s,meta
+KINDS.update(imported=imported,profile=profile,custom_stl=custom_stl,bent_plate=bent_plate,relief_vase=relief_vase)
 
 # ---------- soft-edge helpers (printed parts read as products, not blocks) ----------
 def soften(s,r=1.0,sel=None,chamfer_ok=True):

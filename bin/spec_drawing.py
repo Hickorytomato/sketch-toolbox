@@ -21,7 +21,8 @@ def hlr(dirv,xd):
             if c.IsNull(): continue
             BRepLib.BuildCurves3d_s(c,1e-4)
             for e in cq.Shape.cast(c).Edges():
-                n=max(2,int(e.Length()/(0.1 if U=="in" else 2))+2); pts=[e.positionAt(t) for t in [i/(n-1) for i in range(n)]]
+                try: n=max(2,int(e.Length()/(0.1 if U=="in" else 2))+2); pts=[e.positionAt(t) for t in [i/(n-1) for i in range(n)]]
+                except Exception: continue   # degenerate HLR edge (meshed parts, e.g. relief_vase CAD copy): skip it, keep the drawing
                 out[key].append([(p.x,p.y) for p in pts])
     return out
 bb=comp.BoundingBox(); ext={"x":(bb.xmin,bb.xmax),"y":(bb.ymin,bb.ymax),"z":(bb.zmin,bb.zmax)}

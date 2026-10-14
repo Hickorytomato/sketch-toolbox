@@ -218,6 +218,15 @@ def enrich(out,spec,META,JL,U,STOCK):
                  filler=fl,filler_basis=why,prep=prep_for(min(ts) if ts else 0.125,kind),t_min_in=min(ts) if ts else None,
                  cjp="cjp" in txt or "full pen" in txt,wps="Your WPS governs: these are starting points, not a qualified procedure (AWS D1.1 / ASME IX).",
                  base=mats)
+        if kind=="groove":
+            gs="bevel" if "bevel" in txt else "j" if re.search(r"\bj[- ]groove",txt) else "u" if re.search(r"\bu[- ]groove",txt) else "square" if ("square" in txt or "butt" in txt and "v" not in txt.replace("bevel","")) else "v"
+            if "flare" in txt: gs="flare-"+("bevel" if gs=="bevel" else "v")
+            ang=re.search(r"(\d+)\s*(?:deg|°)",txt); ro=re.search(r"(?:root|gap)\s*(?:opening\s*)?([\d/.]+)",txt); dp=re.search(r"\(([\d/.]+)\)",w["weld"])
+            w.update(groove=gs,groove_angle=int(ang[1]) if ang else (None if gs in("square",) else (45 if "bevel" in gs else 60)),
+                     root_opening=ro[1] if ro else None,depth=dp[1] if dp else None,break_arrow=gs in("bevel","j","flare-bevel"),
+                     back_weld="back weld" in txt or "backing" in txt or "back-gouge" in txt)
+            if w["cjp"]: w["size"]=None   # A2.4: CJP groove with no size shown = complete joint penetration
+        w["field"]="field" in txt; w["contour"]="flush" if "flush" in txt else "convex" if "convex" in txt else None
         if w["cjp"]: w["flag"]="CJP weld: needs a qualified WPS and backing/back-gouge - not certified by Sketch"
     # hole specs from bolted joints
     hs=[]
@@ -233,6 +242,8 @@ def enrich(out,spec,META,JL,U,STOCK):
     # engineer / code flags
     txt=" ".join([str(spec.get("ask","")),str(spec.get("title","")),str(spec.get("name",""))]+[str(p.get("label","")) for p in spec.get("parts",[])]).lower()
     out["flags"]=[]
+    import loadnote as _ln
+    out["load_note"]=_ln.NOTE if _ln.needed(spec) else None; out["load_note_why"]=_ln.why(spec) if out["load_note"] else None
     if re.search(STRUCT,txt) or spec.get("structural"): out["flags"].append("ENGINEER/CODE: this item carries people or structural/lifting/pressure load. Sketch does not do structural or code design: have a licensed engineer or your local code official verify sizes, welds and fasteners before use. Nothing here is stamped.")
     if re.search(FRAMING,txt): out["flags"].append("FRAMING: spans, headers and stud spacing come from code tables only (IRC R602.3(5), R602.7, AWC span tables) - reference, not design. Verify with your local code official.")
     if any(w.get("cjp") for w in out.get("welds",[])): out["flags"].append("CJP welds present: qualified WPS and welder required (AWS D1.1).")

@@ -207,7 +207,9 @@ for nm,s in P.items():
     m=META[nm]; sol=s.val(); vol=sol.Volume()*toin**3
     cq.exporters.export(s,f"{V}/step/{nm}.step"); cq.exporters.export(s,f"{V}/stl/{nm}.stl",tolerance=0.01 if U=="in" else 0.05)
     ar=m.get("_args",{})
-    if m.get("kind") in("imported","custom_stl") and str(ar.get("file","")).lower().rsplit(".",1)[-1] not in("step","stp","iges","igs","brep"):
+    if m.get("mesh_file"):   # v1.0.6 relief_vase: the displaced mesh IS the print/render mesh (CAD copy is decimated, STEP/drawings only)
+        om=trimesh.load(m["mesh_file"],force="mesh"); bb_=sol.BoundingBox(); om.apply_translation(-om.bounds[0]); om.apply_translation([bb_.xmin,bb_.ymin,bb_.zmin]); om.export(f"{V}/stl/{nm}.stl")
+    elif m.get("kind") in("imported","custom_stl") and str(ar.get("file","")).lower().rsplit(".",1)[-1] not in("step","stp","iges","igs","brep"):
         # renders + printing use the ORIGINAL mesh (scaled/placed like the CAD copy); the sewn CAD copy is only for STEP/drawings
         om=trimesh.load(kit._path(ar["file"]),force="mesh"); om.apply_translation(-om.bounds[0]); sc_=ar.get("scale",1.0)
         om.apply_scale([ar.get("sx") or sc_,ar.get("sy") or sc_,ar.get("sz") or sc_]); bb_=sol.BoundingBox(); om.apply_translation([bb_.xmin,bb_.ymin,bb_.zmin]); om.export(f"{V}/stl/{nm}.stl")
@@ -237,6 +239,7 @@ for nm,s in P.items():
                         z0=float(_at[2])+float(_t.get("z",0)),z1=float(_at[2])+float(_t.get("z",0))+float(_t.get("pitch",2))*(float(_t.get("turns",2))+1)))
         printparts.append(dict(name=nm,stl=f"stl/{nm}.stl",volume_mm3=round(sol.Volume() if U=="mm" else sol.Volume()*16387.064,1),
             material=m.get("material","PLA"),orient=m.get("print_orient",[0,0,0]),infill=m.get("infill",20),thread_bands=_tb,
+            relief_bands=[dict(b_,c=[float(x) for x in (_MEMB.get(nm,{}).get("at") or [0,0,0])[:2]],zb=float((_MEMB.get(nm,{}).get("at") or [0,0,0])[2])) for b_ in m.get("relief_bands",[])],
             **{k_:m[k_] for k_ in ("assembly","bodies","clearance") if m.get(k_) is not None}))
         # weight estimate for printed parts: filament density x (shell + infill fraction) ~ 45% solid at 20% infill
         _gcc={"PLA":1.24,"PETG":1.27,"TPU":1.21,"ABS":1.04,"ASA":1.07}.get(_mat.upper(),1.24)

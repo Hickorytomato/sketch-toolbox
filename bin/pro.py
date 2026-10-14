@@ -155,6 +155,14 @@ def gate_revision(d,F,res):
         if dr and f"Drawn: {dr}" not in txt: res("revision","drawings.pdf","FAIL","drawn-by from your profile is missing"); ok=False
     W=d.get("welds",[]); MW=M.get("welds",[])
     if len(W)!=len(MW) or any(w.get("side","arrow")!=m_.get("side") or str(w.get("size"))!=str(m_.get("size")) for w,m_ in zip(W,MW)): res("revision","weld sheet","FAIL",f"weld callout sheet ({len(MW)}) does not match the model welds ({len(W)}) side/size"); ok=False
+    for w,m_ in zip(W,MW):   # v1.0.6: AWS A2.4 symbol elements actually drawn
+        e=set(m_.get("elements",[])); kind=w.get("type","fillet"); g=w.get("groove","v") if kind=="groove" else "fillet"
+        need={f"{g}:{s_}" for s_ in (("arrow","other") if w.get("side")=="both" else (w.get("side","arrow"),))}
+        if w.get("all_around"): need.add("all_around")
+        if w.get("field"): need.add("field_flag")
+        if w.get("size") and not w.get("cjp"): need.add("size")
+        if w.get("break_arrow"): need.add("break_arrow")
+        if "elements" in m_ and need-e: res("revision",f'weld {m_["id"]}',"FAIL",f'AWS A2.4 symbol missing {sorted(need-e)} for "{w["weld"]}"'); ok=False
     if ok: res("revision","drawings.pdf","PASS",f'Rev {M["rev"]}, {M.get("pages")} sheets numbered "Sheet i of N", revision table '+(f'vs v{prev}: {"; ".join(M["revisions"][-1]["changes"])[:120]}' if prev else "first issue")+(f', {len(MW)} weld callout(s) W1..W{len(MW)} match the model' if MW else ""))
 def gate_explode(d,F,res):
     V=os.path.dirname(F); J=f"{V}/explode/explode.json"
@@ -323,7 +331,21 @@ def gate_buy(d,F,res):
         used=sum(float(r.get("cost_usd") or 0) for r in d["cutlist"] if r.get("mark") in R["covered"] and r.get("stock")!="buy")
         res("buy","stock","PASS",f'{got} whole board(s)/sheet(s)/drop(s) billed ${R["total"]:.2f} (length used would be ${used:.2f}); offcuts listed'+(f'; not priced: {R["unpriced"]}' if R["unpriced"] else ""))
 
-GATES=[gate_crossmachine,gate_buy,gate_cutday,gate_coupons,gate_learn,gate_prices,gate_quote,gate_revision,gate_explode]
+def gate_load(d,F,res):
+    """v1.0.6: load-bearing builds carry the one-line load note in HOW_TO_USE and on every drawing sheet."""
+    import loadnote as L; spec=json.load(open(f"{F}/spec.json"))
+    if not L.needed(spec): res("load","build","PASS","not load-bearing (no shelf/stand/seat/bracket/rack/hook/weight words): no load note needed"); return
+    ok=True; H=glob.glob(f"{F}/**/HOW_TO_USE.txt",recursive=True)
+    if not H or not all(L.NOTE in open(h).read() for h in H): res("load","HOW_TO_USE.txt","FAIL",f'load-bearing ({L.why(spec)}) but HOW_TO_USE lacks "{L.NOTE}"'); ok=False
+    D=glob.glob(f"{F}/**/drawings.pdf",recursive=True)
+    if D:
+        import subprocess as _sp
+        pages=[p_ for p_ in _sp.run(["pdftotext","-layout",D[0],"-"],capture_output=True,text=True).stdout.split("\f") if p_.strip()]
+        bad=[i+1 for i,p_ in enumerate(pages) if L.NOTE not in " ".join(p_.split())]
+        if bad: res("load","drawings.pdf","FAIL",f"load note missing on sheet(s) {bad[:6]}"); ok=False
+    else: res("load","drawings.pdf","FAIL","no drawings.pdf to carry the load note"); ok=False
+    if ok: res("load","build","PASS",f'load-bearing ({L.why(spec)}): "{L.NOTE}" in HOW_TO_USE and on all {len(pages)} drawing sheets')
+GATES=[gate_crossmachine,gate_buy,gate_cutday,gate_coupons,gate_learn,gate_prices,gate_quote,gate_revision,gate_explode,gate_load]
 def gate(ctx):
     for g in GATES:
         try: g(ctx["d"],ctx["F"],ctx["res"])

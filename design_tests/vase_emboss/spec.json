@@ -1,0 +1,85 @@
+{
+ "name": "vase_emboss",
+ "title": "Vase with embossed SKETCH text and a debossed flower (heightmap relief)",
+ "domain": "print",
+ "units": "mm",
+ "ask": "vase with raised text and a sunk flower",
+ "values": {
+  "filament": {
+   "v": "PLA",
+   "src": "user"
+  },
+  "r": {
+   "v": 30,
+   "src": "user",
+   "unit": "mm"
+  },
+  "h": {
+   "v": 80,
+   "src": "user",
+   "unit": "mm"
+  },
+  "wall": {
+   "v": 2.4,
+   "src": "user",
+   "unit": "mm"
+  }
+ },
+ "derived": {},
+ "parts": [
+  {
+   "name": "vase",
+   "kind": "relief_vase",
+   "material": "=filament",
+   "args": {
+    "r": "=r",
+    "h": "=h",
+    "wall": "=wall",
+    "floor": 2.4,
+    "res": 0.3,
+    "relief": [
+     {
+      "text": "SKETCH",
+      "angle": 90,
+      "z": 24,
+      "w": 56,
+      "h": 14,
+      "depth": 0.8
+     },
+     {
+      "image": "flower.png",
+      "angle": 90,
+      "z": 56,
+      "w": 26,
+      "h": 26,
+      "depth": -0.4
+     }
+    ]
+   },
+   "at": [
+    0,
+    0,
+    0
+   ]
+  }
+ ],
+ "joints": [],
+ "dims": [
+  {
+   "label": "overall H",
+   "v": "=h",
+   "view": "front",
+   "axis": "v"
+  },
+  {
+   "label": "dia",
+   "v": "=2*r",
+   "view": "top",
+   "axis": "h",
+   "span": [
+    "=-r",
+    "=r"
+   ]
+  }
+ ]
+}
