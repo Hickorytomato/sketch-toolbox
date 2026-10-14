@@ -1,0 +1,259 @@
+{
+ "name": "phone_holder",
+ "title": "Wall-mount phone holder",
+ "domain": "print",
+ "units": "mm",
+ "ask": "I want a 3D-printed wall-mount phone holder",
+ "values": {
+  "phone_w": {
+   "v": 82,
+   "src": "user",
+   "unit": "mm",
+   "note": "typical phone width incl. thin case"
+  },
+  "phone_t": {
+   "v": 14,
+   "src": "user",
+   "unit": "mm",
+   "note": "phone + case thickness"
+  },
+  "clear": {
+   "v": 1.0,
+   "src": "assumed",
+   "unit": "mm",
+   "note": "slide-in clearance"
+  },
+  "wall": {
+   "v": 2.8,
+   "src": "assumed",
+   "unit": "mm",
+   "note": "7 perimeters at 0.4 nozzle"
+  },
+  "back_h": {
+   "v": 80,
+   "src": "assumed",
+   "unit": "mm"
+  },
+  "lip_h": {
+   "v": 18,
+   "src": "assumed",
+   "unit": "mm",
+   "note": "front lip height"
+  },
+  "screw_d": {
+   "v": 4.2,
+   "src": "assumed",
+   "unit": "mm",
+   "note": "#8 / M4 wood screw clearance, countersunk"
+  },
+  "cable_w": {
+   "v": 14,
+   "src": "assumed",
+   "unit": "mm",
+   "note": "charging cable slot"
+  },
+  "printer": {
+   "v": "prusa_mk4",
+   "src": "assumed"
+  },
+  "filament": {
+   "v": "PETG",
+   "src": "user"
+  }
+ },
+ "derived": {
+  "W": "=phone_w+2*clear+2*wall",
+  "D": "=phone_t+2*clear"
+ },
+ "parts": [
+  {
+   "name": "back",
+   "kind": "pbox",
+   "group": "holder",
+   "material": "=filament",
+   "finish": "black_paint",
+   "args": {
+    "L": "=W",
+    "W": "=back_h",
+    "H": "=wall",
+    "r": 4
+   },
+   "features": {
+    "holes": [
+     {
+      "x": "=W/2",
+      "y": "=back_h-14",
+      "d": "=screw_d",
+      "csk": 8.5
+     },
+     {
+      "x": "=W/2",
+      "y": "=back_h*0.45",
+      "d": "=screw_d",
+      "csk": 8.5
+     }
+    ],
+    "text": [
+     {
+      "x": "=W/2",
+      "y": "=back_h*0.72",
+      "s": 6,
+      "txt": "SKETCH",
+      "depth": 0.6
+     }
+    ]
+   },
+   "rot": [
+    90,
+    0,
+    180
+   ],
+   "at": [
+    "=W",
+    0,
+    0
+   ]
+  },
+  {
+   "name": "shelf",
+   "kind": "pbox",
+   "group": "holder",
+   "material": "=filament",
+   "args": {
+    "L": "=W",
+    "W": "=D+2*wall",
+    "H": "=wall"
+   },
+   "features": {
+    "cutouts": [
+     {
+      "x": "=W/2-cable_w/2",
+      "y": "=wall+1",
+      "w": "=cable_w",
+      "h": "=D-2",
+      "r": 2
+     }
+    ]
+   },
+   "at": [
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "name": "lip",
+   "kind": "pbox",
+   "group": "holder",
+   "material": "=filament",
+   "args": {
+    "L": "=W",
+    "W": "=wall",
+    "H": "=lip_h"
+   },
+   "features": {},
+   "at": [
+    0,
+    "=wall+D",
+    0
+   ]
+  },
+  {
+   "name": "cheekL",
+   "kind": "pbox",
+   "group": "holder",
+   "material": "=filament",
+   "args": {
+    "L": "=wall",
+    "W": "=D+2*wall",
+    "H": "=lip_h+12"
+   },
+   "at": [
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "name": "cheekR",
+   "kind": "pbox",
+   "group": "holder",
+   "material": "=filament",
+   "args": {
+    "L": "=wall",
+    "W": "=D+2*wall",
+    "H": "=lip_h+12"
+   },
+   "at": [
+    "=W-wall",
+    0,
+    0
+   ]
+  }
+ ],
+ "joints": [
+  {
+   "type": "screws",
+   "n": 2,
+   "size": "#8 x 1-1/4 flat-head wood screw + wall anchors"
+  }
+ ],
+ "print": {
+  "holder": {
+   "orient": [
+    0,
+    0,
+    0
+   ],
+   "note": "prints upright: shelf on the bed, no supports"
+  }
+ },
+ "dims": [
+  {
+   "label": "overall W",
+   "v": "=W",
+   "view": "front",
+   "axis": "h"
+  },
+  {
+   "label": "back H",
+   "v": "=back_h",
+   "view": "front",
+   "axis": "v"
+  },
+  {
+   "label": "phone slot",
+   "v": "=phone_w+2*clear",
+   "view": "top",
+   "axis": "h",
+   "span": [
+    "=wall",
+    "=W-wall"
+   ]
+  },
+  {
+   "label": "slot depth",
+   "v": "=D",
+   "view": "side",
+   "axis": "h",
+   "span": [
+    "=wall",
+    "=wall+D"
+   ]
+  },
+  {
+   "label": "lip H",
+   "v": "=lip_h",
+   "view": "side",
+   "axis": "v"
+  }
+ ],
+ "render_rot": 180,
+ "history": [
+  {
+   "at": "2026-10-13T11:35:54",
+   "change": "phone_w=82 phone_t=14 filament=PETG",
+   "by": "user"
+  }
+ ]
+}

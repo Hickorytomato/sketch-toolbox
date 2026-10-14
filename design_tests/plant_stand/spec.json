@@ -1,0 +1,487 @@
+{
+ "name": "plant_stand",
+ "title": "Welded angle-iron plant stand",
+ "domain": "metal",
+ "units": "in",
+ "ask": "a welded angle iron plant stand",
+ "values": {
+  "S": {
+   "v": 16,
+   "src": "assumed",
+   "unit": "in",
+   "note": "top, outside square"
+  },
+  "H": {
+   "v": 24,
+   "src": "user",
+   "unit": "in",
+   "note": "overall height"
+  },
+  "ang": {
+   "v": "2x2x1/4",
+   "src": "user",
+   "note": "angle size (stock.json); a/ta follow it"
+  },
+  "shelf_z": {
+   "v": 8,
+   "src": "assumed",
+   "unit": "in",
+   "note": "lower stretcher height"
+  },
+  "plate_t": {
+   "v": 0.1345,
+   "src": "assumed",
+   "unit": "in",
+   "note": "10ga top plate"
+  }
+ },
+ "parts": [
+  {
+   "name": "top_front",
+   "kind": "angle",
+   "label": "Top frame",
+   "args": {
+    "L": "=S",
+    "size": "=ang"
+   },
+   "at": [
+    0,
+    0,
+    "=H-a"
+   ]
+  },
+  {
+   "name": "top_back",
+   "kind": "angle",
+   "label": "Top frame",
+   "args": {
+    "L": "=S",
+    "size": "=ang"
+   },
+   "rot": [
+    0,
+    0,
+    180
+   ],
+   "at": [
+    "=S",
+    "=S",
+    "=H-a"
+   ]
+  },
+  {
+   "name": "top_left",
+   "kind": "angle",
+   "label": "Top frame",
+   "args": {
+    "L": "=S",
+    "size": "=ang"
+   },
+   "rot": [
+    0,
+    0,
+    -90
+   ],
+   "at": [
+    0,
+    "=S",
+    "=H-a"
+   ]
+  },
+  {
+   "name": "top_right",
+   "kind": "angle",
+   "label": "Top frame",
+   "args": {
+    "L": "=S",
+    "size": "=ang"
+   },
+   "rot": [
+    0,
+    0,
+    90
+   ],
+   "at": [
+    "=S",
+    0,
+    "=H-a"
+   ]
+  },
+  {
+   "name": "leg_FL",
+   "kind": "angle",
+   "label": "Leg",
+   "args": {
+    "L": "=H-a",
+    "size": "=ang"
+   },
+   "rot": [
+    0,
+    -90,
+    270
+   ],
+   "at": [
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "name": "leg_FR",
+   "kind": "angle",
+   "label": "Leg",
+   "args": {
+    "L": "=H-a",
+    "size": "=ang"
+   },
+   "rot": [
+    0,
+    -90,
+    0
+   ],
+   "at": [
+    "=S",
+    0,
+    0
+   ]
+  },
+  {
+   "name": "leg_BR",
+   "kind": "angle",
+   "label": "Leg",
+   "args": {
+    "L": "=H-a",
+    "size": "=ang"
+   },
+   "rot": [
+    0,
+    -90,
+    90
+   ],
+   "at": [
+    "=S",
+    "=S",
+    0
+   ]
+  },
+  {
+   "name": "leg_BL",
+   "kind": "angle",
+   "label": "Leg",
+   "args": {
+    "L": "=H-a",
+    "size": "=ang"
+   },
+   "rot": [
+    0,
+    -90,
+    180
+   ],
+   "at": [
+    0,
+    "=S",
+    0
+   ]
+  },
+  {
+   "name": "str_front",
+   "kind": "angle",
+   "label": "Stretcher",
+   "args": {
+    "L": "=S-2*a",
+    "size": "=ang"
+   },
+   "at": [
+    "=a",
+    0,
+    "=shelf_z"
+   ]
+  },
+  {
+   "name": "str_back",
+   "kind": "angle",
+   "label": "Stretcher",
+   "args": {
+    "L": "=S-2*a",
+    "size": "=ang"
+   },
+   "rot": [
+    0,
+    0,
+    180
+   ],
+   "at": [
+    "=S-a",
+    "=S",
+    "=shelf_z"
+   ]
+  },
+  {
+   "name": "str_left",
+   "kind": "angle",
+   "label": "Stretcher",
+   "args": {
+    "L": "=S-2*a",
+    "size": "=ang"
+   },
+   "rot": [
+    0,
+    0,
+    -90
+   ],
+   "at": [
+    0,
+    "=S-a",
+    "=shelf_z"
+   ]
+  },
+  {
+   "name": "str_right",
+   "kind": "angle",
+   "label": "Stretcher",
+   "args": {
+    "L": "=S-2*a",
+    "size": "=ang"
+   },
+   "rot": [
+    0,
+    0,
+    90
+   ],
+   "at": [
+    "=S",
+    "=a",
+    "=shelf_z"
+   ]
+  },
+  {
+   "name": "top_plate",
+   "kind": "plate",
+   "label": "Top plate",
+   "args": {
+    "L": "=S-2*ta-0.125",
+    "W": "=S-2*ta-0.125",
+    "t": "=plate_t"
+   },
+   "at": [
+    "=ta+0.0625",
+    "=ta+0.0625",
+    "=H-a+ta"
+   ],
+   "features": {
+    "holes": [
+     {
+      "x": "=(S-2*ta-0.125)/2",
+      "y": "=(S-2*ta-0.125)/2",
+      "d": 0.75
+     },
+     {
+      "x": 3,
+      "y": 3,
+      "d": 0.375
+     },
+     {
+      "x": "=S-2*ta-3.125",
+      "y": 3,
+      "d": 0.375
+     },
+     {
+      "x": 3,
+      "y": "=S-2*ta-3.125",
+      "d": 0.375
+     },
+     {
+      "x": "=S-2*ta-3.125",
+      "y": "=S-2*ta-3.125",
+      "d": 0.375
+     }
+    ]
+   }
+  },
+  {
+   "name": "shelf_plate",
+   "kind": "plate",
+   "label": "Shelf plate",
+   "args": {
+    "L": "=S-2*a-0.125",
+    "W": "=S-2*a-0.125",
+    "t": "=plate_t"
+   },
+   "at": [
+    "=a+0.0625",
+    "=a+0.0625",
+    "=shelf_z+ta"
+   ],
+   "features": {
+    "holes": [
+     {
+      "x": "=(S-2*a-0.125)/2",
+      "y": "=(S-2*a-0.125)/2",
+      "d": 0.75
+     }
+    ]
+   }
+  }
+ ],
+ "joints": [
+  {
+   "type": "miter",
+   "a": "top_front",
+   "b": "top_left"
+  },
+  {
+   "type": "miter",
+   "a": "top_front",
+   "b": "top_right"
+  },
+  {
+   "type": "miter",
+   "a": "top_back",
+   "b": "top_left"
+  },
+  {
+   "type": "miter",
+   "a": "top_back",
+   "b": "top_right"
+  },
+  {
+   "type": "welded",
+   "a": "top_front",
+   "b": "top_left",
+   "weld": "3/16 fillet, full corner",
+   "length": 4
+  },
+  {
+   "type": "welded",
+   "a": "top_front",
+   "b": "top_right",
+   "weld": "3/16 fillet, full corner",
+   "length": 4
+  },
+  {
+   "type": "welded",
+   "a": "top_back",
+   "b": "top_left",
+   "weld": "3/16 fillet, full corner",
+   "length": 4
+  },
+  {
+   "type": "welded",
+   "a": "top_back",
+   "b": "top_right",
+   "weld": "3/16 fillet, full corner",
+   "length": 4
+  },
+  {
+   "type": "welded",
+   "a": "leg_FL",
+   "b": "top_front",
+   "weld": "3/16 fillet, leg to frame",
+   "length": 5
+  },
+  {
+   "type": "welded",
+   "a": "leg_FR",
+   "b": "top_front",
+   "weld": "3/16 fillet, leg to frame",
+   "length": 5
+  },
+  {
+   "type": "welded",
+   "a": "leg_BR",
+   "b": "top_back",
+   "weld": "3/16 fillet, leg to frame",
+   "length": 5
+  },
+  {
+   "type": "welded",
+   "a": "leg_BL",
+   "b": "top_back",
+   "weld": "3/16 fillet, leg to frame",
+   "length": 5
+  },
+  {
+   "type": "welded",
+   "a": "str_front",
+   "b": "leg_FL",
+   "weld": "1/8 fillet, both ends",
+   "length": 6
+  },
+  {
+   "type": "welded",
+   "a": "str_back",
+   "b": "leg_BR",
+   "weld": "1/8 fillet, both ends",
+   "length": 6
+  },
+  {
+   "type": "welded",
+   "a": "str_left",
+   "b": "leg_BL",
+   "weld": "1/8 fillet, both ends",
+   "length": 6
+  },
+  {
+   "type": "welded",
+   "a": "str_right",
+   "b": "leg_FR",
+   "weld": "1/8 fillet, both ends",
+   "length": 6
+  },
+  {
+   "type": "welded",
+   "a": "top_plate",
+   "b": "top_front",
+   "weld": "1\" stitch @ 4\", 4 sides",
+   "length": 12
+  },
+  {
+   "type": "welded",
+   "a": "shelf_plate",
+   "b": "str_front",
+   "weld": "1\" stitch @ 4\", 4 sides",
+   "length": 10
+  }
+ ],
+ "dims": [
+  {
+   "label": "top",
+   "v": "=S",
+   "view": "front",
+   "axis": "h"
+  },
+  {
+   "label": "height",
+   "v": "=H",
+   "view": "front",
+   "axis": "v"
+  },
+  {
+   "label": "shelf",
+   "v": "=shelf_z",
+   "view": "front",
+   "axis": "v",
+   "span": [
+    0,
+    "=shelf_z"
+   ]
+  },
+  {
+   "label": "top",
+   "v": "=S",
+   "view": "side",
+   "axis": "h"
+  }
+ ],
+ "derived": {
+  "a": "=STOCK['angle'][ang][0]",
+  "ta": "=STOCK['angle'][ang][1]"
+ },
+ "history": [
+  {
+   "at": "2026-10-13T11:32:21",
+   "change": "H=24 ang=2x2x1/4",
+   "by": "user"
+  }
+ ]
+}
