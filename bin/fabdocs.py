@@ -119,8 +119,20 @@ if os.path.exists(pj):   # printed parts: filament cost + ~$0.50/h machine time 
             mat+=float(pc.get("cost") or 0); t_=pc.get("time") or ""; hh=sum(int(n)*{"d":24,"h":1,"m":1/60,"s":1/3600}[u] for n,u in _re.findall(r"(\d+)([dhms])",t_))
             hrs["printing_machine"]=round(hrs.get("printing_machine",0)+hh,2); hrs["print_setup"]=round(hrs.get("print_setup",0)+0.1*(pc.get("share_of_plate",1)),2)
 pm=hrs.pop("printing_machine",0); lab=sum(hrs.values())*shop.get("labor_rate",75)+pm*0.5; mat=round(mat,2); sub=lab+mat; price=sub*(1+shop.get("margin_pct",25)/100)
-Q=dict(material_est=round(mat,2),printer_hours=pm,labor_hours=hrs,labor_est=round(lab),subtotal=round(sub),margin_pct=shop.get("margin_pct",25),price_est=round(price),note="ESTIMATE ONLY: edit bin/prices.json and machines.json 'shop'")
+SRC_=[dict(line=f'{r_["part"]} ({r_["material"]}) x{r_["qty"]}',usd=r_.get("cost_usd"),source=r_.get("cost_src","?")) for r_ in d["cutlist"] if r_.get("mark")!="HW"]
+if os.path.exists(pj):
+    for r_ in json.load(open(pj))["parts"]:
+        for pc in r_["pieces"]: SRC_.append(dict(line=f'filament {pc["name"]}',usd=float(pc.get("cost") or 0),source="PrusaSlicer (print.json)"))
+SRC_.append(dict(line="labor",usd=round(lab),source=f'machines.json shop labor_rate {shop.get("labor_rate",75)}/h; hours: cut minutes from gcode*/*.json (nest + G-code), other hours per-part rates in machines.json shop'))
+Q=dict(sources=SRC_,material_est=round(mat,2),printer_hours=pm,labor_hours=hrs,labor_est=round(lab),subtotal=round(sub),margin_pct=shop.get("margin_pct",25),price_est=round(price),note="ESTIMATE ONLY: edit bin/prices.json and machines.json 'shop'")
 json.dump(Q,open(f"{O}/quote.json","w"),indent=1)
+# ---- shopping list: everything you buy (store-bought stock, hardware, sheet goods/lumber/metal to cut from)
+with open(f"{O}/shopping_list.csv","w",newline="") as fh:
+    w=csv.writer(fh); w.writerow(["item","qty","size","why","est. cost"])
+    for r_ in d["cutlist"]:
+        if r_.get("stock")=="print": continue
+        why="hardware" if r_.get("mark")=="HW" else ("buy as-is" if r_.get("stock")=="buy" else f'raw stock for {", ".join(r_.get("names",[]))}')
+        w.writerow([r_["material"] if r_.get("mark")=="HW" or r_.get("stock")=="buy" else f'{r_["material"]} ({r_["part"]})',r_["qty"],r_.get("length",""),why,r_.get("est. cost","")])
 # ---- BOM csv + pdf
 with open(f"{O}/bom.csv","w",newline="") as fh:
     cols=["mark","part","material","qty","length","weight","est. cost","notes"]; w=csv.DictWriter(fh,fieldnames=cols,extrasaction="ignore"); w.writeheader(); [w.writerow(r) for r in d["cutlist"]]

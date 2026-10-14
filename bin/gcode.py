@@ -118,5 +118,6 @@ for mname in wanted:
         ax.set_aspect("equal"); ax.set_xlim(-2,W+2); ax.set_ylim(-2,H+2)
         ax.set_title(f"{mname}: {G['name']}  cut {cutlen:.0f} in, {len(pierces)} pierces, ~{mins:.1f} min  (VERIFY BEFORE CUTTING)")
         fig.savefig(nc.replace(".nc","_preview.png"),dpi=80,bbox_inches="tight"); plt.close(fig)
-        json.dump(dict(machine=mname,sheet=G["name"],cut_in=round(cutlen,1),pierces=len(pierces),est_min=round(mins,1),warnings=warn+tooSmall),open(nc.replace(".nc",".json"),"w"))
+        json.dump(dict(machine=mname,type=t,sheet=G["name"],sheet_size=list(G["sheet"]),comp=comp,kerf=m.get("kerf"),tool_dia=m.get("tool_dia"),parts=[pp_["name"] for pp_ in G["parts"]],
+            cut_in=round(cutlen,1),pierces=len(pierces),est_min=round(mins,1),warnings=warn+tooSmall),open(nc.replace(".nc",".json"),"w"))
         print(nc,f"cut {cutlen:.0f}in pierces {len(pierces)} ~{mins:.1f}min",("WARN: "+"; ".join(warn+tooSmall)) if warn or tooSmall else "")

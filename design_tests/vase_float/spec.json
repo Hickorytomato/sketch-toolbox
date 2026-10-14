@@ -1,0 +1,82 @@
+{
+ "name": "vase_float",
+ "title": "Vase with a flower relief (petals 1.6 mm) + a floating bit",
+ "domain": "print",
+ "units": "mm",
+ "ask": "Vase with a flower relief (petals 1.6 mm) + a floating bit",
+ "values": {
+  "filament": {
+   "v": "PLA",
+   "src": "user"
+  },
+  "r": {
+   "v": 30,
+   "src": "user",
+   "unit": "mm"
+  },
+  "h": {
+   "v": 80,
+   "src": "user",
+   "unit": "mm"
+  },
+  "wall": {
+   "v": 2.4,
+   "src": "user",
+   "unit": "mm"
+  }
+ },
+ "derived": {},
+ "parts": [
+  {
+   "name": "vase",
+   "kind": "cylinder",
+   "group": "vase",
+   "material": "=filament",
+   "args": {
+    "r": "=r",
+    "h": "=h",
+    "wall": "=wall",
+    "open": "top",
+    "floor": 2.4
+   },
+   "at": [
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "name": "flower_relief",
+   "kind": "custom_stl",
+   "material": "=filament",
+   "args": {
+    "file": "flower_relief.stl"
+   },
+   "at": [
+    29.0,
+    -7.328203230275509,
+    18.75
+   ],
+   "group": "vase"
+  }
+ ],
+ "joints": [],
+ "dims": [
+  {
+   "label": "overall H",
+   "v": "=h",
+   "view": "front",
+   "axis": "v"
+  },
+  {
+   "label": "dia",
+   "v": "=2*r",
+   "view": "top",
+   "axis": "h",
+   "span": [
+    "=-r",
+    "=r"
+   ]
+  }
+ ]
+}

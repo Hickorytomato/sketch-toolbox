@@ -1,13 +1,22 @@
 #!/usr/bin/env bash
-# Sketch toolbox installer v1.0.2. Idempotent. Root: $SKETCH_ROOT (default /workspace/sketch).
-# Downloads the v1.0.2 release tarball, checks its sha256, installs scripts -> $ROOT/bin and tests -> $ROOT/design_tests,
+# Sketch toolbox installer v1.0.3. Idempotent. Root: $SKETCH_ROOT (default /workspace/sketch).
+# Downloads the v1.0.3 release tarball, checks its sha256, installs scripts -> $ROOT/bin and tests -> $ROOT/design_tests,
 # keeps your settings, removes scripts that are no longer in this version, then sets up the venv, Blender and PrusaSlicer.
 set -euo pipefail
-VER=1.0.2
+VER=1.0.3
 URL="https://github.com/Hickorytomato/sketch-toolbox/releases/download/v$VER/sketch-toolbox-$VER.tar.gz"
-SHA=8abdde47dac00a5d73c3f278ac86005397a564b2856cbd3a68333737f4c4404d
+SHA=3b4571911a6fae7b9a68f4935815084e43f36f19259e93b9ea37410d1e0cf58d
 ROOT=${SKETCH_ROOT:-/workspace/sketch}; mkdir -p "$ROOT/bin" "$ROOT/tools"
 TMP=$(mktemp -d); trap 'rm -rf "$TMP"' EXIT
+# preflight: free disk space (Blender + PrusaSlicer + python deps ~3.5 GB on a first install)
+NEED_MB=3500; { [ -x "$ROOT/tools/blender/blender" ] || ls "$ROOT"/tools/blender*/blender >/dev/null 2>&1; } && [ -e "$ROOT/tools/prusaslicer/AppRun" ] && NEED_MB=500
+NEED_MB=${SKETCH_NEED_MB:-$NEED_MB}   # override for testing
+for D in "$ROOT" "$TMP"; do
+  FREE_MB=$(df -Pm "$D" | awk 'NR==2{print $4}')
+  if [ -n "$FREE_MB" ] && [ "$FREE_MB" -lt "$NEED_MB" ]; then
+    echo "Not enough disk space to install Sketch's toolbox: it needs about $((NEED_MB/1000)).$(( (NEED_MB%1000)/100 )) GB free on $(df -P "$D" | awk 'NR==2{print $6}'), but only $((FREE_MB/1000)).$(( (FREE_MB%1000)/100 )) GB is free. Free up $(( (NEED_MB-FREE_MB+99)/100/10 )).$(( (NEED_MB-FREE_MB+99)/100%10 )) GB and run it again."; exit 1
+  fi
+done
 echo "downloading sketch-toolbox v$VER"
 curl -fsSL -o "$TMP/tb.tar.gz" "$URL"
 [ "$(sha256sum "$TMP/tb.tar.gz" | cut -d' ' -f1)" = "$SHA" ] || { echo "toolbox checksum mismatch, not installing"; exit 1; }

@@ -112,6 +112,8 @@ EVERYTHING HERE IS AN ESTIMATE AND NEEDS HUMAN VERIFICATION BEFORE CUTTING, WELD
 simulate and dry-run all G-code (kerf, feeds, heights, M-codes are generic), check prints in your own slicer, treat prices/hours as rough.
 TXT
 cp $V/review.md $V/review.png $F/ 2>/dev/null || true
+# provenance: hash of every file the toolbox just made (ship.py refuses anything changed or added afterwards)
+$PY -c "import os,sys,json,hashlib;F=sys.argv[1];json.dump(dict(files={os.path.relpath(os.path.join(r,f),F):hashlib.sha256(open(os.path.join(r,f),'rb').read()).hexdigest() for r,_,fs in os.walk(F) for f in fs if f!='.gen.json'}),open(F+'/.gen.json','w'),indent=0)" $F
 Z=$V/$(basename $P)_v${n}_fab.zip; rm -f "$Z"; (cd $F && $PY -c "import shutil,sys;shutil.make_archive(sys.argv[1][:-4],'zip','.')" "$Z")
 $PY - "$V" <<'PYX'
 import json,sys,os
@@ -129,4 +131,9 @@ if os.path.exists(pj):
 print("[assumptions to confirm] "+(", ".join(a) if a else "none"))
 PYX
 log "package: $Z ($(du -h "$Z" | cut -f1))"
-echo "[next] Stage 3 of 3 done. Send drawing.png, offer the zip, say plainly every number and G-code is an estimate to check before cutting/printing."
+log "SHIP GATE (fuse/2 mm/base/bed/slicer, drawings, cut files, BOM, cost, hand plan)"
+if $PY $B/ship.py $P --v $n | sed 's/^/      /'; [ ${PIPESTATUS[0]} -eq 0 ]; then
+echo "[next] Stage 3 of 3 done. Send ONLY from $V/ship/: one message per file, in the order of $V/ship/send_list.txt (say where each goes), the zip last. Mention every [WARN]. Say plainly every number and G-code is an estimate to check before cutting/printing."
+else
+echo "[next] SHIP BLOCKED: do NOT send any file. Tell the user in plain words what failed (the [FAIL] lines above), fix it in the spec, rerun --final."; exit 3
+fi

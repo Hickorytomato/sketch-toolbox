@@ -48,6 +48,7 @@ fmt=(lambda v:f'{v:.3f}"'.replace('.000"','"')) if U=="in" else (lambda v:f"{v:.
 W,H=17,11; PITCH=0.19/H  # ~0.19 in per row
 fig=plt.figure(figsize=(W,H))
 fig.patches.append(plt.Rectangle((0.01,0.01),0.98,0.98,transform=fig.transFigure,fill=False,lw=1.5))
+DRAWN=[]   # every dimension printed on the sheet -> drawing_dims.json (ship.py cross-checks them against the model)
 VIEWBOX={"top":(0.03,0.52,0.30,0.42),"front":(0.03,0.06,0.30,0.42),"side":(0.35,0.06,0.28,0.42)}
 for vn,(dv,xd,(ia,ib)) in VIEWS.items():
     ax=fig.add_axes(VIEWBOX[vn]); ax.set_aspect("equal",adjustable="datalim"); ax.axis("off"); ax.set_title(vn.upper()+" VIEW",fontsize=11,loc="left",weight="bold")
@@ -59,6 +60,7 @@ for vn,(dv,xd,(ia,ib)) in VIEWS.items():
     x0,x1,y0,y1=min(xs),max(xs),min(ys),max(ys); size=max(x1-x0,y1-y0); off=size*0.08; nh=nv=0
     for dm in [q for q in d.get("dims",[]) if q["view"]==vn]:
         col="tab:red" if dm["src"]!="user" else "tab:blue"; txt=f'{dm["label"]} {fmt(dm["value"])}'+(" *" if dm["src"]!="user" else "")
+        DRAWN.append(dict(label=dm["label"],value=dm["value"],text=txt,view=vn,axis=dm["axis"],span=dm.get("span"),expr=dm.get("expr")))
         if dm["axis"]=="h":
             a,b=dm["span"] if dm.get("span") else (x0,x0+dm["value"]); nh+=1; yy=y0-off*nh*1.3
             ax.annotate("",(a,yy),(b,yy),arrowprops=dict(arrowstyle="<->",color=col,lw=0.9)); ax.plot([a,a],[y0,yy],color=col,lw=0.4); ax.plot([b,b],[y0,yy],color=col,lw=0.4)
@@ -97,6 +99,8 @@ for i,r in enumerate(rows):
 T(0.03,0.03,"Drawn by Sketch from spec.json. CHECK ALL DIMENSIONS BEFORE CUTTING.",fontsize=9,style="italic")
 T(0.80,0.03,f"SHEET 1 OF {2 if rest else 1}",fontsize=9,weight="bold")
 fig.savefig(f"{V}/drawing.png",dpi=110); plt.close(fig); print(f"{V}/drawing.png")
+import hashlib
+json.dump(dict(units=U,dims=DRAWN,png_sha256=hashlib.sha256(open(f"{V}/drawing.png","rb").read()).hexdigest(),note="written by spec_drawing.py; every value comes from parts.json dims (spec formulas)"),open(f"{V}/drawing_dims.json","w"),indent=1,default=float)
 if os.path.exists(f"{V}/drawing_2.png"): os.remove(f"{V}/drawing_2.png")
 if rest:
     fig=plt.figure(figsize=(W,H)); X0=0.05; y=0.95

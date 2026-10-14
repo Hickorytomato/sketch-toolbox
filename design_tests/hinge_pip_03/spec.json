@@ -1,0 +1,67 @@
+{
+ "name": "hinge_pip_03",
+ "title": "Print-in-place hinge, 0.3 mm gap",
+ "domain": "print",
+ "units": "mm",
+ "ask": "Print-in-place hinge, 0.3 mm gap",
+ "values": {
+  "filament": {
+   "v": "PLA",
+   "src": "user"
+  },
+  "gap": {
+   "v": 0.3,
+   "src": "user",
+   "unit": "mm"
+  }
+ },
+ "derived": {},
+ "parts": [
+  {
+   "name": "leaf_a",
+   "kind": "custom_stl",
+   "material": "=filament",
+   "args": {
+    "file": "leaf_a.stl"
+   },
+   "at": [
+    -13.5,
+    -10.0,
+    0.0
+   ],
+   "group": "hinge",
+   "assembly": "print_in_place",
+   "bodies": [
+    "leaf_a",
+    "leaf_b"
+   ]
+  },
+  {
+   "name": "leaf_b",
+   "kind": "custom_stl",
+   "material": "=filament",
+   "args": {
+    "file": "leaf_b.stl"
+   },
+   "at": [
+    -9.0,
+    -9.0,
+    0.0
+   ],
+   "group": "hinge"
+  }
+ ],
+ "joints": [],
+ "dims": [
+  {
+   "label": "pin gap",
+   "v": "=gap",
+   "view": "top",
+   "axis": "h",
+   "span": [
+    4,
+    "=4+gap"
+   ]
+  }
+ ]
+}

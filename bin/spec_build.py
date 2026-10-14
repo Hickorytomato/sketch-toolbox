@@ -155,18 +155,19 @@ for j in JL:
 sc=trimesh.Scene(); asm=cq.Assembly(); dens=json.load(open(f"{B}/prices.json"))["density_lb_in3"]
 PM=json.load(open(f"{B}/printers.json")) if os.path.exists(f"{B}/printers.json") else {}
 rows={}; flats=[]; printparts=[]; groups={}
+_MEMB={p_["name"]:p_ for p_ in plist} if "plist" in globals() else {}
 for nm,s in P.items():
     m=META[nm]
     if m.get("group"): groups.setdefault(m["group"],[]).append(nm); continue
 for g,names in groups.items():   # print groups -> single body
     u=P[names[0]]
     for n2 in names[1:]: u=u.union(P[n2])
-    P[g]=u; META[g]=dict(META[names[0]],name=g,kind=META[names[0]].get("kind") if len(names)==1 else "printed"); [P.pop(n2) for n2 in names if n2!=g]; [META.pop(n2) for n2 in names if n2!=g]
+    P[g]=u; META[g]=dict(META[names[0]],name=g,kind=META[names[0]].get("kind") if len(names)==1 else "printed"); [META[g].update({k_:META[n2][k_]}) for n2 in names for k_ in ("assembly","bodies","clearance") if META[n2].get(k_) is not None]; [P.pop(n2) for n2 in names if n2!=g]; [META.pop(n2) for n2 in names if n2!=g]
 for nm,s in P.items():
     m=META[nm]; sol=s.val(); vol=sol.Volume()*toin**3
     cq.exporters.export(s,f"{V}/step/{nm}.step"); cq.exporters.export(s,f"{V}/stl/{nm}.stl",tolerance=0.01 if U=="in" else 0.05)
     ar=m.get("_args",{})
-    if m.get("kind")=="imported" and str(ar.get("file","")).lower().rsplit(".",1)[-1] not in("step","stp","iges","igs","brep"):
+    if m.get("kind") in("imported","custom_stl") and str(ar.get("file","")).lower().rsplit(".",1)[-1] not in("step","stp","iges","igs","brep"):
         # renders + printing use the ORIGINAL mesh (scaled/placed like the CAD copy); the sewn CAD copy is only for STEP/drawings
         om=trimesh.load(kit._path(ar["file"]),force="mesh"); om.apply_translation(-om.bounds[0]); sc_=ar.get("scale",1.0)
         om.apply_scale([ar.get("sx") or sc_,ar.get("sy") or sc_,ar.get("sz") or sc_]); bb_=sol.BoundingBox(); om.apply_translation([bb_.xmin,bb_.ymin,bb_.zmin]); om.export(f"{V}/stl/{nm}.stl")
@@ -187,8 +188,16 @@ for nm,s in P.items():
         r_["qty"]+=1; r_["_w"]+=vol*dens.get("lumber",0.02); r_["_names"].append(nm)
         continue
     if st=="print":
+        _tb=[]   # screw-thread bands (thread teeth are form features: ship.py exempts them from the 2 mm wall rule)
+        for _mn in ([x for x in groups.get(nm,[])] or [nm]):
+            _mm=_MEMB.get(_mn,{}); _r=_mm.get("rot",[0,0,0]) or [0,0,0]; _at=_mm.get("at",[0,0,0]) or [0,0,0]
+            if _mm.get("kind") in("round","cylinder","cone") and not (_r[0] or _r[1]):
+                for _t in (_mm.get("args",{}).get("threads") or []):
+                    _tb.append(dict(c=[float(_at[0]),float(_at[1])],r=float(_t["r"]),depth=float(_t.get("depth",1))+float(_t.get("clearance",0)),
+                        z0=float(_at[2])+float(_t.get("z",0)),z1=float(_at[2])+float(_t.get("z",0))+float(_t.get("pitch",2))*(float(_t.get("turns",2))+1)))
         printparts.append(dict(name=nm,stl=f"stl/{nm}.stl",volume_mm3=round(sol.Volume() if U=="mm" else sol.Volume()*16387.064,1),
-            material=m.get("material","PLA"),orient=m.get("print_orient",[0,0,0]),infill=m.get("infill",20)))
+            material=m.get("material","PLA"),orient=m.get("print_orient",[0,0,0]),infill=m.get("infill",20),thread_bands=_tb,
+            **{k_:m[k_] for k_ in ("assembly","bodies","clearance") if m.get(k_) is not None}))
         # weight estimate for printed parts: filament density x (shell + infill fraction) ~ 45% solid at 20% infill
         _gcc={"PLA":1.24,"PETG":1.27,"TPU":1.21,"ABS":1.04,"ASA":1.07}.get(_mat.upper(),1.24)
         _cm3=(sol.Volume() if U=="mm" else sol.Volume()*16387.064)/1000; _w=_cm3*_gcc*0.6/453.6
@@ -268,23 +277,31 @@ for nm,s in P.items():
 asm.save(f"{V}/assembly.step"); sc.export(f"{V}/model.glb")
 trimesh.util.concatenate([g for g in sc.dump()]).export(f"{V}/model.stl")
 pr=json.load(open(f"{B}/prices.json")); cut=[]; tw=tc=0
+_PD=json.load(open(f"{B}/prices_default.json")) if os.path.exists(f"{B}/prices_default.json") else {}
+def _price(sec,key):
+    """(price, source): the owner's prices.json first, then the toolbox defaults file. No hidden numbers in code."""
+    if key in pr.get(sec,{}): return pr[sec][key],f"prices.json {sec}[{key}]"
+    if key in _PD.get(sec,{}): return _PD[sec][key],f"prices_default.json {sec}[{key}] (toolbox default; set yours in prices.json)"
+    return None,f"MISSING: no {sec}[{key}] in prices.json"
 for i,r_ in enumerate(rows.values()):
     m0=META[r_["_names"][0]]
-    if m0.get("stock")=="buy":   # store-bought: $/ft if priced, else a ballpark per piece
-        _L=float(re.findall(r"[\d.]+",r_["length"])[0])*toin
-        cost=(pr["price_per_ft"][r_["material"]]*_L/12 if r_["material"] in pr["price_per_ft"] else pr.get("buy_each",{}).get(r_["material"],max(2.0,_L/12*2.5)))*r_["qty"]
-    elif m0.get("stock")=="print": cost=0   # filament cost comes from the slicer (print.json)
-    elif r_["material"] in pr["price_per_ft"] or m0.get("stock")=="lumber":
-        L=float(re.findall(r"[\d.]+",r_["length"])[0])*toin; cost=pr["price_per_ft"].get(r_["material"],pr["price_per_ft"].get("2x4",0.8))*L/12*r_["qty"]
+    def _c(v,mult): return (v*mult) if v is not None else 0.0
+    if m0.get("stock")=="buy":   # store-bought: $/ft if priced, else $ each (prices.json buy_each)
+        _L=float(re.findall(r"[\d.]+",r_["length"])[0])*toin; v,src=_price("price_per_ft",r_["material"])
+        if v is not None: cost=_c(v,_L/12*r_["qty"])
+        else: v,src=_price("buy_each",r_["material"]); cost=_c(v,r_["qty"])
+    elif m0.get("stock")=="print": cost=0; src="slicer (print.json filament cost)"
+    elif r_["material"] in pr.get("price_per_ft",{}) or r_["material"] in _PD.get("price_per_ft",{}) or m0.get("stock")=="lumber":
+        L=float(re.findall(r"[\d.]+",r_["length"])[0])*toin; v,src=_price("price_per_ft",r_["material"]); cost=_c(v,L/12*r_["qty"])
     elif m0.get("stock")=="sheet_good":   # priced by area at $/sqft
-        cost=pr.get("price_per_sqft",{}).get(m0.get("material","plywood"),2.0)*sum(P[n].val().Volume()*toin**3/(m0["t"]*toin)/144 for n in r_["_names"])
-    else: cost=r_["_w"]*pr["price_per_lb"].get(r_["stock"] if r_["stock"]!="angle" else "tube",1.2)
+        v,src=_price("price_per_sqft",m0.get("material","plywood")); cost=_c(v,sum(P[n].val().Volume()*toin**3/(m0["t"]*toin)/144 for n in r_["_names"]))
+    else: v,src=_price("price_per_lb",r_["stock"] if r_["stock"]!="angle" else "tube"); cost=_c(v,r_["_w"])
     tw+=r_["_w"]; tc+=cost
-    cut.append({"mark":chr(65+i) if i<26 else f"A{i}","part":r_["part"],"material":r_["material"],"qty":r_["qty"],"length":r_["length"],"weight":f'{r_["_w"]:.1f} lb',"est. cost":f"~${cost:.0f}","notes":r_["notes"],"names":r_["_names"]})
-for f in fasteners: cut.append({"mark":"HW","part":"Hardware","material":f["item"],"qty":f["qty"],"length":"","weight":"","est. cost":"","notes":""})
+    cut.append({"mark":chr(65+i) if i<26 else f"A{i}","part":r_["part"],"material":r_["material"],"qty":r_["qty"],"length":r_["length"],"weight":f'{r_["_w"]:.1f} lb',"est. cost":f"~${cost:.0f}","notes":r_["notes"],"names":r_["_names"],"stock":m0.get("stock"),"cost_usd":round(cost,2),"cost_src":src})
+for f in fasteners: cut.append({"mark":"HW","part":"Hardware","material":f["item"],"qty":f["qty"],"length":"","weight":"","est. cost":"","notes":"","stock":"buy","cost_src":"not priced (hardware)"})
 title=spec.get("title",spec.get("name","Design"))
 out=dict(params=dict(kind="spec",title=title,units=U,**{k:v for k,v in vals.items() if isinstance(v,(int,float,str))}),cutlist=cut,flats=flats,welds=welds,joints=copes,
-         jointrec=jointrec,fasteners=fasteners,print_parts=printparts,total_weight_lb=round(tw,1),est_cost=round(tc))
+         jointrec=jointrec,fasteners=fasteners,print_parts=printparts,total_weight_lb=round(tw,1),est_cost=round(tc,2))
 SRC={k:(v.get("src","assumed") if isinstance(v,dict) else "assumed") for k,v in spec["values"].items()}
 def srcof(expr):
     if not (isinstance(expr,str) and expr.startswith("=")): return "user"
@@ -292,7 +309,7 @@ def srcof(expr):
     for k,v in spec.get("derived",{}).items():
         if k in names: dep|={n for n in re.findall(r"[A-Za-z_]\w*",v) if n in SRC}
     return "assumed" if any(SRC[n]!="user" for n in dep) else "user"
-out["dims"]=[dict(label=dm.get("label",""),value=round(float(ev(dm["v"])),4),view=dm.get("view","front"),axis=dm.get("axis","h"),
+out["dims"]=[dict(expr=dm["v"],label=dm.get("label",""),value=round(float(ev(dm["v"])),4),view=dm.get("view","front"),axis=dm.get("axis","h"),
     span=ev(dm["span"]) if "span" in dm else None,at=ev(dm["at"]) if "at" in dm else None,src=srcof(dm["v"])) for dm in spec.get("dims",[])]
 out["spec_values"]={k:dict(v=vals.get(k),src=SRC[k],unit=(spec["values"][k].get("unit","") if isinstance(spec["values"][k],dict) else ""),note=(spec["values"][k].get("note","") if isinstance(spec["values"][k],dict) else "")) for k in SRC}
 out["title"]=spec.get("title"); out["domain"]=spec.get("domain")

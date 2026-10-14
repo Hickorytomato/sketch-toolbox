@@ -33,6 +33,12 @@ spec_drawing.py          dimensioned hidden-line drawing     fabdocs.py  drawing
 export_dxf.py, nest.py, gcode.py   flats -> DXF -> nested sheets -> plasma/laser/router .nc (starting points only)
 print3d.py               checks, orientation, split to bed with pins, bed packing (plate_<n> per bed, --per-part/--both), PrusaSlicer G-code + 3MF, time/grams/cost (printers.json)
 cope.py, wood_plan.py    pipe cope templates, hand-tool plan          package_machines.py  FOR_<machine>/ folders
+ship.py PROJECT           THE SHIP GATE (run by design.sh --final): fuse/1 body/2 mm print walls/flat base/bed/slicer, drawings vs model,
+                         closed+kerfed cut files inside the sheet, BOM=model, shopping list, cost sources, hand plan -> vN/ship/ + manifest
+                         + send_list.txt + zip.  ship.py --verify FILE: was this file shipped?  ship.py --check-print STL: gate one mesh.
+meshfuse.py IN OUT       union overlapping shells into one solid (used by ship.py and kind custom_stl)
+custom_stl (spec kind)   a mesh the bot generated itself (relief, ornament): {kind: custom_stl, args:{file: x.stl}, group: <body>} -> gated like every part.
+                         Print-in-place moving parts: "assembly": "print_in_place", "bodies": [names] (gap >= 0.5 mm, printers.json pip_clearance_mm)
 import_file.py FILE PROJECT   STEP/IGES/STL/3MF/OBJ -> spec; DXF/SVG -> profile flat (--t, --domain); PDF/photo -> cleaned images:
                          read them with vision, write read.json, then `import_file.py --from-read read.json PROJECT`. Read values are src "read".
 from_photo.py composite PHOTO RENDER OUT  (render with --cutout first)   taste.py show|add kept|rejected <cat> "<v>"|set units

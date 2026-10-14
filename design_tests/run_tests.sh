@@ -8,3 +8,4 @@ t plant_stand H=24 ang=2x2x1/4                         # "make it 24 tall and be
 t salt_shaker holes=6 neck_d=28                       # "give it 6 holes and a wider neck" (round/cone/shell/threads/hole pattern)
 t belt_rig plate_h=64 dt_clear=0.35                   # "make the plate 64 tall, looser slide" (arc_plate, dovetail, cutters, path, ring, link)
 echo "ALL TESTS PASSED"
+echo "now: design_tests/ship_tests.sh (ship gate)"

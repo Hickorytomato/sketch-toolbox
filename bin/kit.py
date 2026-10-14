@@ -107,7 +107,13 @@ def place(s,rot=(0,0,0),at=(0,0,0)):
     return s.translate(tuple(at))
 
 # ---------- imported geometry ----------
-def _path(f): return f if os.path.isabs(f) else os.path.join(os.environ.get("SPEC_DIR","."),f)
+def _path(f):
+    """absolute, or relative to the spec's folder, the project folder, or PROJECT/source/ (where custom_stl files live)"""
+    if os.path.isabs(f): return f
+    sd=os.environ.get("SPEC_DIR",".")
+    for c in (os.path.join(sd,f),os.path.join(os.path.dirname(sd),f),os.path.join(os.path.dirname(sd),"source",f),os.path.join(sd,"source",f)):
+        if os.path.exists(c): return c
+    return os.path.join(sd,f)
 def mesh_to_solid(path,max_faces=15000,scale=(1,1,1)):
     import trimesh
     from OCP.BRepBuilderAPI import BRepBuilderAPI_MakePolygon,BRepBuilderAPI_MakeFace,BRepBuilderAPI_Sewing,BRepBuilderAPI_MakeSolid
@@ -164,7 +170,24 @@ def profile(outer,t,holes=(),inner=(),material="steel",sx=1.0,sy=1.0,**k):
     for ip in inner: s=s.cut(cq.Workplane("XY").polyline(S(ip)).close().extrude(t))
     wood=material in("plywood","baltic_birch","mdf","acrylic")
     return s,dict(stock="sheet_good" if wood else "plate",section=f'{t} {material}' if wood else f'{t}" plate',flat=True,t=t,material=material)
-KINDS.update(imported=imported,profile=profile)
+def custom_stl(file,**k):
+    """a one-off mesh the bot generated itself (relief, ornament, organic shape). Same as 'imported', but marked so ship.py
+    always fuses it with its group and gates it like every other print part. Put it in the same 'group' as the body it decorates."""
+    f=_path(file)
+    try:   # generated meshes often touch/overlap themselves (petals meeting at a point): union their shells first so the CAD copy is a real solid
+        import trimesh,tempfile,meshfuse
+        r,e=meshfuse.fuse(trimesh.load(f,force="mesh"),os.path.basename(f))
+        if r and len(r[0])>1:   # separate bodies (print-in-place, or a floating bit ship.py will reject): one solid each, kept in place
+            sc=k.get("scale",1.0); S=(k.get("sx") or sc,k.get("sy") or sc,k.get("sz") or sc); lo=np.min([b.bounds[0] for b in r[0]],axis=0); sols=[]
+            for b in r[0]:
+                t=tempfile.NamedTemporaryFile(suffix=".stl",delete=False); b.export(t.name); so=mesh_to_solid(t.name,scale=S)
+                off=(b.bounds[0]-lo)*np.array(S); sols.append(so.translate(cq.Vector(*map(float,off))))
+            return cq.Workplane("XY").add(cq.Compound.makeCompound(sols)),dict(stock=k.get("stock","print"),section=f"custom {os.path.basename(file)} ({len(sols)} bodies)")
+        if r and r[1]>1:
+            t=tempfile.NamedTemporaryFile(suffix=".stl",delete=False); trimesh.util.concatenate(r[0]).export(t.name); f=t.name
+    except Exception: pass
+    s,meta=imported(f,**k); meta["section"]=f"custom {os.path.basename(file)}"; return s,meta
+KINDS.update(imported=imported,profile=profile,custom_stl=custom_stl)
 
 # ---------- soft-edge helpers (printed parts read as products, not blocks) ----------
 def soften(s,r=1.0,sel=None,chamfer_ok=True):
