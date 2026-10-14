@@ -78,7 +78,7 @@ def ws_break(F): J(f"{F}/doc_meta.json",lambda d:d["welds"][0].update(elements=[
 BRK=[("cut day: a cut missing",cut_drop,"lumber_shelf","does not match the BOM"),("cut day: kerf not from settings",cut_kerf,"lumber_shelf","not the saw kerf"),
      ("cut day: parts overlap on sheet",cut_overlap,"steel_bracket","overlap"),("cut day: tags differ from BOM",cut_tag,"lumber_shelf","tags differ"),
      ("coupon missing for a tight fit",cp_drop,"salt_shaker","no test coupon"),("coupon steps don't bracket the value",cp_steps,"salt_shaker","bracket"),
-     ("quote total wrong",q_total,"steel_bracket","total"),("quote line != BOM price",q_line,"lumber_shelf","differs from the priced BOM"),
+     ("quote total wrong",q_total,"steel_bracket","total"),("quote line != BOM price",q_line,"salt_shaker","differs from the priced BOM"),
      ("quote shop not from profile",q_shop,"salt_shaker","not the ones in your profile"),("fake dated store price",pr_fake,"lumber_shelf","dated store price"),
      ("revision letter wrong",rv_letter,"salt_shaker","revision letter"),("weld callouts != model",rv_weld,"steel_bracket","weld callout"),
      ("exploded tag not in BOM",ex_tag,"steel_bracket","not BOM tags"),("exploded image missing",ex_img,"lumber_shelf","step image"),

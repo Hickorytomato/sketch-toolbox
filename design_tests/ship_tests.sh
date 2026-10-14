@@ -24,4 +24,5 @@ want block ply_nominal "23/32"               # 3/4 plywood drawn at 0.750 nomina
 $P design_tests/ship_tamper_test.py || bad=$((bad+1))
 $P design_tests/rules_tests.py | tail -1; [ ${PIPESTATUS[0]} = 0 ] || bad=$((bad+1))   # every new FAIL rule: break blocks, clean ships
 $P design_tests/pro_tests.py | grep -v "^ok" ; [ ${PIPESTATUS[0]} = 0 ] || bad=$((bad+1))   # v1.0.5: cut day, coupons, quote, live prices, revisions, exploded steps, shop learning
+bash design_tests/fast_sketch_test.sh | grep -v "^ok" ; [ ${PIPESTATUS[0]} = 0 ] || bad=$((bad+1))   # v1.0.6: --sketch works while the heavy tools install
 echo "ship tests: $ok ok, $bad bad"; [ $bad = 0 ]

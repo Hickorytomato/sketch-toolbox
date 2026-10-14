@@ -52,7 +52,9 @@ if "--rates" in a:
     sys.path.insert(0,B); import defaults
     P=json.load(open(f"{B}/prices.json")); sh=M.setdefault("shop",{}); mr=sh.setdefault("machine_rate_per_h",{})
     KEYS=[("labor_rate",sh.get("labor_rate",75)),("margin_pct",sh.get("margin_pct",25))]+[(f"machine_rate.{m}",v) for m,v in mr.items() if not m.startswith("_") and M.get(m,{}).get("enabled",m=="printer")]
-    KEYS+=[(f"{s_}.{k}",v) for s_ in ("price_per_ft","price_per_sqft","price_per_lb","buy_each") for k,v in P.get(s_,{}).items()]
+    PD=json.load(open(f"{B}/prices_default.json")) if os.path.exists(f"{B}/prices_default.json") else {}
+    KEYS+=[(f"{s_}.{k}",v) for s_ in ("price_per_ft","price_per_sqft","price_per_lb","buy_each") for k,v in {**{k_:v_ for k_,v_ in PD.get(s_,{}).items() if not str(k_).startswith("_") and isinstance(v_,(int,float))},**P.get(s_,{})}.items()]
+    CONF_ALL=lambda: [ (_confirm(k_), (P.setdefault(k_.split(".")[0],{}).setdefault(k_.split(".",1)[1],v_) if k_.startswith(("price_","buy_")) else None)) for k_,v_ in KEYS]
     def put(k,v):
         if k.startswith("machine_rate."): mr[k.split(".",1)[1]]=v
         elif k in("labor_rate","margin_pct","shop_hours_per_day"): sh[k]=v
@@ -63,14 +65,14 @@ if "--rates" in a:
     if kv:
         for x in kv:
             k,v=x.split("=",1)
-            if k=="confirm" and v=="all": [_confirm(k_) for k_,_ in KEYS]; continue
+            if k=="confirm" and v=="all": CONF_ALL(); continue
             try: put(k,float(v))
             except ValueError: sys.exit(f"{k} must be a number")
     elif sys.stdin.isatty():
         print("Set your real rates and prices (Enter = keep as Sketch default, y = this value is mine, or type a number):")
         for k,v in KEYS:
             r=input(f"  {k} [{v}{' - Sketch default' if defaults.is_default(k,v) else ''}]: ").strip()
-            if r.lower()=="y": _confirm(k)
+            if r.lower()=="y": _confirm(k); (P.setdefault(k.split(".")[0],{}).setdefault(k.split(".",1)[1],v) if k.startswith(("price_","buy_")) else None)
             elif r:
                 try: put(k,float(r))
                 except ValueError: print("    not a number, kept")

@@ -121,8 +121,15 @@ def gate_prices(d,F,res):
             res("prices",k,"FAIL","live price without store, link, date or a positive number"); ok=False; continue
         age=(datetime.date.today()-datetime.date.fromisoformat(v["date"])).days
         if age>8: res("prices",k,"FAIL",f"live price is {age} days old (cache is 7 days): rerun with --refresh"); ok=False
+    SB=[x["item"] for x in (q.get("stock_bought") or {}).get("lines",[])]
     for l in q["lines"]:
         v=L["lines"].get(l["desc"])
+        if v is None and any(l["desc"].startswith(x) for x in SB):   # v1.0.6 whole-stock line: priced from a live per-length price (amount checked by gate_buy)
+            src_=l.get("source","")
+            hit=[v_ for v_ in L["lines"].values() if v_.get("usd") is not None and v_.get("date","") in src_ and str(v_.get("store","")) in src_]
+            dated=bool(re.search(r"\d{4}-\d\d-\d\d",src_))
+            if dated and not hit: res("prices",l["desc"],"FAIL","quote claims a dated store price that live_prices.json does not have"); ok=False
+            continue
         live=v and v.get("usd") is not None
         dated=bool(re.search(r"\d{4}-\d\d-\d\d",l.get("source","")))
         if dated and not live: res("prices",l["desc"],"FAIL","quote claims a dated store price that live_prices.json does not have"); ok=False
