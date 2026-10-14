@@ -1,0 +1,443 @@
+{
+ "name": "lumber_shelf",
+ "title": "2x lumber garage shelf",
+ "domain": "wood",
+ "units": "in",
+ "ask": "a garage shelf out of 2x4s and 2x8s",
+ "values": {
+  "W": {
+   "v": 36,
+   "src": "user",
+   "unit": "in",
+   "note": "outside width"
+  },
+  "D": {
+   "v": 16,
+   "src": "assumed",
+   "unit": "in",
+   "note": "leg depth (front to back of legs)"
+  },
+  "H": {
+   "v": 48,
+   "src": "user",
+   "unit": "in",
+   "note": "leg height"
+  },
+  "z1": {
+   "v": 10,
+   "src": "assumed",
+   "unit": "in",
+   "note": "bottom rail height"
+  },
+  "z2": {
+   "v": 40,
+   "src": "assumed",
+   "unit": "in",
+   "note": "top rail height"
+  },
+  "gap": {
+   "v": 1.333,
+   "src": "assumed",
+   "unit": "in",
+   "note": "gap between shelf boards"
+  }
+ },
+ "parts": [
+  {
+   "name": "leg_FL",
+   "kind": "board",
+   "material": "pine",
+   "label": "Leg",
+   "args": {
+    "L": "=H",
+    "size": "2x4"
+   },
+   "rot": [
+    0,
+    -90,
+    0
+   ],
+   "at": [
+    1.5,
+    0,
+    0
+   ]
+  },
+  {
+   "name": "leg_FR",
+   "kind": "board",
+   "material": "pine",
+   "label": "Leg",
+   "args": {
+    "L": "=H",
+    "size": "2x4"
+   },
+   "rot": [
+    0,
+    -90,
+    0
+   ],
+   "at": [
+    "=W",
+    0,
+    0
+   ]
+  },
+  {
+   "name": "leg_BL",
+   "kind": "board",
+   "material": "pine",
+   "label": "Leg",
+   "args": {
+    "L": "=H",
+    "size": "2x4"
+   },
+   "rot": [
+    0,
+    -90,
+    0
+   ],
+   "at": [
+    1.5,
+    "=D-3.5",
+    0
+   ]
+  },
+  {
+   "name": "leg_BR",
+   "kind": "board",
+   "material": "pine",
+   "label": "Leg",
+   "args": {
+    "L": "=H",
+    "size": "2x4"
+   },
+   "rot": [
+    0,
+    -90,
+    0
+   ],
+   "at": [
+    "=W",
+    "=D-3.5",
+    0
+   ]
+  },
+  {
+   "name": "rail_F_lo",
+   "kind": "board",
+   "material": "pine",
+   "label": "Rail",
+   "args": {
+    "L": "=W",
+    "size": "2x4",
+    "on_edge": true
+   },
+   "at": [
+    0,
+    -1.5,
+    "=z1"
+   ]
+  },
+  {
+   "name": "rail_B_lo",
+   "kind": "board",
+   "material": "pine",
+   "label": "Rail",
+   "args": {
+    "L": "=W",
+    "size": "2x4",
+    "on_edge": true
+   },
+   "at": [
+    0,
+    "=D",
+    "=z1"
+   ]
+  },
+  {
+   "name": "board_lo1",
+   "kind": "board",
+   "material": "pine",
+   "label": "Shelf board",
+   "args": {
+    "L": "=D+3",
+    "size": "2x8"
+   },
+   "rot": [
+    0,
+    0,
+    90
+   ],
+   "at": [
+    "=1.5+7.25+0*(7.25+gap)",
+    -1.5,
+    "=z1+3.5"
+   ]
+  },
+  {
+   "name": "board_lo2",
+   "kind": "board",
+   "material": "pine",
+   "label": "Shelf board",
+   "args": {
+    "L": "=D+3",
+    "size": "2x8"
+   },
+   "rot": [
+    0,
+    0,
+    90
+   ],
+   "at": [
+    "=1.5+7.25+1*(7.25+gap)",
+    -1.5,
+    "=z1+3.5"
+   ]
+  },
+  {
+   "name": "board_lo3",
+   "kind": "board",
+   "material": "pine",
+   "label": "Shelf board",
+   "args": {
+    "L": "=D+3",
+    "size": "2x8"
+   },
+   "rot": [
+    0,
+    0,
+    90
+   ],
+   "at": [
+    "=1.5+7.25+2*(7.25+gap)",
+    -1.5,
+    "=z1+3.5"
+   ]
+  },
+  {
+   "name": "board_lo4",
+   "kind": "board",
+   "material": "pine",
+   "label": "Shelf board",
+   "args": {
+    "L": "=D+3",
+    "size": "2x8"
+   },
+   "rot": [
+    0,
+    0,
+    90
+   ],
+   "at": [
+    "=1.5+7.25+3*(7.25+gap)",
+    -1.5,
+    "=z1+3.5"
+   ]
+  },
+  {
+   "name": "rail_F_hi",
+   "kind": "board",
+   "material": "pine",
+   "label": "Rail",
+   "args": {
+    "L": "=W",
+    "size": "2x4",
+    "on_edge": true
+   },
+   "at": [
+    0,
+    -1.5,
+    "=z2"
+   ]
+  },
+  {
+   "name": "rail_B_hi",
+   "kind": "board",
+   "material": "pine",
+   "label": "Rail",
+   "args": {
+    "L": "=W",
+    "size": "2x4",
+    "on_edge": true
+   },
+   "at": [
+    0,
+    "=D",
+    "=z2"
+   ]
+  },
+  {
+   "name": "board_hi1",
+   "kind": "board",
+   "material": "pine",
+   "label": "Shelf board",
+   "args": {
+    "L": "=D+3",
+    "size": "2x8"
+   },
+   "rot": [
+    0,
+    0,
+    90
+   ],
+   "at": [
+    "=1.5+7.25+0*(7.25+gap)",
+    -1.5,
+    "=z2+3.5"
+   ]
+  },
+  {
+   "name": "board_hi2",
+   "kind": "board",
+   "material": "pine",
+   "label": "Shelf board",
+   "args": {
+    "L": "=D+3",
+    "size": "2x8"
+   },
+   "rot": [
+    0,
+    0,
+    90
+   ],
+   "at": [
+    "=1.5+7.25+1*(7.25+gap)",
+    -1.5,
+    "=z2+3.5"
+   ]
+  },
+  {
+   "name": "board_hi3",
+   "kind": "board",
+   "material": "pine",
+   "label": "Shelf board",
+   "args": {
+    "L": "=D+3",
+    "size": "2x8"
+   },
+   "rot": [
+    0,
+    0,
+    90
+   ],
+   "at": [
+    "=1.5+7.25+2*(7.25+gap)",
+    -1.5,
+    "=z2+3.5"
+   ]
+  },
+  {
+   "name": "board_hi4",
+   "kind": "board",
+   "material": "pine",
+   "label": "Shelf board",
+   "args": {
+    "L": "=D+3",
+    "size": "2x8"
+   },
+   "rot": [
+    0,
+    0,
+    90
+   ],
+   "at": [
+    "=1.5+7.25+3*(7.25+gap)",
+    -1.5,
+    "=z2+3.5"
+   ]
+  }
+ ],
+ "joints": [
+  {
+   "type": "screws",
+   "n": 2,
+   "size": "#10 x 3 in yellow zinc construction screw (rail to leg)",
+   "through": "rail_F_lo",
+   "into": "leg_FL"
+  },
+  {
+   "type": "screws",
+   "n": 2,
+   "size": "#10 x 3 in yellow zinc construction screw (rail to leg)",
+   "through": "rail_F_lo",
+   "into": "leg_FR"
+  },
+  {
+   "type": "screws",
+   "n": 2,
+   "size": "#10 x 3 in yellow zinc construction screw (rail to leg)",
+   "through": "rail_B_lo",
+   "into": "leg_BL"
+  },
+  {
+   "type": "screws",
+   "n": 2,
+   "size": "#10 x 3 in yellow zinc construction screw (rail to leg)",
+   "through": "rail_B_lo",
+   "into": "leg_BR"
+  },
+  {
+   "type": "screws",
+   "n": 16,
+   "size": "#10 x 3 in yellow zinc construction screw (board to rail)",
+   "through": "board_lo1",
+   "into": "rail_F_lo"
+  },
+  {
+   "type": "screws",
+   "n": 2,
+   "size": "#10 x 3 in yellow zinc construction screw (rail to leg)",
+   "through": "rail_F_hi",
+   "into": "leg_FL"
+  },
+  {
+   "type": "screws",
+   "n": 2,
+   "size": "#10 x 3 in yellow zinc construction screw (rail to leg)",
+   "through": "rail_F_hi",
+   "into": "leg_FR"
+  },
+  {
+   "type": "screws",
+   "n": 2,
+   "size": "#10 x 3 in yellow zinc construction screw (rail to leg)",
+   "through": "rail_B_hi",
+   "into": "leg_BL"
+  },
+  {
+   "type": "screws",
+   "n": 2,
+   "size": "#10 x 3 in yellow zinc construction screw (rail to leg)",
+   "through": "rail_B_hi",
+   "into": "leg_BR"
+  },
+  {
+   "type": "screws",
+   "n": 16,
+   "size": "#10 x 3 in yellow zinc construction screw (board to rail)",
+   "through": "board_hi1",
+   "into": "rail_F_hi"
+  }
+ ],
+ "dims": [
+  {
+   "label": "width",
+   "v": "=W",
+   "view": "front",
+   "axis": "h"
+  },
+  {
+   "label": "height",
+   "v": "=H",
+   "view": "front",
+   "axis": "v"
+  },
+  {
+   "label": "depth",
+   "v": "=D+3",
+   "view": "side",
+   "axis": "h"
+  }
+ ]
+}

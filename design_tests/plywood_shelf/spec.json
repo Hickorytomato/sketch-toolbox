@@ -22,10 +22,10 @@
    "unit": "in"
   },
   "t": {
-   "v": 0.75,
+   "v": 0.719,
    "src": "assumed",
    "unit": "in",
-   "note": "3/4 plywood (actual ~0.71-0.73: measure and set!)"
+   "note": "3/4 plywood = 23/32 (0.719) actual (shop_reference): measure yours and set it"
   },
   "dd": {
    "v": 0.25,
@@ -156,7 +156,9 @@
   {
    "type": "screws",
    "n": "=4*shelves+8",
-   "size": "#6 x 1 wood screw (back)"
+   "size": "#6 x 1 in zinc flat-head wood screw (back)",
+   "through": "back",
+   "into": "side_L"
   }
  ],
  "dims": [
@@ -202,6 +204,21 @@
  "history": [
   {
    "at": "2026-10-13T11:29:10",
+   "change": "width=42 shelves=4",
+   "by": "user"
+  },
+  {
+   "at": "2026-10-14T06:40:13",
+   "change": "width=42 shelves=4",
+   "by": "user"
+  },
+  {
+   "at": "2026-10-14T06:54:12",
+   "change": "width=42 shelves=4",
+   "by": "user"
+  },
+  {
+   "at": "2026-10-14T07:16:54",
    "change": "width=42 shelves=4",
    "by": "user"
   }

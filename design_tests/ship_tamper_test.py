@@ -30,7 +30,7 @@ def nestdrop(F):
 def handname(F):
     s=open(f"{F}/hand_tool_plan.txt").read().replace("   - shelf1 ","   - shelf9 ",1); open(f"{F}/hand_tool_plan.txt","w").write(s)
 def handdim(F):
-    s=open(f"{F}/hand_tool_plan.txt").read(); s=re.sub(r'(   - shelf1\s+)41\.000"',r'\g<1>40.000"',s,count=1); open(f"{F}/hand_tool_plan.txt","w").write(s)
+    s=open(f"{F}/hand_tool_plan.txt").read(); s=re.sub(r'(   - shelf1\s+)[0-9.]+"',r'\g<1>40.000"',s,count=1); open(f"{F}/hand_tool_plan.txt","w").write(s)
 def dimval(V): J(f"{V}/drawing_dims.json",lambda d:d["dims"][0].update(value=40.0))
 def dimtyped(V): J(f"{V}/drawing_dims.json",lambda d:d["dims"][0].update(expr=42))
 def dimunits(V): J(f"{V}/drawing_dims.json",lambda d:d.update(units="mm"))

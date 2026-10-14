@@ -24,6 +24,21 @@ prism (any 2D outline + rounded corners, any plane)   dovetail (rail; clear>0 = 
 arc_plate (curved/rolled plate)   ring (torus eyelet, flat)   link (chain link)
 cut_from: ["part",..] on ANY part = negative body subtracted from those parts (tunnels, windows, keyholes, dovetail slots).
 
+## Shop rules (v1.0.4: bin/ref/ + rules.py)
+bin/ref/shop_reference.json (tap/clearance, lumber actual, ply 23/32, weld prep, filler, pipe OD, tolerances, hazards...),
+bin/ref/kerf_table.json (Hypertherm PM45XP cut chart by material/thickness/amps; CO2/fiber laser kerf ranges) and
+bin/ref/failure_modes.json (the 247-item research catalog) - every value with its source. Your overrides go in bin/ref_user.json
+({"shop_reference":{...},"kerf_table":{...}}), merged over the defaults and KEPT by the installer.
+Kerf, in this order: your test cut (`tools_setup.py --kerf-test plasma steel 0.25 --drawn 2 --measured 1.938`, or `--kerf m mat t k`)
+> kerf table > machines.json default; every program and plan says which one it used. Saw kerf for cut lists: `tools_setup.py --saw "table saw" [--saw-kerf 0.125]`.
+Generation: spec_build -> rules.enrich (build id, title block + process tolerances, finish per row, lumber actual, pipe NPS/sch/OD,
+weld schedule side/filler/prep/WPS note, bolt holes from the clearance/tap table, bent_plate blanks, engineer/code flags, lumber buy plan with kerf);
+gcode.py (table kerf, DRILL small/fit holes, 60% hole feed, router tabs + depth-per-pass limit); fabdocs (title block every sheet, hole callouts,
+weld symbols from the model side, masking); wood_plan (shop plan for every build). ship.py runs rules.gate: every geometry/file/plan-text catalog
+item is a check at the catalog's FAIL/WARN severity. `rules.py --coverage` lists checks / advice / skipped with reasons.
+New kit kind: bent_plate (a,b,W,t,R,K,holes_a,holes_b,wb,relief_w,relief_d). Joints: bolted without d takes the table clearance (tapped:true -> tap drill);
+screws/nails with through+into get the length rule checked. Dims may carry tol / fit / fit_class.
+
 ## Scripts
 spec_build.py + kit.py   spec -> CadQuery solids, model.glb (parts named preset__name), STEP, parts.json, steps.json
 sketch3d.py              stage-1 workbench sketch          render_real.py  photoreal hero/spin (--look, --finish, --fill, --cutout)
@@ -32,7 +47,8 @@ review.py                wearer review (PROJECT/wearer.json or geom.json "wearer
 spec_drawing.py          dimensioned hidden-line drawing     fabdocs.py  drawings.pdf, BOM, quote, build steps, sanity
 export_dxf.py, nest.py, gcode.py   flats -> DXF -> nested sheets -> plasma/laser/router .nc (starting points only)
 print3d.py               checks, orientation, split to bed with pins, bed packing (plate_<n> per bed, --per-part/--both), PrusaSlicer G-code + 3MF, time/grams/cost (printers.json)
-cope.py, wood_plan.py    pipe cope templates, hand-tool plan          package_machines.py  FOR_<machine>/ folders
+cope.py, wood_plan.py    pipe cope templates, shop plan (lumber buy list with kerf, weld schedule, tips)
+rules.py, ref.py, kerf.py  shop rules (generation + ship gate), reference data + overrides, kerf lookup          package_machines.py  FOR_<machine>/ folders
 ship.py PROJECT           THE SHIP GATE (run by design.sh --final): fuse/1 body/2 mm print walls/flat base/bed/slicer, drawings vs model,
                          closed+kerfed cut files inside the sheet, BOM=model, shopping list, cost sources, hand plan -> vN/ship/ + manifest
                          + send_list.txt + zip.  ship.py --verify FILE: was this file shipped?  ship.py --check-print STL: gate one mesh.

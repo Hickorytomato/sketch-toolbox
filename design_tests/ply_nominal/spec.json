@@ -1,0 +1,204 @@
+{
+ "name": "ply_nominal",
+ "title": "Plywood shelf with dado joints",
+ "domain": "wood",
+ "units": "in",
+ "ask": "a plywood shelf with dado joints",
+ "values": {
+  "width": {
+   "v": 42,
+   "src": "user",
+   "unit": "in",
+   "note": "outside width"
+  },
+  "height": {
+   "v": 36,
+   "src": "assumed",
+   "unit": "in"
+  },
+  "depth": {
+   "v": 10,
+   "src": "assumed",
+   "unit": "in"
+  },
+  "t": {
+   "v": 0.75,
+   "src": "assumed",
+   "unit": "in",
+   "note": "3/4 plywood drawn at nominal - must block"
+  },
+  "dd": {
+   "v": 0.25,
+   "src": "assumed",
+   "unit": "in",
+   "note": "dado depth (1/3 of thickness)"
+  },
+  "shelves": {
+   "v": 4,
+   "src": "user",
+   "note": "count incl. top and bottom"
+  },
+  "back_t": {
+   "v": 0.25,
+   "src": "assumed",
+   "unit": "in",
+   "note": "1/4 ply back, screwed on"
+  }
+ },
+ "parts": [
+  {
+   "name": "side_L",
+   "kind": "panel",
+   "material": "plywood",
+   "label": "Side",
+   "args": {
+    "L": "=height",
+    "W": "=depth",
+    "t": "=t"
+   },
+   "rot": [
+    0,
+    -90,
+    0
+   ],
+   "at": [
+    "=t",
+    0,
+    0
+   ]
+  },
+  {
+   "name": "side_R",
+   "kind": "panel",
+   "material": "plywood",
+   "label": "Side",
+   "args": {
+    "L": "=height",
+    "W": "=depth",
+    "t": "=t"
+   },
+   "rot": [
+    0,
+    -90,
+    0
+   ],
+   "at": [
+    "=width",
+    0,
+    0
+   ]
+  },
+  {
+   "repeat": {
+    "var": "i",
+    "n": "=shelves"
+   },
+   "name": "shelf{i}",
+   "kind": "panel",
+   "material": "plywood",
+   "label": "Shelf",
+   "args": {
+    "L": "=width-2*t+2*dd",
+    "W": "=depth",
+    "t": "=t"
+   },
+   "at": [
+    "=t-dd",
+    0,
+    "=min(max(i*(height-t)/(shelves-1),0),height-t)"
+   ]
+  },
+  {
+   "name": "back",
+   "kind": "panel",
+   "material": "plywood",
+   "label": "Back",
+   "args": {
+    "L": "=width",
+    "W": "=height",
+    "t": "=back_t"
+   },
+   "rot": [
+    90,
+    0,
+    0
+   ],
+   "at": [
+    0,
+    "=depth+back_t",
+    0
+   ]
+  }
+ ],
+ "joints": [
+  {
+   "repeat": {
+    "var": "i",
+    "n": "=shelves"
+   },
+   "type": "dado",
+   "into": "side_L",
+   "from": "shelf{i}"
+  },
+  {
+   "repeat": {
+    "var": "i",
+    "n": "=shelves"
+   },
+   "type": "dado",
+   "into": "side_R",
+   "from": "shelf{i}"
+  },
+  {
+   "type": "glue",
+   "size": "wood glue in dados"
+  },
+  {
+   "type": "screws",
+   "n": "=4*shelves+8",
+   "size": "#6 x 1 in zinc flat-head wood screw (back)",
+   "through": "back",
+   "into": "side_L"
+  }
+ ],
+ "dims": [
+  {
+   "label": "width",
+   "v": "=width",
+   "view": "front",
+   "axis": "h"
+  },
+  {
+   "label": "height",
+   "v": "=height",
+   "view": "front",
+   "axis": "v"
+  },
+  {
+   "label": "opening",
+   "v": "=(height-t)/(shelves-1)-t",
+   "view": "front",
+   "axis": "v",
+   "span": [
+    "=t",
+    "=(height-t)/(shelves-1)"
+   ]
+  },
+  {
+   "label": "depth",
+   "v": "=depth",
+   "view": "side",
+   "axis": "h"
+  },
+  {
+   "label": "dado depth",
+   "v": "=dd",
+   "view": "top",
+   "axis": "h",
+   "span": [
+    "=t-dd",
+    "=t"
+   ]
+  }
+ ]
+}

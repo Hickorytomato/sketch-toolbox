@@ -1,0 +1,4056 @@
+[
+ {
+  "process": "FDM",
+  "rank_in_process": 1,
+  "failure": "Unsupported overhangs sag/curl",
+  "why": "Layer >45 deg from vertical is <50% supported by layer below",
+  "check": "Face normal angle from vertical >45 deg with no support enabled -> warn",
+  "check_type": "geometry",
+  "severity": "warn",
+  "default_threshold": "45 deg from vertical",
+  "threshold_source": "https://www.hubs.com/knowledge-base/how-design-parts-fdm-3d-printing/",
+  "sources": [
+   "https://www.hubs.com/knowledge-base/how-design-parts-fdm-3d-printing/",
+   "https://xometry.pro/en/3d-printing-design-guide/quick-guide/fused-deposition-modeling/"
+  ],
+  "covered_by_current_gate": "yes",
+  "where_in_toolbox": "print3d.py / meshfuse.py / ship.py"
+ },
+ {
+  "process": "FDM",
+  "rank_in_process": 2,
+  "failure": "Warping / corner lift on large flat parts",
+  "why": "Thermal contraction of long first layers; worse with ABS/ASA",
+  "check": "Footprint longest side > ~100 mm (Sketch default, not sourced) or sharp footprint corners -> suggest 5-10 mm brim / round corners",
+  "check_type": "geometry",
+  "severity": "warn",
+  "default_threshold": "Brim 5-10 mm (fix, not a trigger)",
+  "threshold_source": "https://help.prusa3d.com/article/warping_2011",
+  "sources": [
+   "https://help.prusa3d.com/article/warping_2011",
+   "https://forum.prusa3d.com/forum/original-prusa-i3-mk3s-mk3-how-do-i-print-this-printing-help/large-flat-print-is-warping/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "print3d.py / meshfuse.py / ship.py"
+ },
+ {
+  "process": "FDM",
+  "rank_in_process": 3,
+  "failure": "Moving/mating parts fuse or bind",
+  "why": "Clearance below what extrusion can hold open",
+  "check": "Gap between separate bodies in moving assembly <0.5 mm -> fail (gate uses 0.4)",
+  "check_type": "geometry",
+  "severity": "fail",
+  "default_threshold": "0.5 mm (Xometry, Forge Labs); gate uses 0.4 mm",
+  "threshold_source": "https://xometry.pro/en/3d-printing-design-guide/quick-guide/fused-deposition-modeling/",
+  "sources": [
+   "https://xometry.pro/en/3d-printing-design-guide/quick-guide/fused-deposition-modeling/",
+   "https://forgelabs.com/design-guides/fdm"
+  ],
+  "covered_by_current_gate": "partial",
+  "where_in_toolbox": "print3d.py / meshfuse.py / ship.py"
+ },
+ {
+  "process": "FDM",
+  "rank_in_process": 4,
+  "failure": "Holes print undersized",
+  "why": "Polygonization + perimeter squish; first layer and Arachne undersize holes",
+  "check": "Fit-critical hole (screw/dowel/thread) without compensation -> warn: add offset or drill after",
+  "check_type": "geometry",
+  "severity": "warn",
+  "default_threshold": "No universal number; test-print and enlarge",
+  "threshold_source": "https://github.com/prusa3d/PrusaSlicer/issues/8634",
+  "sources": [
+   "https://github.com/prusa3d/PrusaSlicer/issues/8634",
+   "https://github.com/prusa3d/PrusaSlicer/issues/8706",
+   "https://www.stratasys.com/siteassets/sdm/content---website-storage/design-guides/dg_sdm_fdm_0725a.pdf",
+   "https://www.hubs.com/knowledge-base/how-design-parts-fdm-3d-printing/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "print3d.py / meshfuse.py / ship.py"
+ },
+ {
+  "process": "FDM",
+  "rank_in_process": 5,
+  "failure": "Horizontal holes droop / need support",
+  "why": "Top of a horizontal circle is an overhang/bridge",
+  "check": "Hole axis parallel to bed and diameter > min -> suggest teardrop/diamond profile",
+  "check_type": "geometry",
+  "severity": "warn",
+  "default_threshold": "45 deg teardrop",
+  "threshold_source": "https://www.hubs.com/knowledge-base/how-design-parts-fdm-3d-printing/",
+  "sources": [
+   "https://www.hubs.com/knowledge-base/how-design-parts-fdm-3d-printing/",
+   "https://www.hubs.com/knowledge-base/how-does-part-orientation-affect-3d-print/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "print3d.py / meshfuse.py / ship.py"
+ },
+ {
+  "process": "FDM",
+  "rank_in_process": 6,
+  "failure": "Part breaks along layer lines",
+  "why": "FDM is weakest in Z (across layers)",
+  "check": "Advice only unless load direction is declared: if declared load axis = Z, warn and suggest reorient",
+  "check_type": "advice",
+  "severity": "warn",
+  "default_threshold": "advice only",
+  "threshold_source": "https://www.hubs.com/knowledge-base/how-does-part-orientation-affect-3d-print/",
+  "sources": [
+   "https://www.hubs.com/knowledge-base/how-does-part-orientation-affect-3d-print/",
+   "https://altem.com/wp-content/uploads/2022/02/Production-Parts.pdf"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "print3d.py / meshfuse.py / ship.py"
+ },
+ {
+  "process": "FDM",
+  "rank_in_process": 7,
+  "failure": "Long unsupported bridges sag",
+  "why": "Bridges over ~5 mm sag or show marks",
+  "check": "Horizontal downward-facing span >5 mm with no support -> warn",
+  "check_type": "geometry",
+  "severity": "warn",
+  "default_threshold": "5 mm",
+  "threshold_source": "https://www.hubs.com/knowledge-base/how-design-parts-fdm-3d-printing/",
+  "sources": [
+   "https://www.hubs.com/knowledge-base/how-design-parts-fdm-3d-printing/",
+   "https://xometry.pro/en/3d-printing-design-guide/quick-guide/fused-deposition-modeling/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "print3d.py / meshfuse.py / ship.py"
+ },
+ {
+  "process": "FDM",
+  "rank_in_process": 8,
+  "failure": "Features too small to resolve",
+  "why": "Features below a few nozzle widths vanish",
+  "check": "Feature/pin/emboss width <2.0 mm -> warn (Xometry capability 1.2, rec 1.5)",
+  "check_type": "geometry",
+  "severity": "warn",
+  "default_threshold": "2.0 mm (Protolabs); 1.2-1.5 mm (Xometry)",
+  "threshold_source": "https://www.protolabs.com/services/3d-printing/fused-deposition-modeling/",
+  "sources": [
+   "https://www.protolabs.com/services/3d-printing/fused-deposition-modeling/",
+   "https://xometry.pro/en/3d-printing-design-guide/quick-guide/fused-deposition-modeling/"
+  ],
+  "covered_by_current_gate": "partial",
+  "where_in_toolbox": "print3d.py / meshfuse.py / ship.py"
+ },
+ {
+  "process": "FDM",
+  "rank_in_process": 9,
+  "failure": "Holes smaller than printable",
+  "why": "Tiny holes close up",
+  "check": "Hole diameter <2.0 mm -> warn: drill after",
+  "check_type": "geometry",
+  "severity": "warn",
+  "default_threshold": "2.0 mm",
+  "threshold_source": "https://www.protolabs.com/services/3d-printing/fused-deposition-modeling/",
+  "sources": [
+   "https://www.protolabs.com/services/3d-printing/fused-deposition-modeling/",
+   "https://forgelabs.com/design-guides/fdm"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "print3d.py / meshfuse.py / ship.py"
+ },
+ {
+  "process": "FDM",
+  "rank_in_process": 10,
+  "failure": "Elephant foot / flared first layer breaks fit",
+  "why": "First layer squished wider",
+  "check": "Edges touching bed on mating faces without 45 deg chamfer -> tip; slicer EFC ~0.2 mm",
+  "check_type": "geometry",
+  "severity": "tip",
+  "default_threshold": "0.2 mm EFC for 0.4 nozzle",
+  "threshold_source": "https://help.prusa3d.com/article/elephant-foot-compensation_114487",
+  "sources": [
+   "https://help.prusa3d.com/article/elephant-foot-compensation_114487",
+   "https://www.hubs.com/knowledge-base/how-design-parts-fdm-3d-printing/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "print3d.py / meshfuse.py / ship.py"
+ },
+ {
+  "process": "FDM",
+  "rank_in_process": 11,
+  "failure": "Thin walls",
+  "why": "Walls below extrusion width fail",
+  "check": "Wall <2 mm (Sketch rule; Protolabs min 0.8 mm)",
+  "check_type": "geometry",
+  "severity": "fail",
+  "default_threshold": "2 mm Sketch; 0.8 mm Protolabs",
+  "threshold_source": "https://www.protolabs.com/services/3d-printing/fused-deposition-modeling/",
+  "sources": [
+   "https://www.protolabs.com/services/3d-printing/fused-deposition-modeling/"
+  ],
+  "covered_by_current_gate": "yes",
+  "where_in_toolbox": "print3d.py / meshfuse.py / ship.py"
+ },
+ {
+  "process": "FDM",
+  "rank_in_process": 12,
+  "failure": "Tall thin pins snap",
+  "why": "Small base area, layer stress",
+  "check": "Pin height/diameter large with no base fillet -> tip add fillet or use metal pin",
+  "check_type": "advice",
+  "severity": "tip",
+  "default_threshold": "advice only (no sourced ratio)",
+  "threshold_source": "https://www.hubs.com/knowledge-base/how-design-parts-fdm-3d-printing/",
+  "sources": [
+   "https://www.hubs.com/knowledge-base/how-design-parts-fdm-3d-printing/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "print3d.py / meshfuse.py / ship.py"
+ },
+ {
+  "process": "FDM",
+  "rank_in_process": 13,
+  "failure": "Trapped hollow / support can't drain",
+  "why": "Enclosed cavities",
+  "check": "Enclosed internal void with support needed and no opening >=4 mm -> warn",
+  "check_type": "geometry",
+  "severity": "warn",
+  "default_threshold": "4 mm drain hole",
+  "threshold_source": "https://forgelabs.com/design-guides/fdm",
+  "sources": [
+   "https://forgelabs.com/design-guides/fdm"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "print3d.py / meshfuse.py / ship.py"
+ },
+ {
+  "process": "FDM",
+  "rank_in_process": 14,
+  "failure": "Small bed contact / tip-over",
+  "why": "Tall part on small footprint",
+  "check": "Height/footprint ratio check",
+  "check_type": "geometry",
+  "severity": "warn",
+  "default_threshold": "Sketch default (gate)",
+  "threshold_source": "https://www.hubs.com/knowledge-base/how-design-parts-fdm-3d-printing/",
+  "sources": [
+   "https://www.hubs.com/knowledge-base/how-design-parts-fdm-3d-printing/"
+  ],
+  "covered_by_current_gate": "yes",
+  "where_in_toolbox": "print3d.py / meshfuse.py / ship.py"
+ },
+ {
+  "process": "FDM",
+  "rank_in_process": 15,
+  "failure": "Non-manifold / multi-body mesh",
+  "why": "Overlapping shells confuse slicer",
+  "check": "Single watertight body",
+  "check_type": "geometry",
+  "severity": "fail",
+  "default_threshold": "0 open edges",
+  "threshold_source": "https://www.hubs.com/knowledge-base/how-design-parts-fdm-3d-printing/",
+  "sources": [
+   "https://www.hubs.com/knowledge-base/how-design-parts-fdm-3d-printing/"
+  ],
+  "covered_by_current_gate": "yes",
+  "where_in_toolbox": "print3d.py / meshfuse.py / ship.py"
+ },
+ {
+  "process": "Laser",
+  "rank_in_process": 1,
+  "failure": "Burning/cutting PVC, vinyl, PTFE etc.",
+  "why": "Releases HCl/toxic gas; destroys optics",
+  "check": "Material name/resin code 3 in BOM for laser job -> fail",
+  "check_type": "file",
+  "severity": "fail",
+  "default_threshold": "banned list",
+  "threshold_source": "https://team.bosslaser.com/learn/materials/materials-to-never-laser/",
+  "sources": [
+   "https://team.bosslaser.com/learn/materials/materials-to-never-laser/",
+   "https://support.brmlasers.com/en/getting-started/which-materials-can-you-laser"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "export_dxf.py / nest.py / ship.py"
+ },
+ {
+  "process": "Laser",
+  "rank_in_process": 2,
+  "failure": "Duplicate/overlapping lines",
+  "why": "Stacked artwork -> double cuts, or fills cancel",
+  "check": "Identical or overlapping coincident segments in DXF/SVG -> fail",
+  "check_type": "file",
+  "severity": "fail",
+  "default_threshold": "0 duplicates",
+  "threshold_source": "https://docs.lightburnsoftware.com/latest/Troubleshooting/ImportedExtraLines/",
+  "sources": [
+   "https://docs.lightburnsoftware.com/latest/Troubleshooting/ImportedExtraLines/",
+   "https://docs.lightburnsoftware.com/latest/Troubleshooting/PreviewWindow/MissingShapes/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "export_dxf.py / nest.py / ship.py"
+ },
+ {
+  "process": "Laser",
+  "rank_in_process": 3,
+  "failure": "Open shapes",
+  "why": "Kerf offset/fill require closed loops",
+  "check": "Endpoint gaps; LightBurn auto-join tol 0.05 mm",
+  "check_type": "file",
+  "severity": "fail",
+  "default_threshold": "0.05 mm",
+  "threshold_source": "https://docs.lightburnsoftware.com/latest/Explainers/OpenClosedShapes/",
+  "sources": [
+   "https://docs.lightburnsoftware.com/latest/Explainers/OpenClosedShapes/",
+   "https://docs.lightburnsoftware.com/latest/Guides/Test-KerfOffset/"
+  ],
+  "covered_by_current_gate": "yes",
+  "where_in_toolbox": "export_dxf.py / nest.py / ship.py"
+ },
+ {
+  "process": "Laser",
+  "rank_in_process": 4,
+  "failure": "Hole smaller than material allows",
+  "why": "Heat burns through tiny features",
+  "check": "Hole dia <0.5x thickness -> fail; <1x warn",
+  "check_type": "file",
+  "severity": "fail",
+  "default_threshold": "0.5x t min; 1-1.5x t preferred",
+  "threshold_source": "https://sendcutsend.com/wp-content/uploads/2025/11/5.2.pdf",
+  "sources": [
+   "https://sendcutsend.com/blog/basic-tolerances-and-cut-feature-relationships/",
+   "https://sendcutsend.com/wp-content/uploads/2025/11/5.2.pdf",
+   "https://sendcutsend.com/blog/10-common-reasons-your-design-is-failing-sendcutsend-preflight/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "export_dxf.py / nest.py / ship.py"
+ },
+ {
+  "process": "Laser",
+  "rank_in_process": 5,
+  "failure": "Bridges/webs too thin",
+  "why": "Heat concentration, weak",
+  "check": "Min distance between cut features <0.5x t -> fail; <1x warn",
+  "check_type": "file",
+  "severity": "fail",
+  "default_threshold": "0.5x t min; 1-1.5x t preferred",
+  "threshold_source": "https://sendcutsend.com/blog/basic-tolerances-and-cut-feature-relationships/",
+  "sources": [
+   "https://sendcutsend.com/blog/basic-tolerances-and-cut-feature-relationships/",
+   "https://sendcutsend.com/wp-content/uploads/2025/11/5.2.pdf"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "export_dxf.py / nest.py / ship.py"
+ },
+ {
+  "process": "Laser",
+  "rank_in_process": 6,
+  "failure": "Hole too close to edge (tears out)",
+  "why": "Too little material for hardware",
+  "check": "Hole-to-edge <1x hole dia; slot-to-edge <1.5x width -> warn",
+  "check_type": "file",
+  "severity": "warn",
+  "default_threshold": "1x dia / 1.5x slot width",
+  "threshold_source": "https://sendcutsend.com/blog/basic-tolerances-and-cut-feature-relationships/",
+  "sources": [
+   "https://sendcutsend.com/blog/basic-tolerances-and-cut-feature-relationships/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "export_dxf.py / nest.py / ship.py"
+ },
+ {
+  "process": "Laser",
+  "rank_in_process": 7,
+  "failure": "Floating islands (letter O, A centers) fall out",
+  "why": "Inner contour not connected",
+  "check": "Inner closed contour inside a hole region with no bridge -> warn",
+  "check_type": "file",
+  "severity": "warn",
+  "default_threshold": "bridge >= min bridge width",
+  "threshold_source": "https://sendcutsend.com/wp-content/uploads/2025/11/5.2.pdf",
+  "sources": [
+   "https://sendcutsend.com/wp-content/uploads/2025/11/5.2.pdf"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "export_dxf.py / nest.py / ship.py"
+ },
+ {
+  "process": "Laser",
+  "rank_in_process": 8,
+  "failure": "Kerf over/under-compensated, tab joints loose/tight",
+  "why": "Wrong kerf or applied to one part only",
+  "check": "Kerf offset present and equal on mating parts; overlap after offset -> fail",
+  "check_type": "file",
+  "severity": "fail",
+  "default_threshold": "measured kerf",
+  "threshold_source": "https://docs.lightburnsoftware.com/latest/Guides/Test-KerfOffset/",
+  "sources": [
+   "https://docs.lightburnsoftware.com/latest/Guides/Test-KerfOffset/"
+  ],
+  "covered_by_current_gate": "partial",
+  "where_in_toolbox": "export_dxf.py / nest.py / ship.py"
+ },
+ {
+  "process": "Laser",
+  "rank_in_process": 9,
+  "failure": "Kerf offset makes adjacent paths overlap",
+  "why": "Parts nested too close",
+  "check": "Spacing between parts < kerf -> fail",
+  "check_type": "file",
+  "severity": "fail",
+  "default_threshold": "> kerf",
+  "threshold_source": "https://docs.lightburnsoftware.com/latest/Guides/Test-KerfOffset/",
+  "sources": [
+   "https://docs.lightburnsoftware.com/latest/Guides/Test-KerfOffset/"
+  ],
+  "covered_by_current_gate": "partial",
+  "where_in_toolbox": "export_dxf.py / nest.py / ship.py"
+ },
+ {
+  "process": "Laser",
+  "rank_in_process": 10,
+  "failure": "Acrylic cracks",
+  "why": "Heat concentration, sharp corners, stress",
+  "check": "Acrylic + inside corner radius ~0 -> tip; flag press-fit interference in acrylic",
+  "check_type": "advice",
+  "severity": "tip",
+  "default_threshold": "advice only",
+  "threshold_source": "https://rowmark-ram.s3.amazonaws.com/rowmark-documentation/Causes-and-Effects-of-Cracking-in-Acrylic-Sheet.pdf",
+  "sources": [
+   "https://rowmark-ram.s3.amazonaws.com/rowmark-documentation/Causes-and-Effects-of-Cracking-in-Acrylic-Sheet.pdf",
+   "https://graphics-pro.com/education/common-issues-when-laser-cutting-acrylic/",
+   "https://thejobshop.co/resources/tab-and-slot-design-cnc-router"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "export_dxf.py / nest.py / ship.py"
+ },
+ {
+  "process": "Laser",
+  "rank_in_process": 11,
+  "failure": "Small parts fall through honeycomb and get scorched",
+  "why": "Part smaller than bed support",
+  "check": "Part bbox smaller than bed grid (user setting) -> tip: tabs/microjoints",
+  "check_type": "advice",
+  "severity": "tip",
+  "default_threshold": "advice only",
+  "threshold_source": "https://forum.lightburnsoftware.com/t/acrylic-chipping-along-underside-of-cut-line/93779",
+  "sources": [
+   "https://forum.lightburnsoftware.com/t/acrylic-chipping-along-underside-of-cut-line/93779"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "export_dxf.py / nest.py / ship.py"
+ },
+ {
+  "process": "Laser",
+  "rank_in_process": 12,
+  "failure": "Hidden/masked artwork imported as cuts",
+  "why": "Masks/clipping in source art",
+  "check": "Paths outside sheet or fully covered -> warn",
+  "check_type": "file",
+  "severity": "warn",
+  "default_threshold": "0",
+  "threshold_source": "https://docs.lightburnsoftware.com/latest/Troubleshooting/ImportedExtraLines/",
+  "sources": [
+   "https://docs.lightburnsoftware.com/latest/Troubleshooting/ImportedExtraLines/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "export_dxf.py / nest.py / ship.py"
+ },
+ {
+  "process": "Laser",
+  "rank_in_process": 13,
+  "failure": "Inner shapes cut after outer (part shifts)",
+  "why": "Cut order",
+  "check": "Inner-first order in output",
+  "check_type": "file",
+  "severity": "warn",
+  "default_threshold": "n/a",
+  "threshold_source": "https://docs.lightburnsoftware.com/latest/Explainers/OpenClosedShapes/",
+  "sources": [
+   "https://docs.lightburnsoftware.com/latest/Explainers/OpenClosedShapes/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "export_dxf.py / nest.py / ship.py"
+ },
+ {
+  "process": "Plasma",
+  "rank_in_process": 1,
+  "failure": "Holes too small: taper, dross, out-of-round",
+  "why": "Arc lag below ~1.5x t",
+  "check": "Hole dia <1.5x t -> fail/mark DRILL; <2x warn",
+  "check_type": "file",
+  "severity": "fail",
+  "default_threshold": "1.5x t min, 2x recommended (conventional); ~1x HD",
+  "threshold_source": "https://www.hypertherm.com/resources/system-support/maintenance-and-use/cut-quality/hole-quality/",
+  "sources": [
+   "https://www.hypertherm.com/resources/system-support/maintenance-and-use/cut-quality/hole-quality/",
+   "https://lapas.io/blog/plasma-cutting-small-holes/",
+   "https://manufacturingprocesses.org/processes/cutting/plasma-cutting"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "export_dxf.py / nest.py / gcode.py"
+ },
+ {
+  "process": "Plasma",
+  "rank_in_process": 2,
+  "failure": "Fit-critical holes cut to final size",
+  "why": "Plasma tolerance \u00b10.76 mm, 1-8 deg bevel",
+  "check": "Holes tagged bolt/dowel/tap -> output as pilot + drill note",
+  "check_type": "file",
+  "severity": "warn",
+  "default_threshold": "\u00b10.76 mm conventional",
+  "threshold_source": "https://www.hypertherm.com/resources/system-support/maintenance-and-use/cut-quality/hole-quality/",
+  "sources": [
+   "https://www.hypertherm.com/resources/system-support/maintenance-and-use/cut-quality/hole-quality/",
+   "https://manufacturingprocesses.org/processes/cutting/plasma-cutting"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "export_dxf.py / nest.py / gcode.py"
+ },
+ {
+  "process": "Plasma",
+  "rank_in_process": 3,
+  "failure": "Narrow webs distort/burn",
+  "why": "Heat input",
+  "check": "Web between features <1x t fail; <2x t warn",
+  "check_type": "file",
+  "severity": "fail",
+  "default_threshold": "1x t limit, 2x t recommended",
+  "threshold_source": "https://manufacturingprocesses.org/processes/cutting/plasma-cutting",
+  "sources": [
+   "https://manufacturingprocesses.org/processes/cutting/plasma-cutting"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "export_dxf.py / nest.py / gcode.py"
+ },
+ {
+  "process": "Plasma",
+  "rank_in_process": 4,
+  "failure": "Hole near edge tapers asymmetrically",
+  "why": "Gas pressure differs next to kerf",
+  "check": "Hole edge to part edge <1.5x t -> warn",
+  "check_type": "file",
+  "severity": "warn",
+  "default_threshold": "1.5x t",
+  "threshold_source": "https://lapas.io/blog/plasma-cutting-small-holes/",
+  "sources": [
+   "https://lapas.io/blog/plasma-cutting-small-holes/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "export_dxf.py / nest.py / gcode.py"
+ },
+ {
+  "process": "Plasma",
+  "rank_in_process": 5,
+  "failure": "Kerf too wide for nesting/fits",
+  "why": "Plasma kerf 1.5-4 mm",
+  "check": "Part spacing and slot widths account for 1.5-4 mm kerf -> fail if smaller",
+  "check_type": "file",
+  "severity": "fail",
+  "default_threshold": "1.5-4 mm",
+  "threshold_source": "https://manufacturingprocesses.org/processes/cutting/plasma-cutting",
+  "sources": [
+   "https://manufacturingprocesses.org/processes/cutting/plasma-cutting"
+  ],
+  "covered_by_current_gate": "partial",
+  "where_in_toolbox": "export_dxf.py / nest.py / gcode.py"
+ },
+ {
+  "process": "Plasma",
+  "rank_in_process": 6,
+  "failure": "Bevel on cut face breaks fit/weld prep",
+  "why": "Inherent 1-3 deg good side, 3-8 bad side",
+  "check": "Tip: note cut direction; grind weld prep faces",
+  "check_type": "file",
+  "severity": "tip",
+  "default_threshold": "1-3 deg / 3-8 deg",
+  "threshold_source": "https://www.hypertherm.com/resources/system-support/maintenance-and-use/cut-quality/cut-angularity/",
+  "sources": [
+   "https://www.hypertherm.com/resources/system-support/maintenance-and-use/cut-quality/cut-angularity/",
+   "https://manufacturingprocesses.org/processes/cutting/plasma-cutting"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "export_dxf.py / nest.py / gcode.py"
+ },
+ {
+  "process": "Plasma",
+  "rank_in_process": 7,
+  "failure": "Lead-in divots on holes",
+  "why": "Radial lead-in at kerf crossing",
+  "check": "CAM rule: straight 90 deg lead-in on small holes",
+  "check_type": "advice",
+  "severity": "tip",
+  "default_threshold": "advice only",
+  "threshold_source": "https://forum.linuxcnc.org/media/kunena/attachments/20660/hyperthermholes.pdf",
+  "sources": [
+   "https://forum.linuxcnc.org/media/kunena/attachments/20660/hyperthermholes.pdf"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "export_dxf.py / nest.py / gcode.py"
+ },
+ {
+  "process": "Plasma",
+  "rank_in_process": 8,
+  "failure": "Tight inside corners/radii fill with dross",
+  "why": "Arc lag in corners",
+  "check": "Inside radius < kerf/2 -> warn",
+  "check_type": "file",
+  "severity": "warn",
+  "default_threshold": "Sketch default (no sourced number)",
+  "threshold_source": "https://www.hypertherm.com/resources/system-support/maintenance-and-use/cut-quality/hole-quality/",
+  "sources": [
+   "https://www.hypertherm.com/resources/system-support/maintenance-and-use/cut-quality/hole-quality/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "export_dxf.py / nest.py / gcode.py"
+ },
+ {
+  "process": "Plasma",
+  "rank_in_process": 9,
+  "failure": "Thin plate warps from heat",
+  "why": "Heat input on thin sheet",
+  "check": "Advice only",
+  "check_type": "advice",
+  "severity": "tip",
+  "default_threshold": "advice only",
+  "threshold_source": "https://manufacturingprocesses.org/processes/cutting/plasma-cutting",
+  "sources": [
+   "https://manufacturingprocesses.org/processes/cutting/plasma-cutting"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "export_dxf.py / nest.py / gcode.py"
+ },
+ {
+  "process": "Plasma",
+  "rank_in_process": 10,
+  "failure": "Weld prep faces cut with nitrogen-enriched edge -> porosity",
+  "why": "Cut face chemistry",
+  "check": "Edges flagged as weld joints -> note 'grind after cut'",
+  "check_type": "file",
+  "severity": "tip",
+  "default_threshold": "n/a",
+  "threshold_source": "https://manufacturingprocesses.org/processes/cutting/plasma-cutting",
+  "sources": [
+   "https://manufacturingprocesses.org/processes/cutting/plasma-cutting"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "export_dxf.py / nest.py / gcode.py"
+ },
+ {
+  "process": "CNC",
+  "rank_in_process": 1,
+  "failure": "Square inside corners for tabs won't seat",
+  "why": "Bit leaves radius = bit/2",
+  "check": "Inside corner radius < tool radius with mating part -> fail unless dogbone/T-bone",
+  "check_type": "file",
+  "severity": "fail",
+  "default_threshold": "radius >= bit dia/2",
+  "threshold_source": "https://thejobshop.co/resources/tab-and-slot-design-cnc-router",
+  "sources": [
+   "https://thejobshop.co/resources/tab-and-slot-design-cnc-router",
+   "https://openspindle.com/blog/cnc-routing-dfm",
+   "https://makers.universityprep.org/classes/design-and-fabrication/cnc-design-rules/",
+   "https://theworkshoplife.com/articles/design-cnc-tabs-slots-perfect-fit"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "export_dxf.py / nest.py / gcode.py"
+ },
+ {
+  "process": "CNC",
+  "rank_in_process": 2,
+  "failure": "Slots/holes narrower than bit",
+  "why": "Tool can't enter; CAM skips",
+  "check": "Any slot/hole width < tool dia -> fail",
+  "check_type": "file",
+  "severity": "fail",
+  "default_threshold": "tool dia (SendCutSend: 0.125 in)",
+  "threshold_source": "https://makers.universityprep.org/classes/design-and-fabrication/cnc-design-rules/",
+  "sources": [
+   "https://makers.universityprep.org/classes/design-and-fabrication/cnc-design-rules/",
+   "https://sendcutsend.com/faq/what-are-best-practices-for-minimum-geometry/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "export_dxf.py / nest.py / gcode.py"
+ },
+ {
+  "process": "CNC",
+  "rank_in_process": 3,
+  "failure": "Plywood nominal vs actual thickness -> slots wrong",
+  "why": "3/4 ply is under 3/4; Baltic birch metric",
+  "check": "Slot width = measured thickness + 0.010-0.020 in; fail if built from nominal",
+  "check_type": "file",
+  "severity": "fail",
+  "default_threshold": "+0.010-0.020 in clearance",
+  "threshold_source": "https://thejobshop.co/resources/tab-and-slot-design-cnc-router",
+  "sources": [
+   "https://thejobshop.co/resources/tab-and-slot-design-cnc-router",
+   "https://theworkshoplife.com/articles/design-cnc-tabs-slots-perfect-fit"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "export_dxf.py / nest.py / gcode.py"
+ },
+ {
+  "process": "CNC",
+  "rank_in_process": 4,
+  "failure": "Parts move when cut free",
+  "why": "Vacuum loses grip on small parts",
+  "check": "Every through-cut part has tabs: 3-5 mm wide, height t/2, every 4-6 in, min 3",
+  "check_type": "file",
+  "severity": "warn",
+  "default_threshold": "3-5 mm, t/2, 4-6 in, >=3",
+  "threshold_source": "https://craftgineer.com/blog/cnc-routing-mistakes",
+  "sources": [
+   "https://craftgineer.com/blog/cnc-routing-mistakes",
+   "https://openspindle.com/blog/cnc-routing-dfm"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "export_dxf.py / nest.py / gcode.py"
+ },
+ {
+  "process": "CNC",
+  "rank_in_process": 5,
+  "failure": "Thin walls/ribs splinter",
+  "why": "Wall thinner than bit",
+  "check": "Wall width < tool dia -> warn",
+  "check_type": "file",
+  "severity": "warn",
+  "default_threshold": "tool dia",
+  "threshold_source": "https://makers.universityprep.org/classes/design-and-fabrication/cnc-design-rules/",
+  "sources": [
+   "https://makers.universityprep.org/classes/design-and-fabrication/cnc-design-rules/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "export_dxf.py / nest.py / gcode.py"
+ },
+ {
+  "process": "CNC",
+  "rank_in_process": 6,
+  "failure": "Tiny islands become projectiles",
+  "why": "Unheld pieces",
+  "check": "Part area below threshold without tabs -> warn",
+  "check_type": "advice",
+  "severity": "warn",
+  "default_threshold": "advice",
+  "threshold_source": "https://makers.universityprep.org/classes/design-and-fabrication/cnc-design-rules/",
+  "sources": [
+   "https://makers.universityprep.org/classes/design-and-fabrication/cnc-design-rules/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "export_dxf.py / nest.py / gcode.py"
+ },
+ {
+  "process": "CNC",
+  "rank_in_process": 7,
+  "failure": "Double compensation (CAM offset + drawn offset)",
+  "why": "Offset applied twice",
+  "check": "Drawn geometry flagged 'nominal'; offset only in toolpath",
+  "check_type": "file",
+  "severity": "warn",
+  "default_threshold": "n/a",
+  "threshold_source": "https://theworkshoplife.com/articles/design-cnc-tabs-slots-perfect-fit",
+  "sources": [
+   "https://theworkshoplife.com/articles/design-cnc-tabs-slots-perfect-fit"
+  ],
+  "covered_by_current_gate": "partial",
+  "where_in_toolbox": "export_dxf.py / nest.py / gcode.py"
+ },
+ {
+  "process": "CNC",
+  "rank_in_process": 8,
+  "failure": "Tearout on visible face",
+  "why": "Bit choice, cross-grain",
+  "check": "Tip: compression bit, good face up",
+  "check_type": "advice",
+  "severity": "tip",
+  "default_threshold": "advice only",
+  "threshold_source": "https://makers.universityprep.org/classes/design-and-fabrication/cnc-design-rules/",
+  "sources": [
+   "https://makers.universityprep.org/classes/design-and-fabrication/cnc-design-rules/",
+   "https://craftgineer.com/blog/cnc-routing-mistakes"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "export_dxf.py / nest.py / gcode.py"
+ },
+ {
+  "process": "CNC",
+  "rank_in_process": 9,
+  "failure": "Depth per pass too deep, bit breaks",
+  "why": "Overload",
+  "check": "G-code DOC <= 0.5x bit dia (wood), 1/3x hardwood/ply/MDF",
+  "check_type": "file",
+  "severity": "warn",
+  "default_threshold": "0.5x / 0.33x dia",
+  "threshold_source": "https://craftgineer.com/blog/cnc-routing-mistakes",
+  "sources": [
+   "https://craftgineer.com/blog/cnc-routing-mistakes"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "export_dxf.py / nest.py / gcode.py"
+ },
+ {
+  "process": "CNC",
+  "rank_in_process": 10,
+  "failure": "MDF/acrylic tabs snap/crack",
+  "why": "Material brittle",
+  "check": "Tabbed structural joints in MDF/acrylic -> tip",
+  "check_type": "advice",
+  "severity": "tip",
+  "default_threshold": "advice only",
+  "threshold_source": "https://thejobshop.co/resources/tab-and-slot-design-cnc-router",
+  "sources": [
+   "https://thejobshop.co/resources/tab-and-slot-design-cnc-router"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "export_dxf.py / nest.py / gcode.py"
+ },
+ {
+  "process": "CNC",
+  "rank_in_process": 11,
+  "failure": "Plywood voids",
+  "why": "Hidden core gaps",
+  "check": "Tip: spare part for show faces",
+  "check_type": "advice",
+  "severity": "tip",
+  "default_threshold": "advice only",
+  "threshold_source": "https://makers.universityprep.org/classes/design-and-fabrication/cnc-design-rules/",
+  "sources": [
+   "https://makers.universityprep.org/classes/design-and-fabrication/cnc-design-rules/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "export_dxf.py / nest.py / gcode.py"
+ },
+ {
+  "process": "CNC",
+  "rank_in_process": 12,
+  "failure": "Interference fits crush veneer",
+  "why": "Too tight",
+  "check": "Fit clearance <0 in plywood -> warn",
+  "check_type": "file",
+  "severity": "warn",
+  "default_threshold": "0",
+  "threshold_source": "https://theworkshoplife.com/articles/design-cnc-tabs-slots-perfect-fit",
+  "sources": [
+   "https://theworkshoplife.com/articles/design-cnc-tabs-slots-perfect-fit"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "export_dxf.py / nest.py / gcode.py"
+ },
+ {
+  "process": "Drawings/BOM",
+  "rank_in_process": 1,
+  "failure": "Drawing dims don't match model",
+  "why": "Manual edits",
+  "check": "Dims read from model",
+  "check_type": "file",
+  "severity": "fail",
+  "default_threshold": "0 mismatch",
+  "threshold_source": "https://www.getleo.ai/blog/bom-drawing-mismatch-detection",
+  "sources": [
+   "https://www.getleo.ai/blog/bom-drawing-mismatch-detection",
+   "https://www.wogo.ai/en/column/2d-drawing-check-list/"
+  ],
+  "covered_by_current_gate": "yes",
+  "where_in_toolbox": "spec_drawing.py / fabdocs.py / ship.py"
+ },
+ {
+  "process": "Drawings/BOM",
+  "rank_in_process": 2,
+  "failure": "BOM quantities wrong / missing items",
+  "why": "Desync",
+  "check": "Every model part once",
+  "check_type": "file",
+  "severity": "fail",
+  "default_threshold": "exact",
+  "threshold_source": "https://www.openbom.com/blog/plm-and-bom-management/bom-review-mistakes-quality-cost-supply-chain",
+  "sources": [
+   "https://www.openbom.com/blog/plm-and-bom-management/bom-review-mistakes-quality-cost-supply-chain",
+   "https://www.getleo.ai/blog/bom-drawing-mismatch-detection"
+  ],
+  "covered_by_current_gate": "yes",
+  "where_in_toolbox": "spec_drawing.py / fabdocs.py / ship.py"
+ },
+ {
+  "process": "Drawings/BOM",
+  "rank_in_process": 3,
+  "failure": "Units/scale missing or inconsistent in title block",
+  "why": "Title block not filled",
+  "check": "Every sheet has units, scale, date, part name",
+  "check_type": "file",
+  "severity": "fail",
+  "default_threshold": "present",
+  "threshold_source": "https://www.wogo.ai/en/column/2d-drawing-check-list/",
+  "sources": [
+   "https://www.wogo.ai/en/column/2d-drawing-check-list/",
+   "https://blog.hppi.com/engineering/avoid-the-most-common-technical-drawing-mistakes-engineering-blog"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "spec_drawing.py / fabdocs.py / ship.py"
+ },
+ {
+  "process": "Drawings/BOM",
+  "rank_in_process": 4,
+  "failure": "Missing tolerances on fit features",
+  "why": "Undefined fit",
+  "check": "Mating features carry tolerance or 'fit' note",
+  "check_type": "file",
+  "severity": "warn",
+  "default_threshold": "present",
+  "threshold_source": "https://blog.hppi.com/engineering/avoid-the-most-common-technical-drawing-mistakes-engineering-blog",
+  "sources": [
+   "https://blog.hppi.com/engineering/avoid-the-most-common-technical-drawing-mistakes-engineering-blog",
+   "https://www.wogo.ai/en/column/2d-drawing-check-list/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "spec_drawing.py / fabdocs.py / ship.py"
+ },
+ {
+  "process": "Drawings/BOM",
+  "rank_in_process": 5,
+  "failure": "Hole/thread callouts missing",
+  "why": "No thread spec",
+  "check": "Every hole has dia/depth; threads have spec",
+  "check_type": "file",
+  "severity": "fail",
+  "default_threshold": "present",
+  "threshold_source": "https://www.wogo.ai/en/column/2d-drawing-check-list/",
+  "sources": [
+   "https://www.wogo.ai/en/column/2d-drawing-check-list/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "spec_drawing.py / fabdocs.py / ship.py"
+ },
+ {
+  "process": "Drawings/BOM",
+  "rank_in_process": 6,
+  "failure": "Revision mismatch between files",
+  "why": "Old file sent",
+  "check": "All files share one revision/build id",
+  "check_type": "file",
+  "severity": "fail",
+  "default_threshold": "identical id",
+  "threshold_source": "https://bomproof.ai/mistakes/revision-mismatch",
+  "sources": [
+   "https://bomproof.ai/mistakes/revision-mismatch"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "spec_drawing.py / fabdocs.py / ship.py"
+ },
+ {
+  "process": "Drawings/BOM",
+  "rank_in_process": 7,
+  "failure": "Duplicate or missing dimensions",
+  "why": "Over/under-dimensioning",
+  "check": "Each feature dimensioned once",
+  "check_type": "file",
+  "severity": "warn",
+  "default_threshold": "n/a",
+  "threshold_source": "https://blog.hppi.com/engineering/avoid-the-most-common-technical-drawing-mistakes-engineering-blog",
+  "sources": [
+   "https://blog.hppi.com/engineering/avoid-the-most-common-technical-drawing-mistakes-engineering-blog",
+   "https://www.wogo.ai/en/column/2d-drawing-check-list/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "spec_drawing.py / fabdocs.py / ship.py"
+ },
+ {
+  "process": "Drawings/BOM",
+  "rank_in_process": 8,
+  "failure": "Material/finish not stated",
+  "why": "Missing notes",
+  "check": "Every part row has material+thickness+finish",
+  "check_type": "file",
+  "severity": "fail",
+  "default_threshold": "present",
+  "threshold_source": "https://www.wogo.ai/en/column/2d-drawing-check-list/",
+  "sources": [
+   "https://www.wogo.ai/en/column/2d-drawing-check-list/",
+   "https://www.openbom.com/blog/plm-and-bom-management/bom-review-mistakes-quality-cost-supply-chain"
+  ],
+  "covered_by_current_gate": "partial",
+  "where_in_toolbox": "spec_drawing.py / fabdocs.py / ship.py"
+ },
+ {
+  "process": "FDM",
+  "rank_in_process": 16,
+  "failure": "Dimensional error on prints",
+  "why": "FDM accuracy limited",
+  "check": "Fits on prints use >= \u00b10.5 mm allowance (prototype FDM)",
+  "check_type": "geometry",
+  "severity": "warn",
+  "default_threshold": "\u00b10.5% lower limit \u00b10.5 mm (Protolabs prototyping)",
+  "threshold_source": "https://www.protolabs.com/services/3d-printing/fused-deposition-modeling/",
+  "sources": [
+   "https://www.protolabs.com/services/3d-printing/fused-deposition-modeling/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "print3d.py / meshfuse.py / ship.py"
+ },
+ {
+  "process": "FDM",
+  "rank_in_process": 17,
+  "failure": "Threads printed too fine",
+  "why": "Thread pitch below printable",
+  "check": "Printed threads pitch < ~1 mm or dia < M6 -> suggest heat-set insert or tapped hole",
+  "check_type": "geometry",
+  "severity": "warn",
+  "default_threshold": "Sketch default",
+  "threshold_source": "https://www.rivcut.com/resources/thread-engagement-calculator",
+  "sources": [
+   "https://www.rivcut.com/resources/thread-engagement-calculator"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "print3d.py / meshfuse.py / ship.py"
+ },
+ {
+  "process": "FDM",
+  "rank_in_process": 18,
+  "failure": "Screw into plastic strips",
+  "why": "Plastic weak in threads",
+  "check": "Steel screw into plastic: engagement >=2.5xD or use insert",
+  "check_type": "geometry",
+  "severity": "warn",
+  "default_threshold": "2.5xD or insert",
+  "threshold_source": "https://www.rivcut.com/resources/thread-engagement-calculator",
+  "sources": [
+   "https://www.rivcut.com/resources/thread-engagement-calculator"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "print3d.py / meshfuse.py / ship.py"
+ },
+ {
+  "process": "FDM",
+  "rank_in_process": 19,
+  "failure": "Sharp edges on bed face distort fit",
+  "why": "Elephant foot + corner lift",
+  "check": "45 deg chamfer on bed-contact edges of fit parts",
+  "check_type": "geometry",
+  "severity": "tip",
+  "default_threshold": "45 deg chamfer",
+  "threshold_source": "https://www.hubs.com/knowledge-base/how-design-parts-fdm-3d-printing/",
+  "sources": [
+   "https://www.hubs.com/knowledge-base/how-design-parts-fdm-3d-printing/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "print3d.py / meshfuse.py / ship.py"
+ },
+ {
+  "process": "FDM",
+  "rank_in_process": 20,
+  "failure": "Supports on cosmetic faces",
+  "why": "Support scars",
+  "check": "Supports touching faces tagged cosmetic -> warn/reorient",
+  "check_type": "geometry",
+  "severity": "tip",
+  "default_threshold": "advice only",
+  "threshold_source": "https://www.hubs.com/knowledge-base/how-design-parts-fdm-3d-printing/",
+  "sources": [
+   "https://www.hubs.com/knowledge-base/how-design-parts-fdm-3d-printing/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "print3d.py / meshfuse.py / ship.py"
+ },
+ {
+  "process": "FDM",
+  "rank_in_process": 21,
+  "failure": "Bed too small / part split needed",
+  "why": "Part exceeds bed",
+  "check": "Bbox > bed -> split with alignment pins",
+  "check_type": "geometry",
+  "severity": "fail",
+  "default_threshold": "bed size (printers.json)",
+  "threshold_source": "https://www.hubs.com/knowledge-base/how-design-parts-fdm-3d-printing/",
+  "sources": [
+   "https://www.hubs.com/knowledge-base/how-design-parts-fdm-3d-printing/"
+  ],
+  "covered_by_current_gate": "yes",
+  "where_in_toolbox": "print3d.py / meshfuse.py / ship.py"
+ },
+ {
+  "process": "FDM",
+  "rank_in_process": 22,
+  "failure": "Brittle filament for load parts",
+  "why": "PLA creep/heat",
+  "check": "Advice: PETG/ABS/ASA for heat/outdoor",
+  "check_type": "advice",
+  "severity": "tip",
+  "default_threshold": "advice only",
+  "threshold_source": "https://help.prusa3d.com/article/warping_2011",
+  "sources": [
+   "https://help.prusa3d.com/article/warping_2011"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "print3d.py / meshfuse.py / ship.py"
+ },
+ {
+  "process": "FDM",
+  "rank_in_process": 23,
+  "failure": "Slicer arachne/classic hole differences",
+  "why": "Perimeter generator undersizes holes",
+  "check": "Advice: test print fit coupons",
+  "check_type": "advice",
+  "severity": "tip",
+  "default_threshold": "advice only",
+  "threshold_source": "https://github.com/prusa3d/PrusaSlicer/issues/8706",
+  "sources": [
+   "https://github.com/prusa3d/PrusaSlicer/issues/8706"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "print3d.py / meshfuse.py / ship.py"
+ },
+ {
+  "process": "FDM",
+  "rank_in_process": 24,
+  "failure": "Gaps/slots fuse",
+  "why": "Gap below extrusion resolution",
+  "check": "Any slot/gap < 0.5 mm -> warn",
+  "check_type": "geometry",
+  "severity": "warn",
+  "default_threshold": "0.5 mm",
+  "threshold_source": "https://forgelabs.com/design-guides/fdm",
+  "sources": [
+   "https://forgelabs.com/design-guides/fdm"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "print3d.py / meshfuse.py / ship.py"
+ },
+ {
+  "process": "FDM",
+  "rank_in_process": 25,
+  "failure": "ABS/ASA warping without enclosure",
+  "why": "Shrinkage",
+  "check": "Material ABS/ASA/PC -> note enclosure/skirt",
+  "check_type": "plan-text",
+  "severity": "warn",
+  "default_threshold": "advice only",
+  "threshold_source": "https://help.prusa3d.com/article/warping_2011",
+  "sources": [
+   "https://help.prusa3d.com/article/warping_2011"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "print3d.py / meshfuse.py / ship.py"
+ },
+ {
+  "process": "Laser",
+  "rank_in_process": 14,
+  "failure": "Laser tolerance assumed too tight",
+  "why": "Thin-sheet laser holds ~\u00b10.1-0.2 mm",
+  "check": "Fits on laser parts use >= \u00b10.1 mm",
+  "check_type": "file",
+  "severity": "warn",
+  "default_threshold": "\u00b10.1-0.2 mm acrylic; kerf 0.1-0.2 mm",
+  "threshold_source": "https://rpmfast.com/blogs-laser-cutting-tolerances-material-limits-design/",
+  "sources": [
+   "https://rpmfast.com/blogs-laser-cutting-tolerances-material-limits-design/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "export_dxf.py / nest.py / ship.py"
+ },
+ {
+  "process": "Laser",
+  "rank_in_process": 15,
+  "failure": "Kerf assumed instead of measured",
+  "why": "Kerf varies by material/focus",
+  "check": "Kerf in machines.json per material; flag default",
+  "check_type": "file",
+  "severity": "warn",
+  "default_threshold": "0.1-0.4 mm laser on thin ply",
+  "threshold_source": "https://cutplan.ai/en/blog/saw-kerf-explained.html",
+  "sources": [
+   "https://cutplan.ai/en/blog/saw-kerf-explained.html",
+   "https://docs.lightburnsoftware.com/latest/Guides/Test-KerfOffset/"
+  ],
+  "covered_by_current_gate": "partial",
+  "where_in_toolbox": "export_dxf.py / nest.py / ship.py"
+ },
+ {
+  "process": "Laser",
+  "rank_in_process": 16,
+  "failure": "Plywood thickness nominal in tab/slot",
+  "why": "Ply undersized",
+  "check": "Slot width = measured thickness",
+  "check_type": "file",
+  "severity": "fail",
+  "default_threshold": "3/4 ply = 23/32 in typical",
+  "threshold_source": "https://truesizelumber.com/plywood-actual-thickness.html",
+  "sources": [
+   "https://truesizelumber.com/plywood-actual-thickness.html",
+   "https://thejobshop.co/resources/tab-and-slot-design-cnc-router"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "export_dxf.py / nest.py / ship.py"
+ },
+ {
+  "process": "Laser",
+  "rank_in_process": 17,
+  "failure": "Engrave fill on open shapes",
+  "why": "Fill requires closed",
+  "check": "Fill layers must be closed loops",
+  "check_type": "file",
+  "severity": "fail",
+  "default_threshold": "closed",
+  "threshold_source": "https://docs.lightburnsoftware.com/latest/Explainers/OpenClosedShapes/",
+  "sources": [
+   "https://docs.lightburnsoftware.com/latest/Explainers/OpenClosedShapes/"
+  ],
+  "covered_by_current_gate": "partial",
+  "where_in_toolbox": "export_dxf.py / nest.py / ship.py"
+ },
+ {
+  "process": "Laser",
+  "rank_in_process": 18,
+  "failure": "Cut order outer first moves part",
+  "why": "Part drops before inner cut",
+  "check": "Inner contours ordered first",
+  "check_type": "file",
+  "severity": "warn",
+  "default_threshold": "advice only",
+  "threshold_source": "https://docs.lightburnsoftware.com/latest/Explainers/OpenClosedShapes/",
+  "sources": [
+   "https://docs.lightburnsoftware.com/latest/Explainers/OpenClosedShapes/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "export_dxf.py / nest.py / ship.py"
+ },
+ {
+  "process": "Laser",
+  "rank_in_process": 19,
+  "failure": "Unknown plastic cut",
+  "why": "Could be PVC",
+  "check": "Material unknown -> fail until identified (SDS)",
+  "check_type": "plan-text",
+  "severity": "fail",
+  "default_threshold": "SDS required",
+  "threshold_source": "https://team.bosslaser.com/learn/materials/materials-to-never-laser/",
+  "sources": [
+   "https://team.bosslaser.com/learn/materials/materials-to-never-laser/",
+   "https://support.brmlasers.com/en/getting-started/which-materials-can-you-laser"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "export_dxf.py / nest.py / ship.py"
+ },
+ {
+  "process": "Laser",
+  "rank_in_process": 20,
+  "failure": "Laser cutting galvanized/coated metal fume",
+  "why": "Zinc fume",
+  "check": "Coated metal on laser/plasma -> safety note",
+  "check_type": "plan-text",
+  "severity": "warn",
+  "default_threshold": "Zn oxide PEL 5 mg/m3",
+  "threshold_source": "https://portugues.cdc.gov/niosh/npg/npgd0675.html",
+  "sources": [
+   "https://portugues.cdc.gov/niosh/npg/npgd0675.html",
+   "https://aws-p-001-delivery.sitecorecontenthub.cloud/api/public/content/Fact-Sheet-No.25"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "export_dxf.py / nest.py / ship.py"
+ },
+ {
+  "process": "Laser",
+  "rank_in_process": 21,
+  "failure": "Part bigger than bed",
+  "why": "Machine limits",
+  "check": "Part bbox <= laser bed (machines.json)",
+  "check_type": "file",
+  "severity": "fail",
+  "default_threshold": "bed size",
+  "threshold_source": "https://sendcutsend.com/blog/10-common-reasons-your-design-is-failing-sendcutsend-preflight/",
+  "sources": [
+   "https://sendcutsend.com/blog/10-common-reasons-your-design-is-failing-sendcutsend-preflight/"
+  ],
+  "covered_by_current_gate": "yes",
+  "where_in_toolbox": "export_dxf.py / nest.py / ship.py"
+ },
+ {
+  "process": "Laser",
+  "rank_in_process": 22,
+  "failure": "Mask/tape not noted for acrylic",
+  "why": "Surface damage",
+  "check": "Plan note keep masking on acrylic",
+  "check_type": "plan-text",
+  "severity": "tip",
+  "default_threshold": "advice only",
+  "threshold_source": "https://graphics-pro.com/education/common-issues-when-laser-cutting-acrylic/",
+  "sources": [
+   "https://graphics-pro.com/education/common-issues-when-laser-cutting-acrylic/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "export_dxf.py / nest.py / ship.py"
+ },
+ {
+  "process": "Laser",
+  "rank_in_process": 23,
+  "failure": "Text too small to cut",
+  "why": "Bridges/holes below min",
+  "check": "Text stroke < 0.5x t -> warn",
+  "check_type": "file",
+  "severity": "warn",
+  "default_threshold": "0.5x t",
+  "threshold_source": "https://sendcutsend.com/wp-content/uploads/2025/11/5.2.pdf",
+  "sources": [
+   "https://sendcutsend.com/wp-content/uploads/2025/11/5.2.pdf"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "export_dxf.py / nest.py / ship.py"
+ },
+ {
+  "process": "Laser",
+  "rank_in_process": 24,
+  "failure": "Living hinge slits too close",
+  "why": "Bridge min",
+  "check": "Slit spacing >= min bridge",
+  "check_type": "file",
+  "severity": "warn",
+  "default_threshold": "0.5x t",
+  "threshold_source": "https://sendcutsend.com/blog/basic-tolerances-and-cut-feature-relationships/",
+  "sources": [
+   "https://sendcutsend.com/blog/basic-tolerances-and-cut-feature-relationships/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "export_dxf.py / nest.py / ship.py"
+ },
+ {
+  "process": "Laser",
+  "rank_in_process": 25,
+  "failure": "Acrylic press-fits crack",
+  "why": "Brittle",
+  "check": "No interference fits in acrylic",
+  "check_type": "file",
+  "severity": "warn",
+  "default_threshold": "advice only",
+  "threshold_source": "https://thejobshop.co/resources/tab-and-slot-design-cnc-router",
+  "sources": [
+   "https://thejobshop.co/resources/tab-and-slot-design-cnc-router"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "export_dxf.py / nest.py / ship.py"
+ },
+ {
+  "process": "Plasma",
+  "rank_in_process": 11,
+  "failure": "Tolerance assumed tighter than plasma",
+  "why": "Arc wander",
+  "check": "Fit features plan for \u00b10.76 mm conventional, \u00b10.25 HD",
+  "check_type": "file",
+  "severity": "warn",
+  "default_threshold": "\u00b10.030 in conv / \u00b10.010 in HD",
+  "threshold_source": "https://www.hypertherm.com/resources/system-support/maintenance-and-use/cut-quality/hole-quality/",
+  "sources": [
+   "https://www.hypertherm.com/resources/system-support/maintenance-and-use/cut-quality/hole-quality/",
+   "https://manufacturingprocesses.org/processes/cutting/plasma-cutting"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "export_dxf.py / nest.py / gcode.py"
+ },
+ {
+  "process": "Plasma",
+  "rank_in_process": 12,
+  "failure": "Plate thickness outside plasma sweet spot",
+  "why": "Cost/quality",
+  "check": "Advice: plasma best 6-38 mm",
+  "check_type": "advice",
+  "severity": "tip",
+  "default_threshold": "0.25-1.5 in",
+  "threshold_source": "https://manufacturingprocesses.org/processes/cutting/plasma-cutting",
+  "sources": [
+   "https://manufacturingprocesses.org/processes/cutting/plasma-cutting"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "export_dxf.py / nest.py / gcode.py"
+ },
+ {
+  "process": "Plasma",
+  "rank_in_process": 13,
+  "failure": "HAZ at edges to be bent/machined",
+  "why": "Hardened edge",
+  "check": "Edges to be bent/tapped noted",
+  "check_type": "plan-text",
+  "severity": "tip",
+  "default_threshold": "HAZ 0.25-1.3 mm",
+  "threshold_source": "https://manufacturingprocesses.org/processes/cutting/plasma-cutting",
+  "sources": [
+   "https://manufacturingprocesses.org/processes/cutting/plasma-cutting"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "export_dxf.py / nest.py / gcode.py"
+ },
+ {
+  "process": "Plasma",
+  "rank_in_process": 14,
+  "failure": "Holes cut at full speed",
+  "why": "Taper",
+  "check": "G-code: holes <1 in at ~60% speed",
+  "check_type": "file",
+  "severity": "warn",
+  "default_threshold": "60% speed",
+  "threshold_source": "https://forum.linuxcnc.org/media/kunena/attachments/20660/hyperthermholes.pdf",
+  "sources": [
+   "https://forum.linuxcnc.org/media/kunena/attachments/20660/hyperthermholes.pdf"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "export_dxf.py / nest.py / gcode.py"
+ },
+ {
+  "process": "Plasma",
+  "rank_in_process": 15,
+  "failure": "Galvanized plate cut",
+  "why": "Zinc fume",
+  "check": "Galv material -> ventilation note",
+  "check_type": "plan-text",
+  "severity": "warn",
+  "default_threshold": "PEL 5 mg/m3",
+  "threshold_source": "https://portugues.cdc.gov/niosh/npg/npgd0675.html",
+  "sources": [
+   "https://portugues.cdc.gov/niosh/npg/npgd0675.html"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "export_dxf.py / nest.py / gcode.py"
+ },
+ {
+  "process": "Plasma",
+  "rank_in_process": 16,
+  "failure": "Small parts tip into slats",
+  "why": "Support",
+  "check": "Part smaller than slat spacing -> microtab",
+  "check_type": "file",
+  "severity": "tip",
+  "default_threshold": "advice only",
+  "threshold_source": "Sketch default",
+  "sources": [
+   "https://manufacturingprocesses.org/processes/cutting/plasma-cutting"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "export_dxf.py / nest.py / gcode.py"
+ },
+ {
+  "process": "Plasma",
+  "rank_in_process": 17,
+  "failure": "Kerf comp sign wrong",
+  "why": "Inside vs outside",
+  "check": "Holes offset inward, outlines outward",
+  "check_type": "file",
+  "severity": "fail",
+  "default_threshold": "kerf/2",
+  "threshold_source": "https://docs.lightburnsoftware.com/latest/Guides/Test-KerfOffset/",
+  "sources": [
+   "https://docs.lightburnsoftware.com/latest/Guides/Test-KerfOffset/"
+  ],
+  "covered_by_current_gate": "partial",
+  "where_in_toolbox": "export_dxf.py / nest.py / gcode.py"
+ },
+ {
+  "process": "Plasma",
+  "rank_in_process": 18,
+  "failure": "Pierce too close to edge",
+  "why": "Blowout",
+  "check": "Lead-in pierce inside scrap, not on part edge",
+  "check_type": "file",
+  "severity": "warn",
+  "default_threshold": "advice only",
+  "threshold_source": "https://forum.linuxcnc.org/media/kunena/attachments/20660/hyperthermholes.pdf",
+  "sources": [
+   "https://forum.linuxcnc.org/media/kunena/attachments/20660/hyperthermholes.pdf"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "export_dxf.py / nest.py / gcode.py"
+ },
+ {
+  "process": "Plasma",
+  "rank_in_process": 19,
+  "failure": "Dross left on bolt holes",
+  "why": "Fit",
+  "check": "Plan: deburr/grind",
+  "check_type": "plan-text",
+  "severity": "tip",
+  "default_threshold": "advice only",
+  "threshold_source": "https://manufacturingprocesses.org/processes/cutting/plasma-cutting",
+  "sources": [
+   "https://manufacturingprocesses.org/processes/cutting/plasma-cutting"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "export_dxf.py / nest.py / gcode.py"
+ },
+ {
+  "process": "Plasma",
+  "rank_in_process": 20,
+  "failure": "Part needs bending after cut",
+  "why": "Hole-to-bend",
+  "check": "Sheet metal rules apply",
+  "check_type": "geometry",
+  "severity": "warn",
+  "default_threshold": "2.5T+R",
+  "threshold_source": "https://ssgmfg.com/design-guides/sheet-metal-fabrication",
+  "sources": [
+   "https://ssgmfg.com/design-guides/sheet-metal-fabrication"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "export_dxf.py / nest.py / gcode.py"
+ },
+ {
+  "process": "Plasma",
+  "rank_in_process": 21,
+  "failure": "Plasma-cut slot for tab joint too tight",
+  "why": "Kerf+bevel",
+  "check": "Slot >= tab + bevel allowance",
+  "check_type": "file",
+  "severity": "warn",
+  "default_threshold": "Sketch default",
+  "threshold_source": "https://www.hypertherm.com/resources/system-support/maintenance-and-use/cut-quality/cut-angularity/",
+  "sources": [
+   "https://www.hypertherm.com/resources/system-support/maintenance-and-use/cut-quality/cut-angularity/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "export_dxf.py / nest.py / gcode.py"
+ },
+ {
+  "process": "Plasma",
+  "rank_in_process": 22,
+  "failure": "Web between nested parts",
+  "why": "Heat distortion",
+  "check": "Part spacing >= kerf + margin",
+  "check_type": "file",
+  "severity": "warn",
+  "default_threshold": "1.5-4 mm kerf",
+  "threshold_source": "https://manufacturingprocesses.org/processes/cutting/plasma-cutting",
+  "sources": [
+   "https://manufacturingprocesses.org/processes/cutting/plasma-cutting"
+  ],
+  "covered_by_current_gate": "partial",
+  "where_in_toolbox": "export_dxf.py / nest.py / gcode.py"
+ },
+ {
+  "process": "Plasma",
+  "rank_in_process": 23,
+  "failure": "Warp of long thin strips",
+  "why": "Heat",
+  "check": "Strips L/W large -> warn",
+  "check_type": "file",
+  "severity": "warn",
+  "default_threshold": "Sketch default",
+  "threshold_source": "https://manufacturingprocesses.org/processes/cutting/plasma-cutting",
+  "sources": [
+   "https://manufacturingprocesses.org/processes/cutting/plasma-cutting"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "export_dxf.py / nest.py / gcode.py"
+ },
+ {
+  "process": "Plasma",
+  "rank_in_process": 24,
+  "failure": "Material not on plasma-capable list",
+  "why": "Non-conductive",
+  "check": "Plasma requires conductive metal",
+  "check_type": "plan-text",
+  "severity": "fail",
+  "default_threshold": "conductive only",
+  "threshold_source": "https://manufacturingprocesses.org/processes/cutting/plasma-cutting",
+  "sources": [
+   "https://manufacturingprocesses.org/processes/cutting/plasma-cutting"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "export_dxf.py / nest.py / gcode.py"
+ },
+ {
+  "process": "Plasma",
+  "rank_in_process": 25,
+  "failure": "Cut quality expectations",
+  "why": "ISO 9013 not Ra",
+  "check": "Advice",
+  "check_type": "advice",
+  "severity": "tip",
+  "default_threshold": "advice only",
+  "threshold_source": "https://manufacturingprocesses.org/processes/cutting/plasma-cutting",
+  "sources": [
+   "https://manufacturingprocesses.org/processes/cutting/plasma-cutting"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "export_dxf.py / nest.py / gcode.py"
+ },
+ {
+  "process": "CNC",
+  "rank_in_process": 13,
+  "failure": "Tolerance on plywood spec'd too tight",
+  "why": "Sheet variation",
+  "check": "Router fits plan >= \u00b10.20-0.25 mm",
+  "check_type": "file",
+  "severity": "warn",
+  "default_threshold": "\u00b10.20-0.25 mm ply; \u00b10.13-0.25 mm stable stock",
+  "threshold_source": "https://glcncmachining.com/cnc-machine-wood-services/",
+  "sources": [
+   "https://glcncmachining.com/cnc-machine-wood-services/",
+   "https://thejobshop.co/resources/cnc-routing-tolerances-design-guide"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "export_dxf.py / nest.py / gcode.py"
+ },
+ {
+  "process": "CNC",
+  "rank_in_process": 14,
+  "failure": "Dado sized to nominal ply",
+  "why": "Undersized ply",
+  "check": "Dado width = measured +~0.002 in glue",
+  "check_type": "file",
+  "severity": "fail",
+  "default_threshold": "+0.002 in",
+  "threshold_source": "https://deadon.app/dado-calculator",
+  "sources": [
+   "https://deadon.app/dado-calculator",
+   "https://sawmillcreek.org/threads/need-a-primer-help-with-router-bits-for-plywood-dados.283437/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "export_dxf.py / nest.py / gcode.py"
+ },
+ {
+  "process": "CNC",
+  "rank_in_process": 15,
+  "failure": "Bit diameter not in machines.json",
+  "why": "Unknown kerf",
+  "check": "Kerf = bit dia",
+  "check_type": "file",
+  "severity": "fail",
+  "default_threshold": "bit dia",
+  "threshold_source": "https://sawplot.com/guides/saw-blade-kerf",
+  "sources": [
+   "https://sawplot.com/guides/saw-blade-kerf",
+   "https://cutplan.ai/en/blog/saw-kerf-explained.html"
+  ],
+  "covered_by_current_gate": "partial",
+  "where_in_toolbox": "export_dxf.py / nest.py / gcode.py"
+ },
+ {
+  "process": "CNC",
+  "rank_in_process": 16,
+  "failure": "Pocket corners too sharp",
+  "why": "Radius",
+  "check": "Same as inside corner rule",
+  "check_type": "file",
+  "severity": "fail",
+  "default_threshold": "bit/2",
+  "threshold_source": "https://openspindle.com/blog/cnc-routing-dfm",
+  "sources": [
+   "https://openspindle.com/blog/cnc-routing-dfm"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "export_dxf.py / nest.py / gcode.py"
+ },
+ {
+  "process": "CNC",
+  "rank_in_process": 17,
+  "failure": "Part too close to sheet edge/clamps",
+  "why": "Clamp collision",
+  "check": "Margin >= Sketch default",
+  "check_type": "file",
+  "severity": "warn",
+  "default_threshold": "Sketch default",
+  "threshold_source": "https://craftgineer.com/blog/cnc-routing-mistakes",
+  "sources": [
+   "https://craftgineer.com/blog/cnc-routing-mistakes"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "export_dxf.py / nest.py / gcode.py"
+ },
+ {
+  "process": "CNC",
+  "rank_in_process": 18,
+  "failure": "Cutting plastics with wrong bit",
+  "why": "Melting",
+  "check": "Advice single-flute upcut",
+  "check_type": "advice",
+  "severity": "tip",
+  "default_threshold": "advice only",
+  "threshold_source": "https://craftgineer.com/blog/cnc-routing-mistakes",
+  "sources": [
+   "https://craftgineer.com/blog/cnc-routing-mistakes"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "export_dxf.py / nest.py / gcode.py"
+ },
+ {
+  "process": "CNC",
+  "rank_in_process": 19,
+  "failure": "V-carve detail too fine",
+  "why": "V-bit angle",
+  "check": "Advice 60 vs 90 deg",
+  "check_type": "advice",
+  "severity": "tip",
+  "default_threshold": "advice only",
+  "threshold_source": "https://craftgineer.com/blog/cnc-routing-mistakes",
+  "sources": [
+   "https://craftgineer.com/blog/cnc-routing-mistakes"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "export_dxf.py / nest.py / gcode.py"
+ },
+ {
+  "process": "CNC",
+  "rank_in_process": 20,
+  "failure": "Grain direction ignored in nest",
+  "why": "Strength/looks",
+  "check": "Lock grain on show faces",
+  "check_type": "file",
+  "severity": "warn",
+  "default_threshold": "n/a",
+  "threshold_source": "https://cutplan.ai/en/blog/grain-direction-panel-cutting.html",
+  "sources": [
+   "https://cutplan.ai/en/blog/grain-direction-panel-cutting.html"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "export_dxf.py / nest.py / gcode.py"
+ },
+ {
+  "process": "CNC",
+  "rank_in_process": 21,
+  "failure": "Onion skin vs tabs choice",
+  "why": "Holding",
+  "check": "Advice",
+  "check_type": "advice",
+  "severity": "tip",
+  "default_threshold": "advice only",
+  "threshold_source": "https://openspindle.com/blog/cnc-routing-dfm",
+  "sources": [
+   "https://openspindle.com/blog/cnc-routing-dfm"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "export_dxf.py / nest.py / gcode.py"
+ },
+ {
+  "process": "CNC",
+  "rank_in_process": 22,
+  "failure": "Sheet size assumed 48x96 exact",
+  "why": "Ply sheet sizes",
+  "check": "Nest uses actual sheet (4x8 nominal)",
+  "check_type": "file",
+  "severity": "warn",
+  "default_threshold": "48x96 in",
+  "threshold_source": "Sketch default",
+  "sources": [
+   "https://cutplan.ai/en/blog/grain-direction-panel-cutting.html"
+  ],
+  "covered_by_current_gate": "partial",
+  "where_in_toolbox": "export_dxf.py / nest.py / gcode.py"
+ },
+ {
+  "process": "CNC",
+  "rank_in_process": 23,
+  "failure": "Assembly impossible order",
+  "why": "Tabs can't enter",
+  "check": "Advice: check assembly sequence",
+  "check_type": "advice",
+  "severity": "warn",
+  "default_threshold": "advice only",
+  "threshold_source": "https://theworkshoplife.com/articles/design-cnc-tabs-slots-perfect-fit",
+  "sources": [
+   "https://theworkshoplife.com/articles/design-cnc-tabs-slots-perfect-fit"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "export_dxf.py / nest.py / gcode.py"
+ },
+ {
+  "process": "CNC",
+  "rank_in_process": 24,
+  "failure": "Sanding changes fits",
+  "why": "Removal",
+  "check": "Plan note",
+  "check_type": "plan-text",
+  "severity": "tip",
+  "default_threshold": "advice only",
+  "threshold_source": "https://makers.universityprep.org/classes/design-and-fabrication/cnc-design-rules/",
+  "sources": [
+   "https://makers.universityprep.org/classes/design-and-fabrication/cnc-design-rules/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "export_dxf.py / nest.py / gcode.py"
+ },
+ {
+  "process": "CNC",
+  "rank_in_process": 25,
+  "failure": "Holding small parts",
+  "why": "Vacuum loss",
+  "check": "Tabs or tape+CA",
+  "check_type": "plan-text",
+  "severity": "warn",
+  "default_threshold": "advice only",
+  "threshold_source": "https://craftgineer.com/blog/cnc-routing-mistakes",
+  "sources": [
+   "https://craftgineer.com/blog/cnc-routing-mistakes"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "export_dxf.py / nest.py / gcode.py"
+ },
+ {
+  "process": "Drawings/BOM",
+  "rank_in_process": 9,
+  "failure": "Weld symbols wrong side",
+  "why": "Arrow/other side confusion",
+  "check": "Weld symbol side matches model weld location",
+  "check_type": "file",
+  "severity": "fail",
+  "default_threshold": "AWS A2.4 below=arrow side",
+  "threshold_source": "https://pubs.aws.org/Download_PDFS/2__A2_4_2020_PV.pdf",
+  "sources": [
+   "https://pubs.aws.org/Download_PDFS/2__A2_4_2020_PV.pdf",
+   "https://www.millerwelds.com/en-US/resources/knowledge-hub/welding-basics/how-to-read-and-understand-weld-symbols"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "spec_drawing.py / fabdocs.py / ship.py"
+ },
+ {
+  "process": "Drawings/BOM",
+  "rank_in_process": 10,
+  "failure": "Fillet size/pitch misread",
+  "why": "Pitch c-c not gap",
+  "check": "Intermittent welds dimensioned length-pitch c-c",
+  "check_type": "file",
+  "severity": "warn",
+  "default_threshold": "pitch = c-c",
+  "threshold_source": "https://www.millerwelds.com/en-US/resources/knowledge-hub/welding-basics/how-to-read-and-understand-weld-symbols",
+  "sources": [
+   "https://www.millerwelds.com/en-US/resources/knowledge-hub/welding-basics/how-to-read-and-understand-weld-symbols",
+   "https://helonic.com/knowledge-base/how-to-read-welding-symbols"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "spec_drawing.py / fabdocs.py / ship.py"
+ },
+ {
+  "process": "Drawings/BOM",
+  "rank_in_process": 11,
+  "failure": "Weld-all-around missing",
+  "why": "Implied",
+  "check": "Closed-profile welds use all-around",
+  "check_type": "file",
+  "severity": "warn",
+  "default_threshold": "advice only",
+  "threshold_source": "https://helonic.com/knowledge-base/how-to-read-welding-symbols",
+  "sources": [
+   "https://helonic.com/knowledge-base/how-to-read-welding-symbols"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "spec_drawing.py / fabdocs.py / ship.py"
+ },
+ {
+  "process": "Drawings/BOM",
+  "rank_in_process": 12,
+  "failure": "General tolerance block missing",
+  "why": "No default tol",
+  "check": "Title block cites ISO 2768-m or stated \u00b1",
+  "check_type": "file",
+  "severity": "fail",
+  "default_threshold": "ISO 2768-m",
+  "threshold_source": "https://www.csl-imt.ch/en/knowledge/iso-2768-tolerance-tables/",
+  "sources": [
+   "https://www.csl-imt.ch/en/knowledge/iso-2768-tolerance-tables/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "spec_drawing.py / fabdocs.py / ship.py"
+ },
+ {
+  "process": "Drawings/BOM",
+  "rank_in_process": 13,
+  "failure": "Fit features lack fit class",
+  "why": "Ambiguous",
+  "check": "Shaft/hole pairs carry ISO 286 class",
+  "check_type": "file",
+  "severity": "warn",
+  "default_threshold": "H7/g6 etc",
+  "threshold_source": "https://manufacturingprocesses.org/charts/iso-286-fits-tolerances",
+  "sources": [
+   "https://manufacturingprocesses.org/charts/iso-286-fits-tolerances"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "spec_drawing.py / fabdocs.py / ship.py"
+ },
+ {
+  "process": "Drawings/BOM",
+  "rank_in_process": 14,
+  "failure": "Finish thickness not on drawing",
+  "why": "Coated fit binds",
+  "check": "Coated parts note thickness & masking",
+  "check_type": "file",
+  "severity": "warn",
+  "default_threshold": "powder 2-4 mil",
+  "threshold_source": "https://manufacturingprocesses.org/processes/finishing/powder-coating.md",
+  "sources": [
+   "https://manufacturingprocesses.org/processes/finishing/powder-coating.md"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "spec_drawing.py / fabdocs.py / ship.py"
+ },
+ {
+  "process": "Drawings/BOM",
+  "rank_in_process": 15,
+  "failure": "Lumber called by nominal on drawing w/o actual",
+  "why": "Confusion",
+  "check": "Show actual size on wood parts",
+  "check_type": "file",
+  "severity": "warn",
+  "default_threshold": "2x4=1.5x3.5",
+  "threshold_source": "https://lumberreference.com/lumber-size-chart/",
+  "sources": [
+   "https://lumberreference.com/lumber-size-chart/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "spec_drawing.py / fabdocs.py / ship.py"
+ },
+ {
+  "process": "Drawings/BOM",
+  "rank_in_process": 16,
+  "failure": "Cut list lengths not finished sizes",
+  "why": "Confusion",
+  "check": "Label finished vs rough",
+  "check_type": "file",
+  "severity": "warn",
+  "default_threshold": "advice only",
+  "threshold_source": "https://grainandglue.com/learn/how-to-read-woodworking-plans",
+  "sources": [
+   "https://grainandglue.com/learn/how-to-read-woodworking-plans"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "spec_drawing.py / fabdocs.py / ship.py"
+ },
+ {
+  "process": "Drawings/BOM",
+  "rank_in_process": 17,
+  "failure": "Hardware not specced (size, length, grade)",
+  "why": "Wrong buy",
+  "check": "Shopping list fasteners have size/length/material",
+  "check_type": "file",
+  "severity": "fail",
+  "default_threshold": "present",
+  "threshold_source": "https://www.openbom.com/blog/plm-and-bom-management/bom-review-mistakes-quality-cost-supply-chain",
+  "sources": [
+   "https://www.openbom.com/blog/plm-and-bom-management/bom-review-mistakes-quality-cost-supply-chain"
+  ],
+  "covered_by_current_gate": "partial",
+  "where_in_toolbox": "spec_drawing.py / fabdocs.py / ship.py"
+ },
+ {
+  "process": "Drawings/BOM",
+  "rank_in_process": 18,
+  "failure": "Missing quantity per assembly vs total",
+  "why": "Desync",
+  "check": "BOM shows per-assembly and total",
+  "check_type": "file",
+  "severity": "warn",
+  "default_threshold": "advice only",
+  "threshold_source": "https://www.openbom.com/blog/plm-and-bom-management/bom-review-mistakes-quality-cost-supply-chain",
+  "sources": [
+   "https://www.openbom.com/blog/plm-and-bom-management/bom-review-mistakes-quality-cost-supply-chain"
+  ],
+  "covered_by_current_gate": "partial",
+  "where_in_toolbox": "spec_drawing.py / fabdocs.py / ship.py"
+ },
+ {
+  "process": "Drawings/BOM",
+  "rank_in_process": 19,
+  "failure": "Sheet goods count wrong",
+  "why": "Nest vs BOM",
+  "check": "Sheet count = nest output",
+  "check_type": "file",
+  "severity": "fail",
+  "default_threshold": "exact",
+  "threshold_source": "Sketch default",
+  "sources": [
+   "https://www.openbom.com/blog/plm-and-bom-management/bom-review-mistakes-quality-cost-supply-chain"
+  ],
+  "covered_by_current_gate": "yes",
+  "where_in_toolbox": "spec_drawing.py / fabdocs.py / ship.py"
+ },
+ {
+  "process": "Drawings/BOM",
+  "rank_in_process": 20,
+  "failure": "Developed (flat) length missing for bent/rolled parts",
+  "why": "Shop cuts wrong",
+  "check": "Bent/rolled parts list blank size",
+  "check_type": "file",
+  "severity": "fail",
+  "default_threshold": "\u03c0(ID+t)",
+  "threshold_source": "https://artisantraining.online/wp-content/uploads/2020/12/PF-2.pdf",
+  "sources": [
+   "https://artisantraining.online/wp-content/uploads/2020/12/PF-2.pdf",
+   "https://kingsformmetal.com/resources/downloads/files/KFR-008_Sheet_Metal_Design_Guide_v1.0.pdf"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "spec_drawing.py / fabdocs.py / ship.py"
+ },
+ {
+  "process": "Drawings/BOM",
+  "rank_in_process": 21,
+  "failure": "Pipe called by OD vs NPS mixed",
+  "why": "NPS != OD",
+  "check": "Pipe rows state NPS + schedule + OD",
+  "check_type": "file",
+  "severity": "fail",
+  "default_threshold": "NPS 1 = 1.315 OD",
+  "threshold_source": "https://www.engineersedge.com/pipe_schedules.htm",
+  "sources": [
+   "https://www.engineersedge.com/pipe_schedules.htm"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "spec_drawing.py / fabdocs.py / ship.py"
+ },
+ {
+  "process": "Drawings/BOM",
+  "rank_in_process": 22,
+  "failure": "Drawing scale stated but PDF printed scaled",
+  "why": "Scaled prints",
+  "check": "Note 'do not scale' + scale bar",
+  "check_type": "file",
+  "severity": "tip",
+  "default_threshold": "advice only",
+  "threshold_source": "https://www.wogo.ai/en/column/2d-drawing-check-list/",
+  "sources": [
+   "https://www.wogo.ai/en/column/2d-drawing-check-list/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "spec_drawing.py / fabdocs.py / ship.py"
+ },
+ {
+  "process": "Drawings/BOM",
+  "rank_in_process": 23,
+  "failure": "Kerf/drill callouts missing for plasma holes",
+  "why": "Drill after",
+  "check": "Holes to drill noted",
+  "check_type": "file",
+  "severity": "warn",
+  "default_threshold": "1.5x t",
+  "threshold_source": "https://www.hypertherm.com/resources/system-support/maintenance-and-use/cut-quality/hole-quality/",
+  "sources": [
+   "https://www.hypertherm.com/resources/system-support/maintenance-and-use/cut-quality/hole-quality/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "spec_drawing.py / fabdocs.py / ship.py"
+ },
+ {
+  "process": "Drawings/BOM",
+  "rank_in_process": 24,
+  "failure": "No revision/date on parts list",
+  "why": "Mismatch",
+  "check": "Build ID on every file",
+  "check_type": "file",
+  "severity": "fail",
+  "default_threshold": "identical",
+  "threshold_source": "https://bomproof.ai/mistakes/revision-mismatch",
+  "sources": [
+   "https://bomproof.ai/mistakes/revision-mismatch"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "spec_drawing.py / fabdocs.py / ship.py"
+ },
+ {
+  "process": "Drawings/BOM",
+  "rank_in_process": 25,
+  "failure": "Engineer-required items not flagged",
+  "why": "Liability",
+  "check": "Structural/pressure items flagged",
+  "check_type": "plan-text",
+  "severity": "fail",
+  "default_threshold": "flag",
+  "threshold_source": "https://up.codes/viewer/connecticut/irc-2021/chapter/6/wall-construction",
+  "sources": [
+   "https://up.codes/viewer/connecticut/irc-2021/chapter/6/wall-construction"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "spec_drawing.py / fabdocs.py / ship.py"
+ },
+ {
+  "process": "Woodworking",
+  "rank_in_process": 1,
+  "failure": "Saw kerf ignored in cut list",
+  "why": "Each cut removes material",
+  "check": "Stock >= sum(parts)+n_cuts*kerf; kerf by tool",
+  "check_type": "plan-text",
+  "severity": "fail",
+  "default_threshold": "full 0.126 in, thin 0.091-0.098 in, 7-1/4 circ 0.059 in, band 0.048-0.060 in",
+  "threshold_source": "https://sawplot.com/guides/saw-blade-kerf",
+  "sources": [
+   "https://sawplot.com/guides/saw-blade-kerf",
+   "https://www.cutlistor.com/calculators/kerf-calculator",
+   "https://globalcalcs.com/en/lifestyle/board-cuts-with-kerf/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "wood_plan.py / steps.py / fabdocs.py"
+ },
+ {
+  "process": "Woodworking",
+  "rank_in_process": 2,
+  "failure": "Nominal lumber used as actual",
+  "why": "2x4 is 1.5x3.5",
+  "check": "Wood dims use actual table",
+  "check_type": "geometry",
+  "severity": "fail",
+  "default_threshold": "see shop_reference",
+  "threshold_source": "https://lumberreference.com/lumber-size-chart/",
+  "sources": [
+   "https://lumberreference.com/lumber-size-chart/",
+   "https://www.ezwoodshop.com/lumber-dimensions.html"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "wood_plan.py / steps.py / fabdocs.py"
+ },
+ {
+  "process": "Woodworking",
+  "rank_in_process": 3,
+  "failure": "3/4 plywood assumed 0.75",
+  "why": "Undersized ~23/32",
+  "check": "Use 23/32 or measured",
+  "check_type": "geometry",
+  "severity": "fail",
+  "default_threshold": "23/32 in",
+  "threshold_source": "https://truesizelumber.com/plywood-actual-thickness.html",
+  "sources": [
+   "https://truesizelumber.com/plywood-actual-thickness.html"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "wood_plan.py / steps.py / fabdocs.py"
+ },
+ {
+  "process": "Woodworking",
+  "rank_in_process": 4,
+  "failure": "Loose tape hook error",
+  "why": "Hook play",
+  "check": "Plan: burn an inch or story stick for critical",
+  "check_type": "plan-text",
+  "severity": "tip",
+  "default_threshold": "advice only",
+  "threshold_source": "https://www.woodmagazine.com/measuring-marking/dont-get-burned-by-tapes-first-inch",
+  "sources": [
+   "https://www.woodmagazine.com/measuring-marking/dont-get-burned-by-tapes-first-inch"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "wood_plan.py / steps.py / fabdocs.py"
+ },
+ {
+  "process": "Woodworking",
+  "rank_in_process": 5,
+  "failure": "Cumulative error from stepping measurements",
+  "why": "Errors add",
+  "check": "Plan: measure all from one datum; story stick",
+  "check_type": "plan-text",
+  "severity": "warn",
+  "default_threshold": "advice only",
+  "threshold_source": "https://www.optimallayout.com/guides/measuring-and-marking-accuracy",
+  "sources": [
+   "https://www.optimallayout.com/guides/measuring-and-marking-accuracy",
+   "https://carpentersequip.com/how-to-transfer-a-long-measurement-with-a-story-stick/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "wood_plan.py / steps.py / fabdocs.py"
+ },
+ {
+  "process": "Woodworking",
+  "rank_in_process": 6,
+  "failure": "Cut on wrong side of line",
+  "why": "Kerf on part side",
+  "check": "Plan: cut on waste side, mark X on waste",
+  "check_type": "plan-text",
+  "severity": "tip",
+  "default_threshold": "advice only",
+  "threshold_source": "https://www.woodmagazine.com/measuring-marking/dont-get-burned-by-tapes-first-inch",
+  "sources": [
+   "https://sawplot.com/guides/saw-blade-kerf",
+   "https://www.woodmagazine.com/measuring-marking/dont-get-burned-by-tapes-first-inch"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "wood_plan.py / steps.py / fabdocs.py"
+ },
+ {
+  "process": "Woodworking",
+  "rank_in_process": 7,
+  "failure": "Out of square assembly",
+  "why": "Not checked",
+  "check": "Plan step: equal diagonals / 3-4-5",
+  "check_type": "plan-text",
+  "severity": "warn",
+  "default_threshold": "3-4-5",
+  "threshold_source": "https://festoolownersgroup.com/threads/question-about-being-squared.74522/",
+  "sources": [
+   "https://festoolownersgroup.com/threads/question-about-being-squared.74522/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "wood_plan.py / steps.py / fabdocs.py"
+ },
+ {
+  "process": "Woodworking",
+  "rank_in_process": 8,
+  "failure": "Solid wood panel restrained across grain",
+  "why": "Cracks",
+  "check": "Width movement = width x coeff x \u0394MC; slotted/floating",
+  "check_type": "plan-text",
+  "severity": "warn",
+  "default_threshold": "FWW formula; 8 in red oak 6->16% \u22480.296 in",
+  "threshold_source": "https://www.finewoodworking.com/2013/08/29/calculating-for-wood-movement",
+  "sources": [
+   "https://www.finewoodworking.com/2013/08/29/calculating-for-wood-movement",
+   "https://www.fpl.fs.usda.gov/documnts/fplgtr/fplgtr190/chapter_04.pdf"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "wood_plan.py / steps.py / fabdocs.py"
+ },
+ {
+  "process": "Woodworking",
+  "rank_in_process": 9,
+  "failure": "Flatsawn wide boards cup",
+  "why": "Tangential movement",
+  "check": "Tip quartersawn/alternate grain",
+  "check_type": "advice",
+  "severity": "tip",
+  "default_threshold": "advice only",
+  "threshold_source": "https://www.fpl.fs.usda.gov/documnts/fplgtr/fplgtr190/chapter_04.pdf",
+  "sources": [
+   "https://www.fpl.fs.usda.gov/documnts/fplgtr/fplgtr190/chapter_04.pdf",
+   "https://www.finewoodworking.com/membership/pdf/18950/011241082.pdf"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "wood_plan.py / steps.py / fabdocs.py"
+ },
+ {
+  "process": "Woodworking",
+  "rank_in_process": 10,
+  "failure": "Wet lumber used",
+  "why": "MC not at EMC",
+  "check": "Plan: acclimate to EMC",
+  "check_type": "plan-text",
+  "severity": "tip",
+  "default_threshold": "advice only",
+  "threshold_source": "https://www.fpl.fs.usda.gov/documnts/fplgtr/fplgtr190/chapter_04.pdf",
+  "sources": [
+   "https://www.fpl.fs.usda.gov/documnts/fplgtr/fplgtr190/chapter_04.pdf"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "wood_plan.py / steps.py / fabdocs.py"
+ },
+ {
+  "process": "Woodworking",
+  "rank_in_process": 11,
+  "failure": "Screw splits near end/edge",
+  "why": "Too close",
+  "check": "Screw center >=5d from end, ~3d from edge; pilot in hardwood",
+  "check_type": "geometry",
+  "severity": "warn",
+  "default_threshold": "5d end / 3d edge",
+  "threshold_source": "https://ernstp.se/eu/kunskapsbanken/tra-spricker-vid-skruvning",
+  "sources": [
+   "https://ernstp.se/eu/kunskapsbanken/tra-spricker-vid-skruvning",
+   "https://woodworkingadvisor.com/how-to-not-split-wood-when-screwing/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "wood_plan.py / steps.py / fabdocs.py"
+ },
+ {
+  "process": "Woodworking",
+  "rank_in_process": 12,
+  "failure": "Wrong pilot size",
+  "why": "Split or strip",
+  "check": "#8: 3/32 in soft, 1/8 in hard",
+  "check_type": "plan-text",
+  "severity": "warn",
+  "default_threshold": "see shop_reference",
+  "threshold_source": "https://woodworkingadvisor.com/how-to-not-split-wood-when-screwing/",
+  "sources": [
+   "https://woodworkingadvisor.com/how-to-not-split-wood-when-screwing/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "wood_plan.py / steps.py / fabdocs.py"
+ },
+ {
+  "process": "Woodworking",
+  "rank_in_process": 13,
+  "failure": "Screw too short/too long",
+  "why": "Engagement/blowout",
+  "check": "Screw length ~2-3x top board, 2/3 into receiver, tip doesn't exit",
+  "check_type": "geometry",
+  "severity": "fail",
+  "default_threshold": "2/3 rule",
+  "threshold_source": "https://woodworkingadvisor.com/wood-screw-length-calculator/",
+  "sources": [
+   "https://woodworkingadvisor.com/wood-screw-length-calculator/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "wood_plan.py / steps.py / fabdocs.py"
+ },
+ {
+  "process": "Woodworking",
+  "rank_in_process": 14,
+  "failure": "Nail too short",
+  "why": "Holding",
+  "check": "Nail ~3x top board thickness",
+  "check_type": "plan-text",
+  "severity": "warn",
+  "default_threshold": "3x",
+  "threshold_source": "https://builderology.com/calculators/screw-and-nail-size-calculator/",
+  "sources": [
+   "https://builderology.com/calculators/screw-and-nail-size-calculator/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "wood_plan.py / steps.py / fabdocs.py"
+ },
+ {
+  "process": "Woodworking",
+  "rank_in_process": 15,
+  "failure": "Mortise/tenon too tight or loose",
+  "why": "Glue starve/no fit",
+  "check": "Tenon clearance ~0.004-0.005 in total",
+  "check_type": "geometry",
+  "severity": "warn",
+  "default_threshold": "0.004-0.005 in",
+  "threshold_source": "https://www.lumberjocks.com/threads/clearance-between-mortise-and-tenon-on-bed-frame.365288/",
+  "sources": [
+   "https://www.lumberjocks.com/threads/clearance-between-mortise-and-tenon-on-bed-frame.365288/",
+   "https://sawmillcreek.org/threads/interference-fit-walnut-mortise-and-tenon-corners.254022/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "wood_plan.py / steps.py / fabdocs.py"
+ },
+ {
+  "process": "Woodworking",
+  "rank_in_process": 16,
+  "failure": "Glue-up rushed past open time",
+  "why": "Skinned glue",
+  "check": "Plan: dry fit, clamps staged; Titebond III ~9-15 min open",
+  "check_type": "plan-text",
+  "severity": "warn",
+  "default_threshold": "9-15 min (TB III)",
+  "threshold_source": "https://www.reddit.com/r/BeginnerWoodWorking/comments/1jnnqh7/how_could_i_have_done_a_cleaner_and_faster_job/",
+  "sources": [
+   "https://www.reddit.com/r/BeginnerWoodWorking/comments/1jnnqh7/how_could_i_have_done_a_cleaner_and_faster_job/",
+   "https://www.woodmagazine.com/woodworking-plans/clamping/glue-ups"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "wood_plan.py / steps.py / fabdocs.py"
+ },
+ {
+  "process": "Woodworking",
+  "rank_in_process": 17,
+  "failure": "Over-clamping starves joint",
+  "why": "Too much pressure",
+  "check": "Plan: clamp to thin even squeeze-out",
+  "check_type": "plan-text",
+  "severity": "tip",
+  "default_threshold": "advice only",
+  "threshold_source": "https://www.reddit.com/r/woodworking/comments/1g93gow/can_you_squeeze_all_the_glue_out_of_your_glue_up/",
+  "sources": [
+   "https://www.reddit.com/r/woodworking/comments/1g93gow/can_you_squeeze_all_the_glue_out_of_your_glue_up/",
+   "https://www.finewoodworking.com/media/GlueUps.pdf"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "wood_plan.py / steps.py / fabdocs.py"
+ },
+ {
+  "process": "Woodworking",
+  "rank_in_process": 18,
+  "failure": "Panel glue-up bows",
+  "why": "Clamps one side",
+  "check": "Alternate clamps & cauls",
+  "check_type": "plan-text",
+  "severity": "tip",
+  "default_threshold": "advice only",
+  "threshold_source": "https://www.finewoodworking.com/media/GlueUps.pdf",
+  "sources": [
+   "https://www.finewoodworking.com/media/GlueUps.pdf"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "wood_plan.py / steps.py / fabdocs.py"
+ },
+ {
+  "process": "Woodworking",
+  "rank_in_process": 19,
+  "failure": "Grain direction wrong",
+  "why": "Strength/looks",
+  "check": "Wood part grain = long axis",
+  "check_type": "geometry",
+  "severity": "warn",
+  "default_threshold": "n/a",
+  "threshold_source": "https://cutplan.ai/en/blog/grain-direction-panel-cutting.html",
+  "sources": [
+   "https://cutplan.ai/en/blog/grain-direction-panel-cutting.html"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "wood_plan.py / steps.py / fabdocs.py"
+ },
+ {
+  "process": "Woodworking",
+  "rank_in_process": 20,
+  "failure": "Cut order wastes stock",
+  "why": "Short first",
+  "check": "Plan longest/widest first",
+  "check_type": "plan-text",
+  "severity": "tip",
+  "default_threshold": "advice only",
+  "threshold_source": "https://grainandglue.com/learn/how-to-read-woodworking-plans",
+  "sources": [
+   "https://grainandglue.com/learn/how-to-read-woodworking-plans"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "wood_plan.py / steps.py / fabdocs.py"
+ },
+ {
+  "process": "Woodworking",
+  "rank_in_process": 21,
+  "failure": "Kerf of hand saw vs power saw differs",
+  "why": "Tool varies",
+  "check": "Kerf picked from user's actual tool",
+  "check_type": "plan-text",
+  "severity": "warn",
+  "default_threshold": "hand 0.8-1.2 mm, pull 0.3-0.6 mm, jigsaw 1.5-2.5 mm",
+  "threshold_source": "https://globalcalcs.com/en/lifestyle/board-cuts-with-kerf/",
+  "sources": [
+   "https://globalcalcs.com/en/lifestyle/board-cuts-with-kerf/",
+   "https://www.cutlistor.com/calculators/kerf-calculator"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "wood_plan.py / steps.py / fabdocs.py"
+ },
+ {
+  "process": "Woodworking",
+  "rank_in_process": 22,
+  "failure": "Thin-kerf on miter vs table assumed same",
+  "why": "Different blades",
+  "check": "Per-tool kerf",
+  "check_type": "plan-text",
+  "severity": "tip",
+  "default_threshold": "12 in miter 0.118 in",
+  "threshold_source": "https://sawplot.com/guides/saw-blade-kerf",
+  "sources": [
+   "https://sawplot.com/guides/saw-blade-kerf"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "wood_plan.py / steps.py / fabdocs.py"
+ },
+ {
+  "process": "Woodworking",
+  "rank_in_process": 23,
+  "failure": "Sanding removes fit allowance",
+  "why": "Material loss",
+  "check": "Plan: sand non-fit faces",
+  "check_type": "plan-text",
+  "severity": "tip",
+  "default_threshold": "advice only",
+  "threshold_source": "https://makers.universityprep.org/classes/design-and-fabrication/cnc-design-rules/",
+  "sources": [
+   "https://makers.universityprep.org/classes/design-and-fabrication/cnc-design-rules/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "wood_plan.py / steps.py / fabdocs.py"
+ },
+ {
+  "process": "Woodworking",
+  "rank_in_process": 24,
+  "failure": "Plywood voids on show face",
+  "why": "Core gaps",
+  "check": "Tip spare",
+  "check_type": "advice",
+  "severity": "tip",
+  "default_threshold": "advice only",
+  "threshold_source": "https://makers.universityprep.org/classes/design-and-fabrication/cnc-design-rules/",
+  "sources": [
+   "https://makers.universityprep.org/classes/design-and-fabrication/cnc-design-rules/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "wood_plan.py / steps.py / fabdocs.py"
+ },
+ {
+  "process": "Woodworking",
+  "rank_in_process": 25,
+  "failure": "Sheet waste/yield",
+  "why": "Layout",
+  "check": "Nest 4x8 with kerf",
+  "check_type": "plan-text",
+  "severity": "tip",
+  "default_threshold": "advice only",
+  "threshold_source": "https://cutplan.ai/en/blog/free-cut-list-optimizer.html",
+  "sources": [
+   "https://cutplan.ai/en/blog/free-cut-list-optimizer.html"
+  ],
+  "covered_by_current_gate": "partial",
+  "where_in_toolbox": "wood_plan.py / steps.py / fabdocs.py"
+ },
+ {
+  "process": "Woodworking",
+  "rank_in_process": 26,
+  "failure": "Measurements in fractional rounding drift",
+  "why": "Rounding",
+  "check": "Plans round to 1/16 in max, sum check",
+  "check_type": "plan-text",
+  "severity": "warn",
+  "default_threshold": "Sketch default",
+  "threshold_source": "https://www.optimallayout.com/guides/measuring-and-marking-accuracy",
+  "sources": [
+   "https://www.optimallayout.com/guides/measuring-and-marking-accuracy"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "wood_plan.py / steps.py / fabdocs.py"
+ },
+ {
+  "process": "Framing",
+  "rank_in_process": 1,
+  "failure": "Stud spacing exceeds code table",
+  "why": "Load",
+  "check": "2x4 bearing wall carrying a floor -> 16 in OC max; roof only 24 in OC (IRC R602.3(5)) \u2014 advice + 'verify with local code'",
+  "check_type": "plan-text",
+  "severity": "warn",
+  "default_threshold": "16/24 in OC",
+  "threshold_source": "https://joistspan.com/stud-spacing/",
+  "sources": [
+   "https://joistspan.com/stud-spacing/",
+   "https://up.codes/viewer/connecticut/irc-2021/chapter/6/wall-construction"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "wood_plan.py / steps.py (advice text)"
+ },
+ {
+  "process": "Framing",
+  "rank_in_process": 2,
+  "failure": "Layout off so sheet edges miss studs",
+  "why": "Wrong first mark",
+  "check": "16 OC: first mark 15-1/4 in so 48/96 land on centers",
+  "check_type": "plan-text",
+  "severity": "warn",
+  "default_threshold": "15-1/4 in",
+  "threshold_source": "https://www.altitudecraft.com/blogs/insights/complete-guide-to-16-inch-on-center-stud-layout",
+  "sources": [
+   "https://www.altitudecraft.com/blogs/insights/complete-guide-to-16-inch-on-center-stud-layout",
+   "https://www.finehomebuilding.com/project-guides/framing/laying-stud-walls"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "wood_plan.py / steps.py (advice text)"
+ },
+ {
+  "process": "Framing",
+  "rank_in_process": 3,
+  "failure": "Header undersized",
+  "why": "Span/load",
+  "check": "Header from IRC R602.7 tables only as reference; always 'engineer/code official verify'",
+  "check_type": "plan-text",
+  "severity": "fail",
+  "default_threshold": "e.g. 2-2x10 6'10\" @30psf/24ft (illustrative)",
+  "threshold_source": "https://joistspan.com/headers/",
+  "sources": [
+   "https://joistspan.com/headers/",
+   "https://up.codes/viewer/connecticut/irc-2021/chapter/6/wall-construction"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "wood_plan.py / steps.py (advice text)"
+ },
+ {
+  "process": "Framing",
+  "rank_in_process": 4,
+  "failure": "Jack studs count missed",
+  "why": "Bearing",
+  "check": "Header plan lists jack studs per table NJ",
+  "check_type": "plan-text",
+  "severity": "warn",
+  "default_threshold": "table NJ",
+  "threshold_source": "https://joistspan.com/headers/",
+  "sources": [
+   "https://joistspan.com/headers/",
+   "https://plib.org/wp-content/uploads/2021/07/PLIB-Technical-Report-No-8-Domestic-Header_Girder.pdf"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "wood_plan.py / steps.py (advice text)"
+ },
+ {
+  "process": "Framing",
+  "rank_in_process": 5,
+  "failure": "Unbraced header top",
+  "why": "Table assumption",
+  "check": "Note: cripples bearing -> spans x0.70 or design",
+  "check_type": "plan-text",
+  "severity": "warn",
+  "default_threshold": "0.70",
+  "threshold_source": "https://plib.org/wp-content/uploads/2021/07/PLIB-Technical-Report-No-8-Domestic-Header_Girder.pdf",
+  "sources": [
+   "https://plib.org/wp-content/uploads/2021/07/PLIB-Technical-Report-No-8-Domestic-Header_Girder.pdf"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "wood_plan.py / steps.py (advice text)"
+ },
+ {
+  "process": "Framing",
+  "rank_in_process": 6,
+  "failure": "Joist/rafter span guessed",
+  "why": "Load",
+  "check": "Spans only from AWC tables; flag engineer",
+  "check_type": "plan-text",
+  "severity": "fail",
+  "default_threshold": "AWC span tables, <=24 in OC",
+  "threshold_source": "https://awc.org/wp-content/uploads/2023/11/AWC_STJR2024_20231127_AWCWebsite.pdf",
+  "sources": [
+   "https://awc.org/wp-content/uploads/2023/11/AWC_STJR2024_20231127_AWCWebsite.pdf"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "wood_plan.py / steps.py (advice text)"
+ },
+ {
+  "process": "Framing",
+  "rank_in_process": 7,
+  "failure": "Sheet goods breaks not on framing",
+  "why": "Layout",
+  "check": "4x8 seams land on framing centers",
+  "check_type": "plan-text",
+  "severity": "warn",
+  "default_threshold": "48 in",
+  "threshold_source": "https://www.altitudecraft.com/blogs/insights/complete-guide-to-16-inch-on-center-stud-layout",
+  "sources": [
+   "https://www.altitudecraft.com/blogs/insights/complete-guide-to-16-inch-on-center-stud-layout"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "wood_plan.py / steps.py (advice text)"
+ },
+ {
+  "process": "Framing",
+  "rank_in_process": 8,
+  "failure": "Nominal vs actual in framing heights",
+  "why": "Stack-up",
+  "check": "Wall height uses actual plate thickness 1.5 in",
+  "check_type": "plan-text",
+  "severity": "warn",
+  "default_threshold": "1.5 in",
+  "threshold_source": "https://lumberreference.com/lumber-size-chart/",
+  "sources": [
+   "https://lumberreference.com/lumber-size-chart/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "wood_plan.py / steps.py (advice text)"
+ },
+ {
+  "process": "Framing",
+  "rank_in_process": 9,
+  "failure": "Stamping structural calcs",
+  "why": "Liability",
+  "check": "Never output as stamped; always flag engineer/permit",
+  "check_type": "plan-text",
+  "severity": "fail",
+  "default_threshold": "policy",
+  "threshold_source": "https://up.codes/viewer/connecticut/irc-2021/chapter/6/wall-construction",
+  "sources": [
+   "https://up.codes/viewer/connecticut/irc-2021/chapter/6/wall-construction"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "wood_plan.py / steps.py (advice text)"
+ },
+ {
+  "process": "Framing",
+  "rank_in_process": 10,
+  "failure": "Built-up header nailing missing",
+  "why": "Assembly",
+  "check": "Reference IRC fastening schedule",
+  "check_type": "plan-text",
+  "severity": "tip",
+  "default_threshold": "16d per IRC table R602.3(1)",
+  "threshold_source": "https://up.codes/viewer/connecticut/irc-2021/chapter/6/wall-construction",
+  "sources": [
+   "https://up.codes/viewer/connecticut/irc-2021/chapter/6/wall-construction"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "wood_plan.py / steps.py (advice text)"
+ },
+ {
+  "process": "Framing",
+  "rank_in_process": 11,
+  "failure": "Square of wall/deck not checked",
+  "why": "Out of square",
+  "check": "Diagonals equal / 3-4-5",
+  "check_type": "plan-text",
+  "severity": "warn",
+  "default_threshold": "3-4-5",
+  "threshold_source": "https://festoolownersgroup.com/threads/question-about-being-squared.74522/",
+  "sources": [
+   "https://festoolownersgroup.com/threads/question-about-being-squared.74522/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "wood_plan.py / steps.py (advice text)"
+ },
+ {
+  "process": "Framing",
+  "rank_in_process": 12,
+  "failure": "Treated vs untreated lumber at ground contact",
+  "why": "Rot",
+  "check": "Advice: ground contact needs treated; verify code",
+  "check_type": "advice",
+  "severity": "warn",
+  "default_threshold": "advice only",
+  "threshold_source": "Sketch default",
+  "sources": [
+   "https://up.codes/viewer/connecticut/irc-2021/chapter/6/wall-construction"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "wood_plan.py / steps.py (advice text)"
+ },
+ {
+  "process": "Framing",
+  "rank_in_process": 13,
+  "failure": "Fasteners not compatible with treated lumber",
+  "why": "Corrosion",
+  "check": "Advice: verify hot-dip galv/stainless per maker",
+  "check_type": "advice",
+  "severity": "warn",
+  "default_threshold": "advice only",
+  "threshold_source": "Sketch default",
+  "sources": [
+   "https://up.codes/viewer/connecticut/irc-2021/chapter/6/wall-construction"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "wood_plan.py / steps.py (advice text)"
+ },
+ {
+  "process": "Framing",
+  "rank_in_process": 14,
+  "failure": "Snow/wind load zones ignored",
+  "why": "Local",
+  "check": "Always ask location; flag code",
+  "check_type": "plan-text",
+  "severity": "warn",
+  "default_threshold": "advice only",
+  "threshold_source": "https://joistspan.com/headers/",
+  "sources": [
+   "https://joistspan.com/headers/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "wood_plan.py / steps.py (advice text)"
+ },
+ {
+  "process": "Framing",
+  "rank_in_process": 15,
+  "failure": "Notching/boring studs/joists",
+  "why": "Weakens",
+  "check": "Advice: code limits; refer to code",
+  "check_type": "advice",
+  "severity": "warn",
+  "default_threshold": "advice only",
+  "threshold_source": "https://up.codes/viewer/connecticut/irc-2021/chapter/6/wall-construction",
+  "sources": [
+   "https://up.codes/viewer/connecticut/irc-2021/chapter/6/wall-construction"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "wood_plan.py / steps.py (advice text)"
+ },
+ {
+  "process": "Welding/Fab",
+  "rank_in_process": 1,
+  "failure": "No joint prep for thickness",
+  "why": "Lack of penetration",
+  "check": "Prep by t: <=3-4 mm square gap 0-3; 3-12 mm single-V 50-70 deg, face 1-2, gap 1-4; >12 double-V",
+  "check_type": "plan-text",
+  "severity": "fail",
+  "default_threshold": "see shop_reference",
+  "threshold_source": "https://spawacz.waw.pl/en/calculators/groove-preparation/",
+  "sources": [
+   "https://spawacz.waw.pl/en/calculators/groove-preparation/",
+   "https://geratools.com/weld-joint-prep-calculator",
+   "https://testtalkhq.com/groove-weld-joint-prep-technique/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "cope.py / steps.py / spec_drawing.py"
+ },
+ {
+  "process": "Welding/Fab",
+  "rank_in_process": 2,
+  "failure": "Root opening inconsistent",
+  "why": "Incomplete penetration",
+  "check": "Plan: check gap along seam before tack",
+  "check_type": "plan-text",
+  "severity": "warn",
+  "default_threshold": "open root 1/16-1/8 in",
+  "threshold_source": "https://www.toolgrit.com/guides/weld-joint-design-guide",
+  "sources": [
+   "https://www.toolgrit.com/guides/weld-joint-design-guide",
+   "https://testtalkhq.com/groove-weld-joint-prep-technique/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "cope.py / steps.py / spec_drawing.py"
+ },
+ {
+  "process": "Welding/Fab",
+  "rank_in_process": 3,
+  "failure": "CJP assumed without prep/backing",
+  "why": "Code",
+  "check": "Flag CJP needs WPS; never certify",
+  "check_type": "plan-text",
+  "severity": "fail",
+  "default_threshold": "WPS governs",
+  "threshold_source": "https://www.toolgrit.com/guides/weld-joint-design-guide",
+  "sources": [
+   "https://www.toolgrit.com/guides/weld-joint-design-guide",
+   "https://www.fabdigit.com/guides/welded-assembly-design/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "cope.py / steps.py / spec_drawing.py"
+ },
+ {
+  "process": "Welding/Fab",
+  "rank_in_process": 4,
+  "failure": "Weld distortion",
+  "why": "Heat/shrink",
+  "check": "Plan: balance welds about neutral axis, minimize weld size, intermittent where allowed",
+  "check_type": "plan-text",
+  "severity": "warn",
+  "default_threshold": "advice only",
+  "threshold_source": "https://www.canadianmetalworking.com/canadianfabricatingandwelding/article/welding/18-principles-to-minimize-distortion-part-i",
+  "sources": [
+   "https://www.canadianmetalworking.com/canadianfabricatingandwelding/article/welding/18-principles-to-minimize-distortion-part-i",
+   "https://www.lincolnelectric.com/en/welding-and-cutting-resource-center/welding-how-tos/weld-distortion",
+   "https://www.twi-global.com/technical-knowledge/job-knowledge/distortion-control-prevention-by-fabrication-techniques-036"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "cope.py / steps.py / spec_drawing.py"
+ },
+ {
+  "process": "Welding/Fab",
+  "rank_in_process": 5,
+  "failure": "Too many/large tacks on thin sheet",
+  "why": "Angular distortion",
+  "check": "Plan: small evenly spaced tacks, start center/best fit",
+  "check_type": "plan-text",
+  "severity": "tip",
+  "default_threshold": "advice only",
+  "threshold_source": "https://www.twi-global.com/technical-knowledge/job-knowledge/distortion-control-prevention-by-fabrication-techniques-036",
+  "sources": [
+   "https://www.twi-global.com/technical-knowledge/job-knowledge/distortion-control-prevention-by-fabrication-techniques-036"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "cope.py / steps.py / spec_drawing.py"
+ },
+ {
+  "process": "Welding/Fab",
+  "rank_in_process": 6,
+  "failure": "Long continuous weld on thin stock",
+  "why": "Warp",
+  "check": "Backstep/skip stitches ~37-50 mm",
+  "check_type": "plan-text",
+  "severity": "tip",
+  "default_threshold": "37-50 mm stitches",
+  "threshold_source": "https://www.iieta.org/journals/acsm/paper/10.18280/acsm.480608",
+  "sources": [
+   "https://www.iieta.org/journals/acsm/paper/10.18280/acsm.480608"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "cope.py / steps.py / spec_drawing.py"
+ },
+ {
+  "process": "Welding/Fab",
+  "rank_in_process": 7,
+  "failure": "Wrong filler for base metal",
+  "why": "Cracking/weak",
+  "check": "Filler table: mild ER70S-6; 304 ER308L; 316 ER316L; CS-SS ER309L; Al 6xxx ER4043, 5xxx ER5356",
+  "check_type": "plan-text",
+  "severity": "fail",
+  "default_threshold": "table",
+  "threshold_source": "https://harrisweldingsupplies.com/content/catalogs/lincoln-welding-consumables-catalog.pdf",
+  "sources": [
+   "https://harrisweldingsupplies.com/content/catalogs/lincoln-welding-consumables-catalog.pdf",
+   "https://www.lincolnelectric.com/en/Products/Filler-Metals/Aluminum-MIG-and-TIG",
+   "https://www.hobartbrothers.com/downloads/Aluminum_Filler_Recommendation.pdf"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "cope.py / steps.py / spec_drawing.py"
+ },
+ {
+  "process": "Welding/Fab",
+  "rank_in_process": 8,
+  "failure": "Galvanized welded without warning",
+  "why": "Zinc fume fever",
+  "check": "Galv in BOM + weld -> grind coating off/ventilate note",
+  "check_type": "plan-text",
+  "severity": "fail",
+  "default_threshold": "ZnO PEL 5 mg/m3",
+  "threshold_source": "https://aws-p-001-delivery.sitecorecontenthub.cloud/api/public/content/Fact-Sheet-No.25",
+  "sources": [
+   "https://aws-p-001-delivery.sitecorecontenthub.cloud/api/public/content/Fact-Sheet-No.25",
+   "https://portugues.cdc.gov/niosh/npg/npgd0675.html",
+   "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.353"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "cope.py / steps.py / spec_drawing.py"
+ },
+ {
+  "process": "Welding/Fab",
+  "rank_in_process": 9,
+  "failure": "Stainless fume hazard",
+  "why": "Cr(VI)",
+  "check": "Stainless + weld -> LEV note",
+  "check_type": "plan-text",
+  "severity": "warn",
+  "default_threshold": "PEL 5 \u00b5g/m3",
+  "threshold_source": "https://www.osha.gov/sites/default/files/publications/OSHA%5FFS-3647%5FWELDING.pdf",
+  "sources": [
+   "https://www.osha.gov/sites/default/files/publications/OSHA%5FFS-3647%5FWELDING.pdf"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "cope.py / steps.py / spec_drawing.py"
+ },
+ {
+  "process": "Welding/Fab",
+  "rank_in_process": 10,
+  "failure": "Weld symbol misplaced",
+  "why": "A2.4 side",
+  "check": "Symbols generated from model with arrow/other side",
+  "check_type": "file",
+  "severity": "fail",
+  "default_threshold": "below=arrow",
+  "threshold_source": "https://pubs.aws.org/Download_PDFS/2__A2_4_2020_PV.pdf",
+  "sources": [
+   "https://pubs.aws.org/Download_PDFS/2__A2_4_2020_PV.pdf",
+   "https://www.millerwelds.com/en-US/resources/knowledge-hub/welding-basics/how-to-read-and-understand-weld-symbols"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "cope.py / steps.py / spec_drawing.py"
+ },
+ {
+  "process": "Welding/Fab",
+  "rank_in_process": 11,
+  "failure": "No torch access",
+  "why": "Cramped",
+  "check": "Advice check access angle in model",
+  "check_type": "advice",
+  "severity": "warn",
+  "default_threshold": "advice only",
+  "threshold_source": "https://kingsformmetal.com/resources/downloads/files/KFR-009_Welding_Design_Guide_v1.0.pdf",
+  "sources": [
+   "https://kingsformmetal.com/resources/downloads/files/KFR-009_Welding_Design_Guide_v1.0.pdf"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "cope.py / steps.py / spec_drawing.py"
+ },
+ {
+  "process": "Welding/Fab",
+  "rank_in_process": 12,
+  "failure": "Pipe fit-up gap/hi-lo",
+  "why": "Bad root",
+  "check": "Pipe butt: 1/16 gap, 1/16 land, 37.5 deg bevel (ASME typical); check 4 clock positions",
+  "check_type": "plan-text",
+  "severity": "warn",
+  "default_threshold": "1/16 in, 37.5 deg",
+  "threshold_source": "https://open-exam-prep.com/study-guides/aws-cwi-endorsement-api-1104/design-and-fabrication/joint-alignment-and-fitup",
+  "sources": [
+   "https://open-exam-prep.com/study-guides/aws-cwi-endorsement-api-1104/design-and-fabrication/joint-alignment-and-fitup",
+   "https://open-exam-prep.com/study-guides/nccer-boilermaker/pipe-fabrication/butt-weld-pipe-fabrication"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "cope.py / steps.py / spec_drawing.py"
+ },
+ {
+  "process": "Welding/Fab",
+  "rank_in_process": 13,
+  "failure": "Cope/fish-mouth by eye",
+  "why": "Gaps",
+  "check": "Generate full-scale wrap template from actual ODs and angle",
+  "check_type": "file",
+  "severity": "warn",
+  "default_threshold": "perimeter gap 1/16-1/8 in",
+  "threshold_source": "https://www.metalweightpro.com/articles/fish-mouth-pipe-cut-template.html",
+  "sources": [
+   "https://www.metalweightpro.com/articles/fish-mouth-pipe-cut-template.html"
+  ],
+  "covered_by_current_gate": "partial",
+  "where_in_toolbox": "cope.py / steps.py / spec_drawing.py"
+ },
+ {
+  "process": "Welding/Fab",
+  "rank_in_process": 14,
+  "failure": "Rolled ring cut length wrong",
+  "why": "Wrong axis",
+  "check": "Blank = \u03c0(ID+t) flatwise; edgewise use width",
+  "check_type": "geometry",
+  "severity": "fail",
+  "default_threshold": "\u03c0(ID+t)",
+  "threshold_source": "https://artisantraining.online/wp-content/uploads/2020/12/PF-2.pdf",
+  "sources": [
+   "https://artisantraining.online/wp-content/uploads/2020/12/PF-2.pdf",
+   "https://progressiveweldingsolutions.net/metal-ring-cut-length-calculator/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "cope.py / steps.py / spec_drawing.py"
+ },
+ {
+  "process": "Welding/Fab",
+  "rank_in_process": 15,
+  "failure": "Pipe size confused NPS vs OD",
+  "why": "NPS nominal",
+  "check": "Use OD table",
+  "check_type": "geometry",
+  "severity": "fail",
+  "default_threshold": "NPS 2 = 2.375 OD",
+  "threshold_source": "https://www.engineersedge.com/pipe_schedules.htm",
+  "sources": [
+   "https://www.engineersedge.com/pipe_schedules.htm"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "cope.py / steps.py / spec_drawing.py"
+ },
+ {
+  "process": "Welding/Fab",
+  "rank_in_process": 16,
+  "failure": "Fabrication tolerance unstated",
+  "why": "Expectation",
+  "check": "Weldment default \u00b11/16 small, \u00b11/8 large",
+  "check_type": "plan-text",
+  "severity": "warn",
+  "default_threshold": "\u00b11/16 / \u00b11/8 in",
+  "threshold_source": "https://www.brennersw.com/resources/engineering/tolerances",
+  "sources": [
+   "https://www.brennersw.com/resources/engineering/tolerances",
+   "https://steelcalculator.app/reference/steel-tolerances-guide/",
+   "https://www.paragonmetalfab.com/sheet-metal-fabrication-tolerances/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "cope.py / steps.py / spec_drawing.py"
+ },
+ {
+  "process": "Welding/Fab",
+  "rank_in_process": 17,
+  "failure": "Overwelding",
+  "why": "Cost/distortion",
+  "check": "Fillet size not > thinner member need (advice)",
+  "check_type": "advice",
+  "severity": "warn",
+  "default_threshold": "advice only",
+  "threshold_source": "https://www.canadianmetalworking.com/canadianfabricatingandwelding/article/welding/18-principles-to-minimize-distortion-part-i",
+  "sources": [
+   "https://www.canadianmetalworking.com/canadianfabricatingandwelding/article/welding/18-principles-to-minimize-distortion-part-i",
+   "https://www.fabdigit.com/guides/welded-assembly-design/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "cope.py / steps.py / spec_drawing.py"
+ },
+ {
+  "process": "Welding/Fab",
+  "rank_in_process": 18,
+  "failure": "Hole too close to edge in plate",
+  "why": "Tear-out",
+  "check": "Hole edge >=1x dia from edge (sheet), plasma 1.5x t",
+  "check_type": "geometry",
+  "severity": "warn",
+  "default_threshold": "1x d / 1.5x t",
+  "threshold_source": "https://sendcutsend.com/blog/basic-tolerances-and-cut-feature-relationships/",
+  "sources": [
+   "https://sendcutsend.com/blog/basic-tolerances-and-cut-feature-relationships/",
+   "https://lapas.io/blog/plasma-cutting-small-holes/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "cope.py / steps.py / spec_drawing.py"
+ },
+ {
+  "process": "Welding/Fab",
+  "rank_in_process": 19,
+  "failure": "Final cooled dims ignored",
+  "why": "Shrink",
+  "check": "Advice: measure after cool",
+  "check_type": "advice",
+  "severity": "tip",
+  "default_threshold": "advice only",
+  "threshold_source": "https://www.fabdigit.com/guides/welded-assembly-design/",
+  "sources": [
+   "https://www.fabdigit.com/guides/welded-assembly-design/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "cope.py / steps.py / spec_drawing.py"
+ },
+ {
+  "process": "Welding/Fab",
+  "rank_in_process": 20,
+  "failure": "Weld prep faces with plasma nitrided edge",
+  "why": "Porosity",
+  "check": "Grind after cut",
+  "check_type": "plan-text",
+  "severity": "tip",
+  "default_threshold": "advice only",
+  "threshold_source": "https://manufacturingprocesses.org/processes/cutting/plasma-cutting",
+  "sources": [
+   "https://manufacturingprocesses.org/processes/cutting/plasma-cutting"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "cope.py / steps.py / spec_drawing.py"
+ },
+ {
+  "process": "Welding/Fab",
+  "rank_in_process": 21,
+  "failure": "Mill scale/contamination",
+  "why": "Porosity",
+  "check": "Plan: clean to bright metal (ER70S-6 tolerates light scale)",
+  "check_type": "plan-text",
+  "severity": "tip",
+  "default_threshold": "advice only",
+  "threshold_source": "https://harrisweldingsupplies.com/content/catalogs/lincoln-welding-consumables-catalog.pdf",
+  "sources": [
+   "https://harrisweldingsupplies.com/content/catalogs/lincoln-welding-consumables-catalog.pdf"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "cope.py / steps.py / spec_drawing.py"
+ },
+ {
+  "process": "Welding/Fab",
+  "rank_in_process": 22,
+  "failure": "Bevel angle too narrow",
+  "why": "Sidewall LOF",
+  "check": "Included angle not < ~45-50 deg",
+  "check_type": "plan-text",
+  "severity": "warn",
+  "default_threshold": "50-60 deg typical",
+  "threshold_source": "https://spawacz.waw.pl/en/calculators/groove-preparation/",
+  "sources": [
+   "https://spawacz.waw.pl/en/calculators/groove-preparation/",
+   "https://www.toolgrit.com/guides/weld-joint-design-guide"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "cope.py / steps.py / spec_drawing.py"
+ },
+ {
+  "process": "Welding/Fab",
+  "rank_in_process": 23,
+  "failure": "Weld info missing on plan",
+  "why": "Shop guesses",
+  "check": "Each weld: type, size, length, side",
+  "check_type": "plan-text",
+  "severity": "fail",
+  "default_threshold": "present",
+  "threshold_source": "https://www.fabdigit.com/guides/welded-assembly-design/",
+  "sources": [
+   "https://www.fabdigit.com/guides/welded-assembly-design/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "cope.py / steps.py / spec_drawing.py"
+ },
+ {
+  "process": "Welding/Fab",
+  "rank_in_process": 24,
+  "failure": "Pressure piping / structural lifting fab",
+  "why": "Code",
+  "check": "Flag ASME/AWS code work - qualified welder/engineer",
+  "check_type": "plan-text",
+  "severity": "fail",
+  "default_threshold": "policy",
+  "threshold_source": "https://open-exam-prep.com/study-guides/nccer-boilermaker/pipe-fabrication/butt-weld-pipe-fabrication",
+  "sources": [
+   "https://open-exam-prep.com/study-guides/nccer-boilermaker/pipe-fabrication/butt-weld-pipe-fabrication"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "cope.py / steps.py / spec_drawing.py"
+ },
+ {
+  "process": "Welding/Fab",
+  "rank_in_process": 25,
+  "failure": "Thick plate single-sided V",
+  "why": "Distortion/filler",
+  "check": "Advice double-V >25 mm if both sides reachable",
+  "check_type": "advice",
+  "severity": "tip",
+  "default_threshold": ">25 mm",
+  "threshold_source": "https://geratools.com/weld-joint-prep-calculator",
+  "sources": [
+   "https://geratools.com/weld-joint-prep-calculator"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "cope.py / steps.py / spec_drawing.py"
+ },
+ {
+  "process": "Sheet metal",
+  "rank_in_process": 1,
+  "failure": "Flange too short",
+  "why": "Can't span V-die",
+  "check": "Flange >= max(4T, 3 mm)",
+  "check_type": "geometry",
+  "severity": "fail",
+  "default_threshold": "4T or 3 mm",
+  "threshold_source": "https://fabcon.com/articles/sheet-metal-fabrication/sheet-metal-dfm-guidelines-2026/",
+  "sources": [
+   "https://ssgmfg.com/design-guides/sheet-metal-fabrication",
+   "https://fabcon.com/articles/sheet-metal-fabrication/sheet-metal-dfm-guidelines-2026/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "kit.py / export_dxf.py / spec_drawing.py"
+ },
+ {
+  "process": "Sheet metal",
+  "rank_in_process": 2,
+  "failure": "Bend radius too tight",
+  "why": "Cracking",
+  "check": "Inside R >=1T mild steel; 6061-T6 3-4T",
+  "check_type": "geometry",
+  "severity": "fail",
+  "default_threshold": "1T / 3-4T 6061-T6",
+  "threshold_source": "https://fabcon.com/articles/sheet-metal-fabrication/sheet-metal-dfm-guidelines-2026/",
+  "sources": [
+   "https://fabcon.com/articles/sheet-metal-fabrication/sheet-metal-dfm-guidelines-2026/",
+   "https://hlhrapid.com/knowledge/design-guide-sheet-metal-bending/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "kit.py / export_dxf.py / spec_drawing.py"
+ },
+ {
+  "process": "Sheet metal",
+  "rank_in_process": 3,
+  "failure": "Hole too close to bend",
+  "why": "Distorts",
+  "check": "Hole edge to bend >= 2.5T+R; slots 4T+R",
+  "check_type": "geometry",
+  "severity": "fail",
+  "default_threshold": "2.5T+R / 4T+R",
+  "threshold_source": "https://hlhrapid.com/knowledge/design-guide-sheet-metal-bending/",
+  "sources": [
+   "https://hlhrapid.com/knowledge/design-guide-sheet-metal-bending/",
+   "https://ssgmfg.com/design-guides/sheet-metal-fabrication"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "kit.py / export_dxf.py / spec_drawing.py"
+ },
+ {
+  "process": "Sheet metal",
+  "rank_in_process": 4,
+  "failure": "Missing bend relief",
+  "why": "Tearing",
+  "check": "Relief width >=1T, depth >=T+R",
+  "check_type": "geometry",
+  "severity": "fail",
+  "default_threshold": "1T x (T+R)",
+  "threshold_source": "https://ssgmfg.com/design-guides/sheet-metal-fabrication",
+  "sources": [
+   "https://ssgmfg.com/design-guides/sheet-metal-fabrication",
+   "https://fabcon.com/articles/sheet-metal-fabrication/sheet-metal-dfm-guidelines-2026/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "kit.py / export_dxf.py / spec_drawing.py"
+ },
+ {
+  "process": "Sheet metal",
+  "rank_in_process": 5,
+  "failure": "Wrong flat length (K-factor)",
+  "why": "Neutral axis",
+  "check": "BA = A(\u03c0/180)(R+K\u00b7T), K 0.3-0.5; flag as estimate",
+  "check_type": "geometry",
+  "severity": "warn",
+  "default_threshold": "K 0.3-0.5",
+  "threshold_source": "https://kingsformmetal.com/resources/downloads/files/KFR-008_Sheet_Metal_Design_Guide_v1.0.pdf",
+  "sources": [
+   "https://kingsformmetal.com/resources/downloads/files/KFR-008_Sheet_Metal_Design_Guide_v1.0.pdf",
+   "https://manufyn.com/resources/design-guides/sheet-metal/k-factor-allowance/",
+   "https://ssgmfg.com/design-guides/sheet-metal-fabrication"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "kit.py / export_dxf.py / spec_drawing.py"
+ },
+ {
+  "process": "Sheet metal",
+  "rank_in_process": 6,
+  "failure": "Inconsistent bend radii",
+  "why": "Tool changes",
+  "check": "All bends same R",
+  "check_type": "geometry",
+  "severity": "tip",
+  "default_threshold": "advice only",
+  "threshold_source": "https://ssgmfg.com/design-guides/sheet-metal-fabrication",
+  "sources": [
+   "https://ssgmfg.com/design-guides/sheet-metal-fabrication"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "kit.py / export_dxf.py / spec_drawing.py"
+ },
+ {
+  "process": "Sheet metal",
+  "rank_in_process": 7,
+  "failure": "Hole smaller than thickness",
+  "why": "Punch/cut",
+  "check": "Hole dia >=1T",
+  "check_type": "geometry",
+  "severity": "warn",
+  "default_threshold": "1T",
+  "threshold_source": "https://ssgmfg.com/design-guides/sheet-metal-fabrication",
+  "sources": [
+   "https://ssgmfg.com/design-guides/sheet-metal-fabrication"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "kit.py / export_dxf.py / spec_drawing.py"
+ },
+ {
+  "process": "Sheet metal",
+  "rank_in_process": 8,
+  "failure": "Bend tolerance ignored",
+  "why": "Each bend adds error",
+  "check": "Stack \u00b10.010-0.015 in and \u00b11 deg per bend",
+  "check_type": "geometry",
+  "severity": "warn",
+  "default_threshold": "\u00b10.25-0.38 mm/bend",
+  "threshold_source": "https://ssgmfg.com/design-guides/sheet-metal-fabrication",
+  "sources": [
+   "https://ssgmfg.com/design-guides/sheet-metal-fabrication"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "kit.py / export_dxf.py / spec_drawing.py"
+ },
+ {
+  "process": "Sheet metal",
+  "rank_in_process": 9,
+  "failure": "Features near bend edge",
+  "why": "Tooling",
+  "check": "Features 3-4T from bend edge",
+  "check_type": "geometry",
+  "severity": "warn",
+  "default_threshold": "3-4T",
+  "threshold_source": "https://fabcon.com/articles/sheet-metal-fabrication/sheet-metal-dfm-guidelines-2026/",
+  "sources": [
+   "https://fabcon.com/articles/sheet-metal-fabrication/sheet-metal-dfm-guidelines-2026/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "kit.py / export_dxf.py / spec_drawing.py"
+ },
+ {
+  "process": "Sheet metal",
+  "rank_in_process": 10,
+  "failure": "Slot orientation",
+  "why": "Stress",
+  "check": "Slots parallel to bend",
+  "check_type": "geometry",
+  "severity": "tip",
+  "default_threshold": "advice only",
+  "threshold_source": "https://fabcon.com/articles/sheet-metal-fabrication/sheet-metal-dfm-guidelines-2026/",
+  "sources": [
+   "https://fabcon.com/articles/sheet-metal-fabrication/sheet-metal-dfm-guidelines-2026/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "kit.py / export_dxf.py / spec_drawing.py"
+ },
+ {
+  "process": "Sheet metal",
+  "rank_in_process": 11,
+  "failure": "Hem too tight",
+  "why": "Cracking",
+  "check": "Hem ID >= T, return >= 4T",
+  "check_type": "geometry",
+  "severity": "warn",
+  "default_threshold": "ID T, return 4T",
+  "threshold_source": "https://hlhrapid.com/knowledge/design-guide-sheet-metal-bending/",
+  "sources": [
+   "https://hlhrapid.com/knowledge/design-guide-sheet-metal-bending/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "kit.py / export_dxf.py / spec_drawing.py"
+ },
+ {
+  "process": "Sheet metal",
+  "rank_in_process": 12,
+  "failure": "Universal K-factor assumed",
+  "why": "Varies",
+  "check": "Note 'verify with shop'",
+  "check_type": "plan-text",
+  "severity": "tip",
+  "default_threshold": "advice only",
+  "threshold_source": "https://kingsformmetal.com/resources/downloads/files/KFR-008_Sheet_Metal_Design_Guide_v1.0.pdf",
+  "sources": [
+   "https://kingsformmetal.com/resources/downloads/files/KFR-008_Sheet_Metal_Design_Guide_v1.0.pdf"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "kit.py / export_dxf.py / spec_drawing.py"
+ },
+ {
+  "process": "Sheet metal",
+  "rank_in_process": 13,
+  "failure": "Bend sequence collision",
+  "why": "Part hits tool",
+  "check": "Advice",
+  "check_type": "advice",
+  "severity": "warn",
+  "default_threshold": "advice only",
+  "threshold_source": "https://kingsformmetal.com/resources/downloads/files/KFR-008_Sheet_Metal_Design_Guide_v1.0.pdf",
+  "sources": [
+   "https://kingsformmetal.com/resources/downloads/files/KFR-008_Sheet_Metal_Design_Guide_v1.0.pdf"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "kit.py / export_dxf.py / spec_drawing.py"
+ },
+ {
+  "process": "Fasteners",
+  "rank_in_process": 1,
+  "failure": "Wrong tap drill",
+  "why": "Strip/break tap",
+  "check": "Tap drill table (75%): 1/4-20 #7, M6 5.0 mm ...",
+  "check_type": "plan-text",
+  "severity": "fail",
+  "default_threshold": "shop_reference",
+  "threshold_source": "https://www.rivcut.com/resources/tap-drill-chart",
+  "sources": [
+   "https://www.rivcut.com/resources/tap-drill-chart",
+   "https://mechsimulator.com/tools/tap-drill-chart/",
+   "https://cw-mfg.com/resources/tap-drill-chart"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "kit.py / spec.py / fabdocs.py"
+ },
+ {
+  "process": "Fasteners",
+  "rank_in_process": 2,
+  "failure": "Clearance hole too tight/loose",
+  "why": "Fit",
+  "check": "Clearance: M6 6.4/6.6/7.0 close/normal/loose; 1/4 17/64 close, 9/32 free",
+  "check_type": "geometry",
+  "severity": "fail",
+  "default_threshold": "ISO 273",
+  "threshold_source": "https://thespoollist.com/tools/tap-drill/m6",
+  "sources": [
+   "https://thespoollist.com/tools/tap-drill/m6",
+   "https://www.rivcut.com/resources/tap-drill-chart"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "kit.py / spec.py / fabdocs.py"
+ },
+ {
+  "process": "Fasteners",
+  "rank_in_process": 3,
+  "failure": "Insufficient thread engagement",
+  "why": "Stripping",
+  "check": "Steel-steel 1D; steel into Al 6061 2D; SS-SS 1.25D; plastic 2.5D or insert",
+  "check_type": "geometry",
+  "severity": "fail",
+  "default_threshold": "table",
+  "threshold_source": "https://www.rivcut.com/resources/thread-engagement-calculator",
+  "sources": [
+   "https://www.rivcut.com/resources/thread-engagement-calculator",
+   "https://thespoollist.com/tools/tap-drill/m6"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "kit.py / spec.py / fabdocs.py"
+ },
+ {
+  "process": "Fasteners",
+  "rank_in_process": 4,
+  "failure": "Threads deeper than useful",
+  "why": "Cost",
+  "check": "Thread depth > 1.5-2D steel, 2-3D Al -> tip",
+  "check_type": "geometry",
+  "severity": "tip",
+  "default_threshold": "1.5-2D / 2-3D",
+  "threshold_source": "https://cw-mfg.com/resources/tap-drill-chart",
+  "sources": [
+   "https://cw-mfg.com/resources/tap-drill-chart"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "kit.py / spec.py / fabdocs.py"
+ },
+ {
+  "process": "Fasteners",
+  "rank_in_process": 5,
+  "failure": "Tapping hard metal at 75%",
+  "why": "Tap breakage",
+  "check": "Stainless: 60-65% thread drill",
+  "check_type": "plan-text",
+  "severity": "tip",
+  "default_threshold": "60-65%",
+  "threshold_source": "https://www.rivcut.com/resources/tap-drill-chart",
+  "sources": [
+   "https://www.rivcut.com/resources/tap-drill-chart"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "kit.py / spec.py / fabdocs.py"
+ },
+ {
+  "process": "Fasteners",
+  "rank_in_process": 6,
+  "failure": "Form tap with cut-tap drill",
+  "why": "Wrong hole",
+  "check": "Form tap \u2248 D-0.5P",
+  "check_type": "plan-text",
+  "severity": "tip",
+  "default_threshold": "D-0.5P",
+  "threshold_source": "https://thespoollist.com/tools/tap-drill/m6",
+  "sources": [
+   "https://thespoollist.com/tools/tap-drill/m6"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "kit.py / spec.py / fabdocs.py"
+ },
+ {
+  "process": "Fasteners",
+  "rank_in_process": 7,
+  "failure": "Non-standard fastener sizes",
+  "why": "Can't buy",
+  "check": "Fasteners from standard size list",
+  "check_type": "plan-text",
+  "severity": "warn",
+  "default_threshold": "stock list",
+  "threshold_source": "Sketch default",
+  "sources": [
+   "https://www.rivcut.com/resources/tap-drill-chart"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "kit.py / spec.py / fabdocs.py"
+ },
+ {
+  "process": "Fasteners",
+  "rank_in_process": 8,
+  "failure": "Screw length not standard",
+  "why": "Can't buy",
+  "check": "Round to stock length",
+  "check_type": "plan-text",
+  "severity": "warn",
+  "default_threshold": "Sketch default",
+  "threshold_source": "Sketch default",
+  "sources": [
+   "https://woodworkingadvisor.com/wood-screw-length-calculator/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "kit.py / spec.py / fabdocs.py"
+ },
+ {
+  "process": "Fasteners",
+  "rank_in_process": 9,
+  "failure": "Wood screw pilot/clearance missing",
+  "why": "Split",
+  "check": "See woodworking",
+  "check_type": "plan-text",
+  "severity": "warn",
+  "default_threshold": "#8 3/32-1/8",
+  "threshold_source": "https://woodworkingadvisor.com/how-to-not-split-wood-when-screwing/",
+  "sources": [
+   "https://woodworkingadvisor.com/how-to-not-split-wood-when-screwing/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "kit.py / spec.py / fabdocs.py"
+ },
+ {
+  "process": "Fasteners",
+  "rank_in_process": 10,
+  "failure": "Edge distance near hardware holes",
+  "why": "Tearout",
+  "check": "Hole >=1x dia from edge",
+  "check_type": "geometry",
+  "severity": "warn",
+  "default_threshold": "1x d",
+  "threshold_source": "https://sendcutsend.com/blog/basic-tolerances-and-cut-feature-relationships/",
+  "sources": [
+   "https://sendcutsend.com/blog/basic-tolerances-and-cut-feature-relationships/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "kit.py / spec.py / fabdocs.py"
+ },
+ {
+  "process": "Fasteners",
+  "rank_in_process": 11,
+  "failure": "Fastener grade/material missing",
+  "why": "Strength/corrosion",
+  "check": "BOM has grade/material",
+  "check_type": "plan-text",
+  "severity": "warn",
+  "default_threshold": "present",
+  "threshold_source": "https://www.openbom.com/blog/plm-and-bom-management/bom-review-mistakes-quality-cost-supply-chain",
+  "sources": [
+   "https://www.openbom.com/blog/plm-and-bom-management/bom-review-mistakes-quality-cost-supply-chain"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "kit.py / spec.py / fabdocs.py"
+ },
+ {
+  "process": "Fasteners",
+  "rank_in_process": 12,
+  "failure": "Dissimilar metals",
+  "why": "Galvanic",
+  "check": "Advice",
+  "check_type": "advice",
+  "severity": "tip",
+  "default_threshold": "advice only",
+  "threshold_source": "Sketch default",
+  "sources": [
+   "https://www.rivcut.com/resources/thread-engagement-calculator"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "kit.py / spec.py / fabdocs.py"
+ },
+ {
+  "process": "Fasteners",
+  "rank_in_process": 13,
+  "failure": "Coated threads bind",
+  "why": "Powder in threads",
+  "check": "Mask threads or chase",
+  "check_type": "plan-text",
+  "severity": "warn",
+  "default_threshold": "4x film on pitch dia",
+  "threshold_source": "https://manufacturingprocesses.org/processes/finishing/powder-coating.md",
+  "sources": [
+   "https://manufacturingprocesses.org/processes/finishing/powder-coating.md"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "kit.py / spec.py / fabdocs.py"
+ },
+ {
+  "process": "Finishing",
+  "rank_in_process": 1,
+  "failure": "Powder coat closes bores/threads",
+  "why": "2-4 mil per surface",
+  "check": "Bore -2x film, thread pitch dia 4x film; mask list",
+  "check_type": "geometry",
+  "severity": "warn",
+  "default_threshold": "2-4 mil (50-100 \u00b5m)",
+  "threshold_source": "https://manufacturingprocesses.org/processes/finishing/powder-coating.md",
+  "sources": [
+   "https://manufacturingprocesses.org/processes/finishing/powder-coating.md",
+   "https://glecopaintandpowder.com/design-guide/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "spec.py / fabdocs.py / review.py"
+ },
+ {
+  "process": "Finishing",
+  "rank_in_process": 2,
+  "failure": "Masking not specified",
+  "why": "Coated contact faces",
+  "check": "Drawing lists masked features",
+  "check_type": "file",
+  "severity": "warn",
+  "default_threshold": "present",
+  "threshold_source": "https://fabcon.com/articles/surface-and-finishing/high-tolerance-powder-coating-services/",
+  "sources": [
+   "https://fabcon.com/articles/surface-and-finishing/high-tolerance-powder-coating-services/",
+   "https://glecopaintandpowder.com/design-guide/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "spec.py / fabdocs.py / review.py"
+ },
+ {
+  "process": "Finishing",
+  "rank_in_process": 3,
+  "failure": "Paint stack ignored",
+  "why": "Primer+top",
+  "check": "Liquid paint ~25-50 \u00b5m/coat in stack-up",
+  "check_type": "geometry",
+  "severity": "tip",
+  "default_threshold": "25-50 \u00b5m/coat",
+  "threshold_source": "https://manufacturingprocesses.org/processes/finishing/powder-coating.md",
+  "sources": [
+   "https://manufacturingprocesses.org/processes/finishing/powder-coating.md"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "spec.py / fabdocs.py / review.py"
+ },
+ {
+  "process": "Finishing",
+  "rank_in_process": 4,
+  "failure": "Tight fits after coating",
+  "why": "Low build needed",
+  "check": "Advice low-build 25-50 \u00b5m or chase",
+  "check_type": "advice",
+  "severity": "tip",
+  "default_threshold": "25-50 \u00b5m",
+  "threshold_source": "https://fabcon.com/articles/surface-and-finishing/high-tolerance-powder-coating-services/",
+  "sources": [
+   "https://fabcon.com/articles/surface-and-finishing/high-tolerance-powder-coating-services/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "spec.py / fabdocs.py / review.py"
+ },
+ {
+  "process": "Finishing",
+  "rank_in_process": 5,
+  "failure": "Wood finish on glue surfaces",
+  "why": "Glue won't bond",
+  "check": "Plan: finish after glue-up or tape joints",
+  "check_type": "plan-text",
+  "severity": "tip",
+  "default_threshold": "advice only",
+  "threshold_source": "https://www.finewoodworking.com/media/GlueUps.pdf",
+  "sources": [
+   "https://www.finewoodworking.com/media/GlueUps.pdf"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "spec.py / fabdocs.py / review.py"
+ },
+ {
+  "process": "Finishing",
+  "rank_in_process": 6,
+  "failure": "Wood finish swells fits",
+  "why": "Moisture",
+  "check": "Advice",
+  "check_type": "advice",
+  "severity": "tip",
+  "default_threshold": "advice only",
+  "threshold_source": "https://www.fpl.fs.usda.gov/documnts/fplgtr/fplgtr190/chapter_04.pdf",
+  "sources": [
+   "https://www.fpl.fs.usda.gov/documnts/fplgtr/fplgtr190/chapter_04.pdf"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "spec.py / fabdocs.py / review.py"
+ },
+ {
+  "process": "Finishing",
+  "rank_in_process": 7,
+  "failure": "Galvanizing before welding",
+  "why": "Fume",
+  "check": "Weld before galvanizing / remove coating",
+  "check_type": "plan-text",
+  "severity": "warn",
+  "default_threshold": "advice only",
+  "threshold_source": "https://aws-p-001-delivery.sitecorecontenthub.cloud/api/public/content/Fact-Sheet-No.25",
+  "sources": [
+   "https://aws-p-001-delivery.sitecorecontenthub.cloud/api/public/content/Fact-Sheet-No.25"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "spec.py / fabdocs.py / review.py"
+ },
+ {
+  "process": "Finishing",
+  "rank_in_process": 8,
+  "failure": "No finish specified",
+  "why": "Rust/wear",
+  "check": "Every part has finish field",
+  "check_type": "plan-text",
+  "severity": "warn",
+  "default_threshold": "present",
+  "threshold_source": "https://www.wogo.ai/en/column/2d-drawing-check-list/",
+  "sources": [
+   "https://www.wogo.ai/en/column/2d-drawing-check-list/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "spec.py / fabdocs.py / review.py"
+ },
+ {
+  "process": "Finishing",
+  "rank_in_process": 9,
+  "failure": "Hanging points for powder coat",
+  "why": "No contact",
+  "check": "Advice add hang hole",
+  "check_type": "advice",
+  "severity": "tip",
+  "default_threshold": "advice only",
+  "threshold_source": "https://glecopaintandpowder.com/design-guide/",
+  "sources": [
+   "https://glecopaintandpowder.com/design-guide/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "spec.py / fabdocs.py / review.py"
+ },
+ {
+  "process": "Finishing",
+  "rank_in_process": 10,
+  "failure": "Grounding/electrical contact coated",
+  "why": "Insulation",
+  "check": "Mask contacts",
+  "check_type": "plan-text",
+  "severity": "tip",
+  "default_threshold": "advice only",
+  "threshold_source": "https://fabcon.com/articles/surface-and-finishing/high-tolerance-powder-coating-services/",
+  "sources": [
+   "https://fabcon.com/articles/surface-and-finishing/high-tolerance-powder-coating-services/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "spec.py / fabdocs.py / review.py"
+ },
+ {
+  "process": "Tolerancing",
+  "rank_in_process": 1,
+  "failure": "No general tolerance",
+  "why": "Ambiguity",
+  "check": "Default ISO 2768-m: >6-30 \u00b10.2, >30-120 \u00b10.3, >120-400 \u00b10.5 mm",
+  "check_type": "file",
+  "severity": "fail",
+  "default_threshold": "ISO 2768-m",
+  "threshold_source": "https://www.csl-imt.ch/en/knowledge/iso-2768-tolerance-tables/",
+  "sources": [
+   "https://www.csl-imt.ch/en/knowledge/iso-2768-tolerance-tables/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "spec.py / spec_drawing.py / review.py"
+ },
+ {
+  "process": "Tolerancing",
+  "rank_in_process": 2,
+  "failure": "Tolerance tighter than process",
+  "why": "Unachievable",
+  "check": "Check stated tol >= process capability (shop_reference)",
+  "check_type": "file",
+  "severity": "fail",
+  "default_threshold": "per process",
+  "threshold_source": "https://www.protolabs.com/services/3d-printing/fused-deposition-modeling/",
+  "sources": [
+   "https://www.protolabs.com/services/3d-printing/fused-deposition-modeling/",
+   "https://rpmfast.com/blogs-laser-cutting-tolerances-material-limits-design/",
+   "https://glcncmachining.com/cnc-machine-wood-services/",
+   "https://www.hypertherm.com/resources/system-support/maintenance-and-use/cut-quality/hole-quality/",
+   "https://ssgmfg.com/design-guides/sheet-metal-fabrication"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "spec.py / spec_drawing.py / review.py"
+ },
+ {
+  "process": "Tolerancing",
+  "rank_in_process": 3,
+  "failure": "Stack-up not computed",
+  "why": "Assembly fails",
+  "check": "Worst-case sum of tolerances along chain vs gap",
+  "check_type": "geometry",
+  "severity": "warn",
+  "default_threshold": "worst-case",
+  "threshold_source": "Sketch default",
+  "sources": [
+   "https://www.csl-imt.ch/en/knowledge/iso-2768-tolerance-tables/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "spec.py / spec_drawing.py / review.py"
+ },
+ {
+  "process": "Tolerancing",
+  "rank_in_process": 4,
+  "failure": "Wrong fit class",
+  "why": "Binding/loose",
+  "check": "Sliding H7/g6, locational H7/h6, press H7/p6",
+  "check_type": "plan-text",
+  "severity": "warn",
+  "default_threshold": "ISO 286",
+  "threshold_source": "https://manufacturingprocesses.org/charts/iso-286-fits-tolerances",
+  "sources": [
+   "https://manufacturingprocesses.org/charts/iso-286-fits-tolerances"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "spec.py / spec_drawing.py / review.py"
+ },
+ {
+  "process": "Tolerancing",
+  "rank_in_process": 5,
+  "failure": "Finish thickness not in stack",
+  "why": "Coat",
+  "check": "Add 2x film to bores",
+  "check_type": "geometry",
+  "severity": "warn",
+  "default_threshold": "2-4 mil",
+  "threshold_source": "https://manufacturingprocesses.org/processes/finishing/powder-coating.md",
+  "sources": [
+   "https://manufacturingprocesses.org/processes/finishing/powder-coating.md"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "spec.py / spec_drawing.py / review.py"
+ },
+ {
+  "process": "Tolerancing",
+  "rank_in_process": 6,
+  "failure": "Wood moisture movement in stack",
+  "why": "Seasonal",
+  "check": "Add movement allowance",
+  "check_type": "geometry",
+  "severity": "warn",
+  "default_threshold": "FWW formula",
+  "threshold_source": "https://www.finewoodworking.com/2013/08/29/calculating-for-wood-movement",
+  "sources": [
+   "https://www.finewoodworking.com/2013/08/29/calculating-for-wood-movement"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "spec.py / spec_drawing.py / review.py"
+ },
+ {
+  "process": "Tolerancing",
+  "rank_in_process": 7,
+  "failure": "Weldment overall tol",
+  "why": "Distortion",
+  "check": "\u00b11/16-1/8 in",
+  "check_type": "plan-text",
+  "severity": "warn",
+  "default_threshold": "\u00b11/16-1/8",
+  "threshold_source": "https://www.paragonmetalfab.com/sheet-metal-fabrication-tolerances/",
+  "sources": [
+   "https://www.paragonmetalfab.com/sheet-metal-fabrication-tolerances/",
+   "https://steelcalculator.app/reference/steel-tolerances-guide/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "spec.py / spec_drawing.py / review.py"
+ },
+ {
+  "process": "Tolerancing",
+  "rank_in_process": 8,
+  "failure": "Bend tolerances accumulate",
+  "why": "Per bend",
+  "check": "\u00b10.25-0.38 mm and \u00b11 deg/bend",
+  "check_type": "geometry",
+  "severity": "warn",
+  "default_threshold": "per bend",
+  "threshold_source": "https://ssgmfg.com/design-guides/sheet-metal-fabrication",
+  "sources": [
+   "https://ssgmfg.com/design-guides/sheet-metal-fabrication"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "spec.py / spec_drawing.py / review.py"
+ },
+ {
+  "process": "Tolerancing",
+  "rank_in_process": 9,
+  "failure": "Mixing units",
+  "why": "Errors",
+  "check": "Single unit system per drawing",
+  "check_type": "file",
+  "severity": "fail",
+  "default_threshold": "one",
+  "threshold_source": "https://www.wogo.ai/en/column/2d-drawing-check-list/",
+  "sources": [
+   "https://www.wogo.ai/en/column/2d-drawing-check-list/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "spec.py / spec_drawing.py / review.py"
+ },
+ {
+  "process": "Tolerancing",
+  "rank_in_process": 10,
+  "failure": "FDM fits",
+  "why": "\u00b10.5 mm",
+  "check": "Print fits allowance",
+  "check_type": "geometry",
+  "severity": "warn",
+  "default_threshold": "\u00b10.5 mm",
+  "threshold_source": "https://www.protolabs.com/services/3d-printing/fused-deposition-modeling/",
+  "sources": [
+   "https://www.protolabs.com/services/3d-printing/fused-deposition-modeling/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "spec.py / spec_drawing.py / review.py"
+ },
+ {
+  "process": "Safety",
+  "rank_in_process": 1,
+  "failure": "PVC/vinyl/PTFE in laser",
+  "why": "HCl/toxic",
+  "check": "Fail",
+  "check_type": "plan-text",
+  "severity": "fail",
+  "default_threshold": "banned",
+  "threshold_source": "https://team.bosslaser.com/learn/materials/materials-to-never-laser/",
+  "sources": [
+   "https://team.bosslaser.com/learn/materials/materials-to-never-laser/",
+   "https://support.brmlasers.com/en/getting-started/which-materials-can-you-laser"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "spec.py / steps.py / ship.py"
+ },
+ {
+  "process": "Safety",
+  "rank_in_process": 2,
+  "failure": "Galvanized weld/cut",
+  "why": "Metal fume fever",
+  "check": "Warn + ventilation",
+  "check_type": "plan-text",
+  "severity": "fail",
+  "default_threshold": "ZnO 5 mg/m3",
+  "threshold_source": "https://aws-p-001-delivery.sitecorecontenthub.cloud/api/public/content/Fact-Sheet-No.25",
+  "sources": [
+   "https://aws-p-001-delivery.sitecorecontenthub.cloud/api/public/content/Fact-Sheet-No.25",
+   "https://portugues.cdc.gov/niosh/npg/npgd0675.html"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "spec.py / steps.py / ship.py"
+ },
+ {
+  "process": "Safety",
+  "rank_in_process": 3,
+  "failure": "Stainless weld",
+  "why": "Cr(VI) carcinogen",
+  "check": "LEV note",
+  "check_type": "plan-text",
+  "severity": "warn",
+  "default_threshold": "5 \u00b5g/m3 PEL",
+  "threshold_source": "https://www.osha.gov/sites/default/files/publications/OSHA%5FFS-3647%5FWELDING.pdf",
+  "sources": [
+   "https://www.osha.gov/sites/default/files/publications/OSHA%5FFS-3647%5FWELDING.pdf"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "spec.py / steps.py / ship.py"
+ },
+ {
+  "process": "Safety",
+  "rank_in_process": 4,
+  "failure": "Welding fume generally",
+  "why": "Respiratory",
+  "check": "Ventilation note on all weld plans",
+  "check_type": "plan-text",
+  "severity": "warn",
+  "default_threshold": "advice only",
+  "threshold_source": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.353",
+  "sources": [
+   "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.353",
+   "https://portugues.cdc.gov/niosh/npg/npgd0666.html"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "spec.py / steps.py / ship.py"
+ },
+ {
+  "process": "Safety",
+  "rank_in_process": 5,
+  "failure": "Enclosed space welding zinc/lead",
+  "why": "OSHA",
+  "check": "Ventilation or air-line respirator",
+  "check_type": "plan-text",
+  "severity": "warn",
+  "default_threshold": "1926.353",
+  "threshold_source": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.353",
+  "sources": [
+   "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.353"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "spec.py / steps.py / ship.py"
+ },
+ {
+  "process": "Safety",
+  "rank_in_process": 6,
+  "failure": "CNC tiny islands projectiles",
+  "why": "Ejected parts",
+  "check": "Tabs",
+  "check_type": "file",
+  "severity": "warn",
+  "default_threshold": "advice only",
+  "threshold_source": "https://makers.universityprep.org/classes/design-and-fabrication/cnc-design-rules/",
+  "sources": [
+   "https://makers.universityprep.org/classes/design-and-fabrication/cnc-design-rules/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "spec.py / steps.py / ship.py"
+ },
+ {
+  "process": "Safety",
+  "rank_in_process": 7,
+  "failure": "Acrylic/wood laser fire",
+  "why": "Flammable",
+  "check": "Never leave laser unattended (advice)",
+  "check_type": "advice",
+  "severity": "warn",
+  "default_threshold": "advice only",
+  "threshold_source": "https://team.bosslaser.com/learn/materials/materials-to-never-laser/",
+  "sources": [
+   "https://team.bosslaser.com/learn/materials/materials-to-never-laser/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "spec.py / steps.py / ship.py"
+ },
+ {
+  "process": "Safety",
+  "rank_in_process": 8,
+  "failure": "Structural/pressure items",
+  "why": "Life safety",
+  "check": "Flag engineer/code",
+  "check_type": "plan-text",
+  "severity": "fail",
+  "default_threshold": "policy",
+  "threshold_source": "https://up.codes/viewer/connecticut/irc-2021/chapter/6/wall-construction",
+  "sources": [
+   "https://up.codes/viewer/connecticut/irc-2021/chapter/6/wall-construction"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "spec.py / steps.py / ship.py"
+ },
+ {
+  "process": "Safety",
+  "rank_in_process": 9,
+  "failure": "Router bit overload",
+  "why": "Bit breakage",
+  "check": "DOC limits",
+  "check_type": "file",
+  "severity": "warn",
+  "default_threshold": "0.5x dia",
+  "threshold_source": "https://craftgineer.com/blog/cnc-routing-mistakes",
+  "sources": [
+   "https://craftgineer.com/blog/cnc-routing-mistakes"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "spec.py / steps.py / ship.py"
+ },
+ {
+  "process": "Safety",
+  "rank_in_process": 10,
+  "failure": "Unknown plastic",
+  "why": "Could be chlorinated",
+  "check": "Require SDS",
+  "check_type": "plan-text",
+  "severity": "fail",
+  "default_threshold": "SDS",
+  "threshold_source": "https://team.bosslaser.com/learn/materials/materials-to-never-laser/",
+  "sources": [
+   "https://team.bosslaser.com/learn/materials/materials-to-never-laser/"
+  ],
+  "covered_by_current_gate": "no",
+  "where_in_toolbox": "spec.py / steps.py / ship.py"
+ }
+]

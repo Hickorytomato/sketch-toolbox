@@ -1,0 +1,211 @@
+{
+ "name": "steel_bracket",
+ "title": "Welded steel wall bracket",
+ "domain": "metal",
+ "units": "in",
+ "ask": "a welded steel bracket with a gusset that bolts to a post",
+ "values": {
+  "t": {
+   "v": 0.375,
+   "src": "assumed",
+   "unit": "in",
+   "note": "3/8 plate"
+  },
+  "L": {
+   "v": 6,
+   "src": "user",
+   "unit": "in",
+   "note": "bracket width"
+  },
+  "B": {
+   "v": 4,
+   "src": "assumed",
+   "unit": "in",
+   "note": "base depth"
+  },
+  "Hh": {
+   "v": 6,
+   "src": "assumed",
+   "unit": "in",
+   "note": "upright height"
+  },
+  "finish": {
+   "v": "powder coat, black",
+   "src": "assumed",
+   "unit": "",
+   "note": "finish"
+  }
+ },
+ "parts": [
+  {
+   "name": "base",
+   "kind": "plate",
+   "material": "steel",
+   "label": "Base plate",
+   "args": {
+    "L": "=L",
+    "W": "=B",
+    "t": "=t"
+   },
+   "at": [
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "name": "upright",
+   "kind": "plate",
+   "material": "steel",
+   "label": "Upright plate",
+   "args": {
+    "L": "=L",
+    "W": "=Hh",
+    "t": "=t"
+   },
+   "rot": [
+    90,
+    0,
+    0
+   ],
+   "at": [
+    0,
+    "=B",
+    0
+   ]
+  },
+  {
+   "name": "gusset",
+   "kind": "gusset",
+   "material": "steel",
+   "label": "Gusset",
+   "args": {
+    "a": 3,
+    "b": 4,
+    "t": "=t"
+   },
+   "rot": [
+    90,
+    0,
+    -90
+   ],
+   "at": [
+    "=L/2+t/2",
+    "=B-t",
+    "=t"
+   ]
+  }
+ ],
+ "joints": [
+  {
+   "type": "welded",
+   "a": "upright",
+   "b": "base",
+   "weld": "1/4 fillet, both sides"
+  },
+  {
+   "type": "welded",
+   "a": "gusset",
+   "b": "base",
+   "weld": "3/16 fillet, both sides"
+  },
+  {
+   "type": "welded",
+   "a": "gusset",
+   "b": "upright",
+   "weld": "3/16 fillet, both sides"
+  },
+  {
+   "type": "bolted",
+   "parts": [
+    "base"
+   ],
+   "at": [
+    1.25,
+    1.75,
+    0
+   ],
+   "axis": [
+    0,
+    0,
+    1
+   ],
+   "bolt": "1/2-13 x 1-1/2 in grade 5 zinc hex bolt",
+   "qty": 1
+  },
+  {
+   "type": "bolted",
+   "parts": [
+    "base"
+   ],
+   "at": [
+    "=L-1.25",
+    1.75,
+    0
+   ],
+   "axis": [
+    0,
+    0,
+    1
+   ],
+   "bolt": "1/2-13 x 1-1/2 in grade 5 zinc hex bolt",
+   "qty": 1
+  },
+  {
+   "type": "bolted",
+   "parts": [
+    "upright"
+   ],
+   "at": [
+    1.25,
+    "=B",
+    4.5
+   ],
+   "axis": [
+    0,
+    1,
+    0
+   ],
+   "bolt": "1/2-13 x 1-1/2 in grade 5 zinc hex bolt",
+   "qty": 1
+  },
+  {
+   "type": "bolted",
+   "parts": [
+    "upright"
+   ],
+   "at": [
+    "=L-1.25",
+    "=B",
+    4.5
+   ],
+   "axis": [
+    0,
+    1,
+    0
+   ],
+   "bolt": "1/2-13 x 1-1/2 in grade 5 zinc hex bolt",
+   "qty": 1
+  }
+ ],
+ "dims": [
+  {
+   "label": "width",
+   "v": "=L",
+   "view": "front",
+   "axis": "h"
+  },
+  {
+   "label": "height",
+   "v": "=Hh",
+   "view": "front",
+   "axis": "v"
+  },
+  {
+   "label": "base depth",
+   "v": "=B",
+   "view": "side",
+   "axis": "h"
+  }
+ ]
+}

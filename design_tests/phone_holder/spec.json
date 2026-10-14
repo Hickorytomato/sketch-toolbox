@@ -195,7 +195,7 @@
   {
    "type": "screws",
    "n": 2,
-   "size": "#8 x 1-1/4 flat-head wood screw + wall anchors"
+   "size": "#8 x 1-1/4 in zinc flat-head wood screw + wall anchors"
   }
  ],
  "print": {
@@ -252,6 +252,26 @@
  "history": [
   {
    "at": "2026-10-13T11:35:54",
+   "change": "phone_w=82 phone_t=14 filament=PETG",
+   "by": "user"
+  },
+  {
+   "at": "2026-10-14T06:36:44",
+   "change": "phone_w=82 phone_t=14 filament=PETG",
+   "by": "user"
+  },
+  {
+   "at": "2026-10-14T06:39:47",
+   "change": "phone_w=82 phone_t=14 filament=PETG",
+   "by": "user"
+  },
+  {
+   "at": "2026-10-14T06:53:49",
+   "change": "phone_w=82 phone_t=14 filament=PETG",
+   "by": "user"
+  },
+  {
+   "at": "2026-10-14T07:16:30",
    "change": "phone_w=82 phone_t=14 filament=PETG",
    "by": "user"
   }

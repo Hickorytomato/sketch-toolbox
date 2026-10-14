@@ -1,0 +1,525 @@
+{
+ "saw_kerf": [
+  {
+   "tool": "10in table saw full kerf",
+   "kerf_in": 0.126,
+   "kerf_mm": 3.2,
+   "src": "https://sawplot.com/guides/saw-blade-kerf"
+  },
+  {
+   "tool": "10in table saw thin kerf",
+   "kerf_in": "0.091-0.098",
+   "kerf_mm": "2.3-2.5",
+   "src": "https://sawplot.com/guides/saw-blade-kerf"
+  },
+  {
+   "tool": "12in miter (Diablo D1280X)",
+   "kerf_in": 0.118,
+   "kerf_mm": 3.0,
+   "src": "https://sawplot.com/guides/saw-blade-kerf"
+  },
+  {
+   "tool": "7-1/4in circular thin (Diablo)",
+   "kerf_in": 0.059,
+   "kerf_mm": 1.5,
+   "src": "https://sawplot.com/guides/saw-blade-kerf"
+  },
+  {
+   "tool": "circular saw general",
+   "kerf_mm": "2.2-3.2",
+   "src": "https://cutplan.ai/en/blog/saw-kerf-explained.html"
+  },
+  {
+   "tool": "track saw",
+   "kerf_mm": "2.2-2.4",
+   "src": "https://sawplot.com/guides/saw-blade-kerf"
+  },
+  {
+   "tool": "bandsaw",
+   "kerf_in": "0.048-0.060",
+   "kerf_mm": "0.6-1.5",
+   "src": "https://www.cutlistor.com/calculators/kerf-calculator"
+  },
+  {
+   "tool": "jigsaw",
+   "kerf_mm": "1.5-2.5",
+   "src": "https://www.cutlistor.com/calculators/kerf-calculator"
+  },
+  {
+   "tool": "western hand saw",
+   "kerf_mm": "0.8-1.2",
+   "src": "https://globalcalcs.com/en/lifestyle/board-cuts-with-kerf/"
+  },
+  {
+   "tool": "Japanese pull saw",
+   "kerf_mm": "0.3-0.6",
+   "src": "https://globalcalcs.com/en/lifestyle/board-cuts-with-kerf/"
+  },
+  {
+   "tool": "reciprocating saw",
+   "kerf_mm": "1.5-3.0",
+   "src": "https://globalcalcs.com/en/lifestyle/board-cuts-with-kerf/"
+  },
+  {
+   "tool": "CNC router",
+   "kerf": "bit diameter",
+   "src": "https://sawplot.com/guides/saw-blade-kerf"
+  },
+  {
+   "tool": "laser thin ply",
+   "kerf_mm": "0.1-0.4",
+   "src": "https://cutplan.ai/en/blog/saw-kerf-explained.html"
+  },
+  {
+   "tool": "fiber laser sheet metal",
+   "kerf_mm": "0.1-0.4",
+   "src": "https://www.cutlistor.com/calculators/kerf-calculator"
+  },
+  {
+   "tool": "plasma",
+   "kerf_mm": "1.5-4.0",
+   "src": "https://www.cutlistor.com/calculators/kerf-calculator"
+  },
+  {
+   "tool": "waterjet",
+   "kerf_mm": "0.8-1.2",
+   "src": "https://www.cutlistor.com/calculators/kerf-calculator"
+  },
+  {
+   "tool": "cold saw",
+   "kerf_mm": "2.0-3.0",
+   "src": "https://www.cutlistor.com/calculators/kerf-calculator"
+  },
+  {
+   "tool": "abrasive chop saw",
+   "kerf_mm": "2.5-3.5",
+   "src": "https://www.cutlistor.com/calculators/kerf-calculator"
+  },
+  {
+   "note": "Circular saw ~1/8 in claim: portable saws mostly use thinner blades; 1/8 in mostly table saws",
+   "src": "https://www.woodmagazine.com/tool-reviews/circular-saws/circular-saw-blade-basics"
+  }
+ ],
+ "lumber_actual_in": {
+  "_src": "https://lumberreference.com/lumber-size-chart/",
+  "1x4": [
+   0.75,
+   3.5
+  ],
+  "1x6": [
+   0.75,
+   5.5
+  ],
+  "1x8": [
+   0.75,
+   7.25
+  ],
+  "1x10": [
+   0.75,
+   9.25
+  ],
+  "1x12": [
+   0.75,
+   11.25
+  ],
+  "2x4": [
+   1.5,
+   3.5
+  ],
+  "2x6": [
+   1.5,
+   5.5
+  ],
+  "2x8": [
+   1.5,
+   7.25
+  ],
+  "2x10": [
+   1.5,
+   9.25
+  ],
+  "2x12": [
+   1.5,
+   11.25
+  ]
+ },
+ "plywood": {
+  "3/4 nominal actual_in": "23/32 (0.719)",
+  "src": "https://truesizelumber.com/plywood-actual-thickness.html",
+  "note": "measure each sheet"
+ },
+ "sheet_sizes": {
+  "plywood/MDF": "48x96 in (4x8) nominal",
+  "src": "https://www.altitudecraft.com/blogs/insights/complete-guide-to-16-inch-on-center-stud-layout",
+  "note": "Steel/acrylic sheet sizes not sourced in this pass - Sketch default 48x96"
+ },
+ "framing": {
+  "stud_OC": "16 or 24 in per IRC R602.3(5)",
+  "src": "https://joistspan.com/stud-spacing/",
+  "16OC_first_mark": "15-1/4 in",
+  "src2": "https://www.altitudecraft.com/blogs/insights/complete-guide-to-16-inch-on-center-stud-layout",
+  "headers": "IRC R602.7(1)/(2) - reference only, flag engineer",
+  "src3": "https://joistspan.com/headers/"
+ },
+ "tap_drill_75pct": [
+  {
+   "thread": "#4-40",
+   "drill": "#43",
+   "close": "#31",
+   "src": "https://www.rivcut.com/resources/tap-drill-chart"
+  },
+  {
+   "thread": "#6-32",
+   "drill": "#36",
+   "close": "#25",
+   "src": "https://www.rivcut.com/resources/tap-drill-chart"
+  },
+  {
+   "thread": "#8-32",
+   "drill": "#29",
+   "close": "#18",
+   "src": "https://www.rivcut.com/resources/tap-drill-chart"
+  },
+  {
+   "thread": "#10-24",
+   "drill": "#25",
+   "close": "#9",
+   "src": "https://www.rivcut.com/resources/tap-drill-chart"
+  },
+  {
+   "thread": "#10-32",
+   "drill": "#21",
+   "close": "#7",
+   "src": "https://www.rivcut.com/resources/tap-drill-chart"
+  },
+  {
+   "thread": "1/4-20",
+   "drill": "#7 (0.201)",
+   "close": "17/64",
+   "src": "https://www.rivcut.com/resources/tap-drill-chart"
+  },
+  {
+   "thread": "5/16-18",
+   "drill": "F (0.257)",
+   "close": "21/64",
+   "src": "https://www.rivcut.com/resources/tap-drill-chart"
+  },
+  {
+   "thread": "3/8-16",
+   "drill": "5/16",
+   "close": "25/64",
+   "src": "https://www.rivcut.com/resources/tap-drill-chart"
+  },
+  {
+   "thread": "1/2-13",
+   "drill": "27/64",
+   "close": "33/64",
+   "src": "https://www.rivcut.com/resources/tap-drill-chart"
+  },
+  {
+   "thread": "M3x0.5",
+   "drill": "2.5 mm",
+   "close": "3.2 mm",
+   "src": "https://www.rivcut.com/resources/tap-drill-chart"
+  },
+  {
+   "thread": "M4x0.7",
+   "drill": "3.3 mm",
+   "close": "4.2 mm",
+   "src": "https://www.rivcut.com/resources/tap-drill-chart"
+  },
+  {
+   "thread": "M5x0.8",
+   "drill": "4.2 mm",
+   "close": "5.2 mm",
+   "src": "https://www.rivcut.com/resources/tap-drill-chart"
+  },
+  {
+   "thread": "M6x1.0",
+   "drill": "5.0 mm",
+   "close": "6.2 mm",
+   "src": "https://www.rivcut.com/resources/tap-drill-chart"
+  },
+  {
+   "thread": "M8x1.25",
+   "drill": "6.8 mm",
+   "close": "8.2 mm",
+   "src": "https://www.rivcut.com/resources/tap-drill-chart"
+  },
+  {
+   "thread": "M10x1.5",
+   "drill": "8.5 mm",
+   "close": "10.2 mm",
+   "src": "https://www.rivcut.com/resources/tap-drill-chart"
+  },
+  {
+   "thread": "M12x1.75",
+   "drill": "10.2 mm",
+   "close": "12.2 mm",
+   "src": "https://www.rivcut.com/resources/tap-drill-chart"
+  }
+ ],
+ "iso273_clearance_mm": {
+  "M6": {
+   "fine": 6.4,
+   "medium": 6.6,
+   "coarse": 7.0
+  },
+  "medium_series": {
+   "M3": 3.4,
+   "M4": 4.5,
+   "M5": 5.5,
+   "M6": 6.6,
+   "M8": 9.0,
+   "M10": 11.0,
+   "M12": 13.5,
+   "M16": 17.5,
+   "M20": 22.0
+  },
+  "src": "https://cw-mfg.com/resources/tap-drill-chart",
+  "src2": "https://thespoollist.com/tools/tap-drill/m6"
+ },
+ "thread_engagement": {
+  "steel-steel": "1.0D",
+  "steel-Al6061": "2.0D",
+  "steel-Al7075": "1.5D",
+  "SS-SS": "1.25D",
+  "steel-plastic": "2.5D or insert",
+  "src": "https://www.rivcut.com/resources/thread-engagement-calculator"
+ },
+ "wood_screws": {
+  "length": "2-3x top board, 2/3 into receiver",
+  "pilot_#8": {
+   "softwood": "3/32",
+   "hardwood": "1/8"
+  },
+  "edge": "5d from end, 3d from edge",
+  "nail": "~3x top board",
+  "src": [
+   "https://woodworkingadvisor.com/wood-screw-length-calculator/",
+   "https://woodworkingadvisor.com/how-to-not-split-wood-when-screwing/",
+   "https://ernstp.se/eu/kunskapsbanken/tra-spricker-vid-skruvning",
+   "https://builderology.com/calculators/screw-and-nail-size-calculator/"
+  ]
+ },
+ "sheet_metal": {
+  "min_flange": "max(4T,3mm)",
+  "min_inside_R": "1T mild steel; 3-4T 6061-T6",
+  "hole_to_bend": "2.5T+R",
+  "slot_to_bend": "4T+R",
+  "relief": "width>=1T, depth>=T+R",
+  "K": "0.3-0.5 (verify)",
+  "BA": "A*pi/180*(R+K*T)",
+  "hem": "ID T, return 4T",
+  "src": [
+   "https://ssgmfg.com/design-guides/sheet-metal-fabrication",
+   "https://fabcon.com/articles/sheet-metal-fabrication/sheet-metal-dfm-guidelines-2026/",
+   "https://hlhrapid.com/knowledge/design-guide-sheet-metal-bending/",
+   "https://kingsformmetal.com/resources/downloads/files/KFR-008_Sheet_Metal_Design_Guide_v1.0.pdf"
+  ]
+ },
+ "weld_prep": [
+  {
+   "t_mm": "<=3-4",
+   "prep": "square",
+   "gap_mm": "0-3"
+  },
+  {
+   "t_mm": "3-12",
+   "prep": "single-V 50-70 deg",
+   "face_mm": "1-2",
+   "gap_mm": "1-4"
+  },
+  {
+   "t_mm": "12-40",
+   "prep": "double-V 50-60 deg",
+   "face_mm": "1-3",
+   "gap_mm": "1-3"
+  },
+  {
+   "t_mm": "5-20",
+   "prep": "single bevel T-joint 45-55 deg",
+   "face_mm": "1-3",
+   "gap_mm": "1-3"
+  },
+  {
+   "src": "https://spawacz.waw.pl/en/calculators/groove-preparation/",
+   "note": "WPS governs; AWS D1.1 B-U2 60 deg, 0-1/4 in RO with backing, open root 1/16-1/8 in",
+   "src2": "https://www.toolgrit.com/guides/weld-joint-design-guide"
+  },
+  {
+   "pipe": "ASME typical 37.5 deg bevel, 1/16 gap, 1/16 land",
+   "src": "https://open-exam-prep.com/study-guides/aws-cwi-endorsement-api-1104/design-and-fabrication/joint-alignment-and-fitup"
+  }
+ ],
+ "filler": {
+  "mild steel": "ER70S-6",
+  "304": "ER308L",
+  "316": "ER316L",
+  "CS-to-SS": "ER309L",
+  "Al 6xxx": "ER4043",
+  "Al 5xxx/marine": "ER5356",
+  "src": [
+   "https://harrisweldingsupplies.com/content/catalogs/lincoln-welding-consumables-catalog.pdf",
+   "https://www.lincolnelectric.com/en/Products/Filler-Metals/Aluminum-MIG-and-TIG",
+   "https://www.hobartbrothers.com/downloads/Aluminum_Filler_Recommendation.pdf"
+  ]
+ },
+ "pipe_OD_in": {
+  "_src": "https://www.engineersedge.com/pipe_schedules.htm",
+  "NPS1/2": [
+   0.84,
+   0.109
+  ],
+  "NPS3/4": [
+   1.05,
+   0.113
+  ],
+  "NPS1": [
+   1.315,
+   0.133
+  ],
+  "NPS1-1/2": [
+   1.9,
+   0.145
+  ],
+  "NPS2": [
+   2.375,
+   0.154
+  ],
+  "_fields": "OD, Sch40 wall"
+ },
+ "rolled_ring": {
+  "flatwise": "L=pi*(ID+t)",
+  "edgewise": "L=pi*(ID+width)",
+  "src": "https://artisantraining.online/wp-content/uploads/2020/12/PF-2.pdf"
+ },
+ "tolerance_by_process": [
+  {
+   "process": "FDM prototype",
+   "tol": "\u00b10.5% (min \u00b10.5 mm)",
+   "src": "https://www.protolabs.com/services/3d-printing/fused-deposition-modeling/"
+  },
+  {
+   "process": "FDM industrial",
+   "tol": "\u00b10.3%",
+   "src": "https://www.protolabs.com/services/3d-printing/fused-deposition-modeling/"
+  },
+  {
+   "process": "laser thin acrylic",
+   "tol": "\u00b10.1-0.2 mm",
+   "src": "https://rpmfast.com/blogs-laser-cutting-tolerances-material-limits-design/"
+  },
+  {
+   "process": "laser sheet metal",
+   "tol": "\u00b10.13 mm (\u00b10.005 in)",
+   "src": "https://ssgmfg.com/design-guides/sheet-metal-fabrication"
+  },
+  {
+   "process": "bend",
+   "tol": "+\u00b10.25-0.38 mm, \u00b11 deg per bend",
+   "src": "https://ssgmfg.com/design-guides/sheet-metal-fabrication"
+  },
+  {
+   "process": "CNC router plywood",
+   "tol": "\u00b10.20-0.25 mm",
+   "src": "https://glcncmachining.com/cnc-machine-wood-services/"
+  },
+  {
+   "process": "CNC router stable sheet",
+   "tol": "\u00b10.13-0.25 mm",
+   "src": "https://thejobshop.co/resources/cnc-routing-tolerances-design-guide"
+  },
+  {
+   "process": "plasma conventional",
+   "tol": "\u00b10.76 mm, bevel 1-3 deg good side/3-8 bad",
+   "src": "https://www.hypertherm.com/resources/system-support/maintenance-and-use/cut-quality/hole-quality/"
+  },
+  {
+   "process": "plasma HD",
+   "tol": "\u00b10.25 mm",
+   "src": "https://www.hypertherm.com/resources/system-support/maintenance-and-use/cut-quality/hole-quality/"
+  },
+  {
+   "process": "weldment small/large",
+   "tol": "\u00b11/16 / \u00b11/8 in",
+   "src": "https://www.brennersw.com/resources/engineering/tolerances"
+  },
+  {
+   "process": "AISC member length <30ft",
+   "tol": "\u00b11/32 both ends finished, else \u00b11/16",
+   "src": "https://steelcalculator.app/reference/steel-tolerances-guide/"
+  },
+  {
+   "process": "hand woodworking",
+   "tol": "Sketch default (no source)"
+  }
+ ],
+ "iso2768_mm": {
+  "m": {
+   "0.5-3": 0.1,
+   "3-6": 0.1,
+   "6-30": 0.2,
+   "30-120": 0.3,
+   "120-400": 0.5,
+   "400-1000": 0.8
+  },
+  "f": {
+   "0.5-3": 0.05,
+   "3-6": 0.05,
+   "6-30": 0.1,
+   "30-120": 0.15,
+   "120-400": 0.2,
+   "400-1000": 0.3
+  },
+  "src": "https://www.csl-imt.ch/en/knowledge/iso-2768-tolerance-tables/"
+ },
+ "fits": {
+  "H7/g6": "sliding clearance",
+  "H7/h6": "locational clearance",
+  "H7/p6": "interference",
+  "src": "https://manufacturingprocesses.org/charts/iso-286-fits-tolerances"
+ },
+ "joinery": {
+  "mortise_tenon_total_clearance_in": "0.004-0.005",
+  "src": "https://www.lumberjocks.com/threads/clearance-between-mortise-and-tenon-on-bed-frame.365288/",
+  "dado": "measured ply +~0.002 in",
+  "src2": "https://deadon.app/dado-calculator"
+ },
+ "glue": {
+  "Titebond III open time": "~9-15 min",
+  "src": "https://www.reddit.com/r/BeginnerWoodWorking/comments/1jnnqh7/how_could_i_have_done_a_cleaner_and_faster_job/"
+ },
+ "finish": {
+  "powder": "2-4 mil (50-100 \u00b5m)/surface; bore -2x, thread pitch dia 4x",
+  "paint": "25-50 \u00b5m/coat",
+  "low-build powder": "25-50 \u00b5m",
+  "src": [
+   "https://manufacturingprocesses.org/processes/finishing/powder-coating.md",
+   "https://fabcon.com/articles/surface-and-finishing/high-tolerance-powder-coating-services/"
+  ]
+ },
+ "wood_movement": {
+  "formula": "width x coefficient x \u0394MC",
+  "example": "8 in flatsawn red oak 6->16% \u22480.296 in",
+  "src": "https://www.finewoodworking.com/2013/08/29/calculating-for-wood-movement"
+ },
+ "hazards": {
+  "ZnO fume PEL": "5 mg/m3",
+  "CrVI PEL": "5 \u00b5g/m3 (AL 2.5)",
+  "laser banned": "PVC, vinyl, PTFE, chlorinated/brominated plastics",
+  "src": [
+   "https://portugues.cdc.gov/niosh/npg/npgd0675.html",
+   "https://www.osha.gov/sites/default/files/publications/OSHA%5FFS-3647%5FWELDING.pdf",
+   "https://team.bosslaser.com/learn/materials/materials-to-never-laser/"
+  ]
+ },
+ "cnc_tabs": {
+  "width": "3-5 mm",
+  "height": "t/2",
+  "spacing": "4-6 in",
+  "min": 3,
+  "DOC": "0.5x bit wood, 1/3 hardwood/ply/MDF",
+  "src": "https://craftgineer.com/blog/cnc-routing-mistakes"
+ }
+}

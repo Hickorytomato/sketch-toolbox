@@ -1,0 +1,81 @@
+{
+ "name": "bent_tab",
+ "title": "Bent 10 ga angle tab",
+ "domain": "metal",
+ "units": "in",
+ "ask": "a bent 10 gauge mounting tab",
+ "values": {
+  "a": {
+   "v": 3,
+   "src": "user",
+   "unit": "in",
+   "note": "base leg (outside)"
+  },
+  "b": {
+   "v": 2,
+   "src": "user",
+   "unit": "in",
+   "note": "upright leg (outside)"
+  },
+  "W": {
+   "v": 2,
+   "src": "assumed",
+   "unit": "in",
+   "note": "width"
+  },
+  "t": {
+   "v": 0.1345,
+   "src": "assumed",
+   "unit": "in",
+   "note": "10 ga"
+  }
+ },
+ "parts": [
+  {
+   "name": "tab",
+   "kind": "bent_plate",
+   "material": "steel",
+   "label": "Mounting tab",
+   "args": {
+    "a": "=a",
+    "b": "=b",
+    "W": "=W",
+    "t": "=t",
+    "holes_a": [
+     {
+      "x": 2,
+      "y": 1,
+      "d": 0.281
+     }
+    ],
+    "holes_b": [
+     {
+      "z": 1.25,
+      "y": 1,
+      "d": 0.281
+     }
+    ]
+   },
+   "at": [
+    0,
+    0,
+    0
+   ]
+  }
+ ],
+ "joints": [],
+ "dims": [
+  {
+   "label": "base leg",
+   "v": "=a",
+   "view": "front",
+   "axis": "h"
+  },
+  {
+   "label": "upright leg",
+   "v": "=b",
+   "view": "front",
+   "axis": "v"
+  }
+ ]
+}

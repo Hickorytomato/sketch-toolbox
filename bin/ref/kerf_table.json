@@ -1,0 +1,491 @@
+{
+ "_note": "Kerf starting points. Lookup order: your measured test-cut kerf (tools_setup.py --kerf) > this table (nearest thickness) > machines.json default. Every value is labelled with where it came from.",
+ "plasma": {
+  "src": "https://www.pv-automation.com/downloads/cutcharts/Powermax45xp-inches.csv (Hypertherm Powermax45 XP machine-torch cut charts, Best Quality settings; Hypertherm 810050: 'kerf widths ... are for reference only')",
+  "rows": [
+   {
+    "material": "steel",
+    "t_in": 0.06,
+    "kerf_in": 0.053,
+    "amps": "45 A",
+    "gas": "Air",
+    "consumables": "Shielded 45 A",
+    "torch": "Powermax45XP"
+   },
+   {
+    "material": "steel",
+    "t_in": 0.075,
+    "kerf_in": 0.054,
+    "amps": "45 A",
+    "gas": "Air",
+    "consumables": "Shielded 45 A",
+    "torch": "Powermax45XP"
+   },
+   {
+    "material": "steel",
+    "t_in": 0.135,
+    "kerf_in": 0.057,
+    "amps": "45 A",
+    "gas": "Air",
+    "consumables": "Shielded 45 A",
+    "torch": "Powermax45XP"
+   },
+   {
+    "material": "steel",
+    "t_in": 0.1875,
+    "kerf_in": 0.059,
+    "amps": "45 A",
+    "gas": "Air",
+    "consumables": "Shielded 45 A",
+    "torch": "Powermax45XP"
+   },
+   {
+    "material": "steel",
+    "t_in": 0.25,
+    "kerf_in": 0.061,
+    "amps": "45 A",
+    "gas": "Air",
+    "consumables": "Shielded 45 A",
+    "torch": "Powermax45XP"
+   },
+   {
+    "material": "steel",
+    "t_in": 0.375,
+    "kerf_in": 0.069,
+    "amps": "45 A",
+    "gas": "Air",
+    "consumables": "Shielded 45 A",
+    "torch": "Powermax45XP"
+   },
+   {
+    "material": "steel",
+    "t_in": 0.5,
+    "kerf_in": 0.077,
+    "amps": "45 A",
+    "gas": "Air",
+    "consumables": "Shielded 45 A",
+    "torch": "Powermax45XP"
+   },
+   {
+    "material": "steel",
+    "t_in": 0.625,
+    "kerf_in": 0.082,
+    "amps": "45 A",
+    "gas": "Air",
+    "consumables": "Shielded 45 A",
+    "torch": "Powermax45XP"
+   },
+   {
+    "material": "steel",
+    "t_in": 0.75,
+    "kerf_in": 0.086,
+    "amps": "45 A",
+    "gas": "Air",
+    "consumables": "Shielded 45 A",
+    "torch": "Powermax45XP"
+   },
+   {
+    "material": "steel",
+    "t_in": 0.875,
+    "kerf_in": 0.103,
+    "amps": "45 A",
+    "gas": "Air",
+    "consumables": "Shielded 45 A",
+    "torch": "Powermax45XP"
+   },
+   {
+    "material": "steel",
+    "t_in": 1.0,
+    "kerf_in": 0.119,
+    "amps": "45 A",
+    "gas": "Air",
+    "consumables": "Shielded 45 A",
+    "torch": "Powermax45XP"
+   },
+   {
+    "material": "stainless",
+    "t_in": 0.06,
+    "kerf_in": 0.017,
+    "amps": "45 A",
+    "gas": "Air",
+    "consumables": "Shielded 45 A",
+    "torch": "Powermax45XP",
+    "suspect": "CSV value is ~1/3 of mild steel at the same gauge (FineCut-like); verify against Hypertherm 810050 before trusting"
+   },
+   {
+    "material": "stainless",
+    "t_in": 0.075,
+    "kerf_in": 0.022,
+    "amps": "45 A",
+    "gas": "Air",
+    "consumables": "Shielded 45 A",
+    "torch": "Powermax45XP",
+    "suspect": "CSV value is ~1/3 of mild steel at the same gauge (FineCut-like); verify against Hypertherm 810050 before trusting"
+   },
+   {
+    "material": "stainless",
+    "t_in": 0.135,
+    "kerf_in": 0.041,
+    "amps": "45 A",
+    "gas": "Air",
+    "consumables": "Shielded 45 A",
+    "torch": "Powermax45XP",
+    "suspect": "CSV value is ~1/3 of mild steel at the same gauge (FineCut-like); verify against Hypertherm 810050 before trusting"
+   },
+   {
+    "material": "stainless",
+    "t_in": 0.1875,
+    "kerf_in": 0.044,
+    "amps": "45 A",
+    "gas": "Air",
+    "consumables": "Shielded 45 A",
+    "torch": "Powermax45XP"
+   },
+   {
+    "material": "stainless",
+    "t_in": 0.25,
+    "kerf_in": 0.047,
+    "amps": "45 A",
+    "gas": "Air",
+    "consumables": "Shielded 45 A",
+    "torch": "Powermax45XP"
+   },
+   {
+    "material": "stainless",
+    "t_in": 0.375,
+    "kerf_in": 0.061,
+    "amps": "45 A",
+    "gas": "Air",
+    "consumables": "Shielded 45 A",
+    "torch": "Powermax45XP"
+   },
+   {
+    "material": "stainless",
+    "t_in": 0.5,
+    "kerf_in": 0.075,
+    "amps": "45 A",
+    "gas": "Air",
+    "consumables": "Shielded 45 A",
+    "torch": "Powermax45XP"
+   },
+   {
+    "material": "stainless",
+    "t_in": 0.625,
+    "kerf_in": 0.096,
+    "amps": "45 A",
+    "gas": "Air",
+    "consumables": "Shielded 45 A",
+    "torch": "Powermax45XP"
+   },
+   {
+    "material": "stainless",
+    "t_in": 0.75,
+    "kerf_in": 0.116,
+    "amps": "45 A",
+    "gas": "Air",
+    "consumables": "Shielded 45 A",
+    "torch": "Powermax45XP"
+   },
+   {
+    "material": "stainless",
+    "t_in": 0.875,
+    "kerf_in": 0.137,
+    "amps": "45 A",
+    "gas": "Air",
+    "consumables": "Shielded 45 A",
+    "torch": "Powermax45XP"
+   },
+   {
+    "material": "aluminum",
+    "t_in": 0.1,
+    "kerf_in": 0.056,
+    "amps": "45 A",
+    "gas": "Air",
+    "consumables": "Shielded 45 A",
+    "torch": "Powermax45XP"
+   },
+   {
+    "material": "aluminum",
+    "t_in": 0.125,
+    "kerf_in": 0.06,
+    "amps": "45 A",
+    "gas": "Air",
+    "consumables": "Shielded 45 A",
+    "torch": "Powermax45XP"
+   },
+   {
+    "material": "aluminum",
+    "t_in": 0.1875,
+    "kerf_in": 0.061,
+    "amps": "45 A",
+    "gas": "Air",
+    "consumables": "Shielded 45 A",
+    "torch": "Powermax45XP"
+   },
+   {
+    "material": "aluminum",
+    "t_in": 0.25,
+    "kerf_in": 0.063,
+    "amps": "45 A",
+    "gas": "Air",
+    "consumables": "Shielded 45 A",
+    "torch": "Powermax45XP"
+   },
+   {
+    "material": "aluminum",
+    "t_in": 0.375,
+    "kerf_in": 0.073,
+    "amps": "45 A",
+    "gas": "Air",
+    "consumables": "Shielded 45 A",
+    "torch": "Powermax45XP"
+   },
+   {
+    "material": "aluminum",
+    "t_in": 0.5,
+    "kerf_in": 0.082,
+    "amps": "45 A",
+    "gas": "Air",
+    "consumables": "Shielded 45 A",
+    "torch": "Powermax45XP"
+   },
+   {
+    "material": "aluminum",
+    "t_in": 0.625,
+    "kerf_in": 0.1,
+    "amps": "45 A",
+    "gas": "Air",
+    "consumables": "Shielded 45 A",
+    "torch": "Powermax45XP"
+   },
+   {
+    "material": "aluminum",
+    "t_in": 0.75,
+    "kerf_in": 0.117,
+    "amps": "45 A",
+    "gas": "Air",
+    "consumables": "Shielded 45 A",
+    "torch": "Powermax45XP"
+   },
+   {
+    "material": "stainless",
+    "t_in": 0.25,
+    "kerf_in": 0.075,
+    "amps": "45 A",
+    "gas": "F5",
+    "consumables": "Shielded 45 A",
+    "torch": "Powermax45XP"
+   },
+   {
+    "material": "stainless",
+    "t_in": 0.375,
+    "kerf_in": 0.088,
+    "amps": "45 A",
+    "gas": "F5",
+    "consumables": "Shielded 45 A",
+    "torch": "Powermax45XP"
+   },
+   {
+    "material": "stainless",
+    "t_in": 0.5,
+    "kerf_in": 0.101,
+    "amps": "45 A",
+    "gas": "F5",
+    "consumables": "Shielded 45 A",
+    "torch": "Powermax45XP"
+   }
+  ],
+  "default_amps": "45 A"
+ },
+ "laser": {
+  "src": "see each row; fiber cannot practically cut wood/acrylic (https://rialtomfg.com/blog/fiber-laser-vs-co2-laser-cutting/)",
+  "rows": [
+   {
+    "source": "co2",
+    "material": "plywood",
+    "t_mm": [
+     3,
+     3
+    ],
+    "kerf_mm": [
+     0.12,
+     0.18
+    ],
+    "src": "https://lbplugins.com/kerf-calc.html"
+   },
+   {
+    "source": "co2",
+    "material": "plywood",
+    "t_mm": [
+     6,
+     6
+    ],
+    "kerf_mm": [
+     0.18,
+     0.28
+    ],
+    "src": "https://lbplugins.com/kerf-calc.html"
+   },
+   {
+    "source": "co2",
+    "material": "mdf",
+    "t_mm": [
+     3,
+     3
+    ],
+    "kerf_mm": [
+     0.15,
+     0.22
+    ],
+    "src": "https://lbplugins.com/kerf-calc.html"
+   },
+   {
+    "source": "co2",
+    "material": "mdf",
+    "t_mm": [
+     6,
+     6
+    ],
+    "kerf_mm": [
+     0.22,
+     0.3
+    ],
+    "src": "https://lbplugins.com/kerf-calc.html"
+   },
+   {
+    "source": "co2",
+    "material": "acrylic",
+    "t_mm": [
+     3,
+     3
+    ],
+    "kerf_mm": [
+     0.1,
+     0.15
+    ],
+    "src": "https://lbplugins.com/kerf-calc.html"
+   },
+   {
+    "source": "co2",
+    "material": "acrylic",
+    "t_mm": [
+     6,
+     6
+    ],
+    "kerf_mm": [
+     0.15,
+     0.22
+    ],
+    "src": "https://lbplugins.com/kerf-calc.html"
+   },
+   {
+    "source": "co2",
+    "material": "acrylic",
+    "t_mm": [
+     10,
+     10
+    ],
+    "kerf_mm": [
+     0.2,
+     0.35
+    ],
+    "src": "https://www.fabflow.app/blog/laser-cutting-complete-guide"
+   },
+   {
+    "source": "fiber",
+    "material": "steel",
+    "t_mm": [
+     1,
+     3
+    ],
+    "kerf_mm": [
+     0.1,
+     0.15
+    ],
+    "src": "https://www.laserspechub.com/tools/kerf-calculator"
+   },
+   {
+    "source": "fiber",
+    "material": "steel",
+    "t_mm": [
+     3,
+     6
+    ],
+    "kerf_mm": [
+     0.15,
+     0.25
+    ],
+    "src": "https://www.laserspechub.com/tools/kerf-calculator"
+   },
+   {
+    "source": "fiber",
+    "material": "steel",
+    "t_mm": [
+     10,
+     10
+    ],
+    "kerf_mm": [
+     0.3,
+     0.5
+    ],
+    "src": "https://www.fabflow.app/blog/laser-cutting-complete-guide"
+   },
+   {
+    "source": "fiber",
+    "material": "stainless",
+    "t_mm": [
+     1,
+     3
+    ],
+    "kerf_mm": [
+     0.12,
+     0.18
+    ],
+    "src": "https://www.laserspechub.com/tools/kerf-calculator"
+   },
+   {
+    "source": "fiber",
+    "material": "aluminum",
+    "t_mm": [
+     1,
+     3
+    ],
+    "kerf_mm": [
+     0.15,
+     0.25
+    ],
+    "src": "https://www.laserspechub.com/tools/kerf-calculator"
+   },
+   {
+    "source": "fiber",
+    "material": "aluminum",
+    "t_mm": [
+     3,
+     6
+    ],
+    "kerf_mm": [
+     0.25,
+     0.35
+    ],
+    "src": "https://www.laserspechub.com/tools/kerf-calculator"
+   },
+   {
+    "source": "co2",
+    "material": "steel",
+    "t_mm": [
+     1,
+     6
+    ],
+    "kerf_mm": [
+     0.25,
+     0.4
+    ],
+    "src": "https://www.accurl.com/blog/laser-cutting-kerf/"
+   }
+  ]
+ },
+ "router": {
+  "rule": "kerf = bit diameter (machines.json router.tool_dia)",
+  "src": "https://craftgineer.com/blog/cnc-routing-mistakes"
+ }
+}

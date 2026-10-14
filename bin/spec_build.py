@@ -6,7 +6,7 @@ Spec format: see README 'Living spec'. Values: {"key":{"v":..,"src":"user|assume
 '=' is an expression over values (math allowed), e.g. "=width-2*t"."""
 import sys,os,json,math,re
 import cadquery as cq, trimesh, numpy as np
-sys.path.insert(0,os.path.dirname(os.path.abspath(__file__))); import kit
+sys.path.insert(0,os.path.dirname(os.path.abspath(__file__))); import kit, rules
 B=os.path.dirname(os.path.abspath(__file__))
 spec=json.load(open(sys.argv[1])); os.environ["SPEC_DIR"]=os.path.dirname(os.path.abspath(sys.argv[1])); V=sys.argv[2]; os.makedirs(f"{V}/step",exist_ok=True); os.makedirs(f"{V}/stl",exist_ok=True)
 U=spec.get("units","in"); toin=1 if U=="in" else 1/25.4
@@ -110,7 +110,7 @@ for j in JL:
         P[j["a"]],P[j["b"]]=A,Bn
     elif t in("mortise_tenon","mortise"):
         # tenon = 'b' end inside 'a'; shoulders trimmed by 'shoulder' on the two thin faces; mortise = tenon + clear
-        A,Bn=P[j["a"]],P[j["b"]]; ov=A.intersect(Bn).val(); bb=ov.BoundingBox(); sh=j.get("shoulder",0.25 if U=="in" else 6); cl=j.get("clear",0.01 if U=="in" else 0.2)
+        A,Bn=P[j["a"]],P[j["b"]]; ov=A.intersect(Bn).val(); bb=ov.BoundingBox(); sh=j.get("shoulder",0.25 if U=="in" else 6); cl=j.get("clear",0.0025 if U=="in" else 0.06); rec["clear"]=cl   # 0.004-0.005 in total (catalog #139)
         thin=min(("x",bb.xlen),("y",bb.ylen),("z",bb.zlen),key=lambda kv:kv[1])[0]
         dims=[bb.xlen,bb.ylen,bb.zlen]; k="xyz".index(thin); dims[k]=max(dims[k]-2*sh,dims[k]/3)
         ten=cq.Workplane("XY").box(*dims).translate((bb.center.x,bb.center.y,bb.center.z))
@@ -132,6 +132,10 @@ for j in JL:
         P[j["branch"]]=P[j["branch"]].cut(cyl); META[j["branch"]].setdefault("ends",[]).append("coped")
         copes.append(dict(branch=j["branch"],header_od=od,branch_od=META[j["branch"]]["od"],angle=j.get("angle",90),ends=1))
     elif t=="bolted":
+        if not j.get("d"):   # hole size from the clearance / tap table, never guessed
+            _dd,_src=(rules.tap_for(j.get("bolt","")) if j.get("tapped") else rules.clearance_for(j.get("bolt",""),U))
+            if _dd is None: raise SystemExit(f"bolted joint: no table size for '{j.get('bolt')}' - give d or a standard bolt (e.g. 3/8-16, M8)")
+            j["d"]=_dd/toin; rec["d"]=j["d"]; rec["d_src"]=_src
         d=np.array(j.get("axis",[0,0,1]),float); d/=np.linalg.norm(d); at=np.array(j["at"],float)
         cyl=cq.Workplane(cq.Plane(origin=tuple(at-d*500),xDir=tuple(np.cross(d,[0,0,1]) if abs(d[2])<0.9 else (1,0,0)),normal=tuple(d))).circle(j["d"]/2).extrude(1000)
         for nm in j["parts"]: P[nm]=P[nm].cut(cyl)
@@ -207,7 +211,17 @@ for nm,s in P.items():
     if m.get("material") in("acrylic",): dk="acrylic"
     w=vol*dens.get(dk,0.03)
     if m.get("flat_t"): m["flat"]=True; m["t"]=m["flat_t"]
-    if m.get("flat"):
+    if m.get("bent"):   # bent sheet metal: flat blank from the bend allowance (K flagged as estimate), holes mapped onto the blank
+        bt=m["bent"]; k_=toin; u0=bt["Bf"]; u1=bt["Bf"]+bt["BA"]; Ln=bt["L"]; RT=bt["R"]+bt["t"]
+        hl=[(round((bt["Bf"]+bt["BA"]+(h["x"]-RT))*k_,4),round(h["y"]*k_,4),round(h["d"]/2*k_,4)) for h in bt["holes_a"]]+[(round((bt["Bf"]-(h["z"]-RT))*k_,4),round(h["y"]*k_,4),round(h["d"]/2*k_,4)) for h in bt["holes_b"]]
+        if bt["wb"]<bt["W"]:   # partial-width bend: leg b only y<wb, relief notch y wb..wb+rw past the bend
+            q_=lambda u,y:(round(u*k_,4),round(y*k_,4)); ue=u1+max(bt["relief_d"]-RT,0)
+            ol=[q_(0,0),q_(Ln,0),q_(Ln,bt["W"]),q_(u1-RT,bt["W"]),q_(u1-RT,bt["wb"]+bt["relief_w"]),q_(ue,bt["wb"]+bt["relief_w"]),q_(ue,bt["wb"]),q_(0,bt["wb"])]
+        else: ol=[(0,0),(round(Ln*k_,4),0),(round(Ln*k_,4),round(bt["W"]*k_,4)),(0,round(bt["W"]*k_,4))]
+        flats.append(dict(name=nm,shape="poly",outer=ol+[ol[0]],inner_poly=[],holes=hl,pockets=[],w=round(Ln*k_,4),h=round(bt["W"]*k_,4),thickness=round(bt["t"]*k_,4),material=m.get("material","steel"),
+            blank_length=round(Ln*k_,4),bends=[dict(u0=round(u0*k_,4),u1=round(u1*k_,4),angle=90,R=round(bt["R"]*k_,4),K=bt["K"],BA=round(bt["BA"]*k_,4),flanges=[round(bt["a"]*k_,4),round(bt["b"]*k_,4)],
+            partial=bt["wb"]<bt["W"],relief_w=round(bt["relief_w"]*k_,4),relief_d=round(bt["relief_d"]*k_,4))]))
+    if m.get("flat") and not m.get("bent"):
         # true outline: section the part at mid-thickness in its local frame (inverse placement)
         loc=P[nm]; at=m.get("at",(0,0,0)); r=m.get("rot",(0,0,0))
         loc=loc.translate(tuple(-a for a in at))
@@ -242,10 +256,13 @@ for nm,s in P.items():
             mnx,mny,_,_=ext.bounds
             sh=lambda pts:[(round(x-mnx,4),round(y-mny,4)) for x,y in pts]
             holes=[];ipoly=[]
+            from shapely.geometry import Polygon
             for ring in ext.interiors:
                 c=list(ring.coords); xs=[p[0] for p in c]; ys=[p[1] for p in c]; cx,cy=(max(xs)+min(xs))/2,(max(ys)+min(ys))/2
                 rr=[math.hypot(x-cx,y-cy) for x,y in c]
-                if max(rr)-min(rr)<0.01*max(rr)+1e-4: holes.append((round(cx-mnx,4),round(cy-mny,4),round(sum(rr)/len(rr),4)))
+                _ar=Polygon(c).area if len(c)>2 else 0; _rm=sum(rr)/len(rr)
+                # a circle, not just "all vertices equidistant" (a rectangle's 4 corners are too: thin slots were becoming 2 in holes)
+                if len(c)>=12 and max(rr)-min(rr)<0.01*max(rr)+1e-4 and abs(_ar-math.pi*_rm*_rm)<0.03*math.pi*_rm*_rm: holes.append((round(cx-mnx,4),round(cy-mny,4),round(sum(rr)/len(rr),4)))
                 else: ipoly.append(sh(c))
             pockets=[]
             for face_,other,zs in (("top",top,np.linspace(t-1e-3,1e-3,25)),("bottom",bot,np.linspace(1e-3,t-1e-3,25))):
@@ -310,9 +327,10 @@ def srcof(expr):
         if k in names: dep|={n for n in re.findall(r"[A-Za-z_]\w*",v) if n in SRC}
     return "assumed" if any(SRC[n]!="user" for n in dep) else "user"
 out["dims"]=[dict(expr=dm["v"],label=dm.get("label",""),value=round(float(ev(dm["v"])),4),view=dm.get("view","front"),axis=dm.get("axis","h"),
-    span=ev(dm["span"]) if "span" in dm else None,at=ev(dm["at"]) if "at" in dm else None,src=srcof(dm["v"])) for dm in spec.get("dims",[])]
+    span=ev(dm["span"]) if "span" in dm else None,at=ev(dm["at"]) if "at" in dm else None,src=srcof(dm["v"]),**{k_:dm[k_] for k_ in ("tol","fit","fit_class") if k_ in dm}) for dm in spec.get("dims",[])]
 out["spec_values"]={k:dict(v=vals.get(k),src=SRC[k],unit=(spec["values"][k].get("unit","") if isinstance(spec["values"][k],dict) else ""),note=(spec["values"][k].get("note","") if isinstance(spec["values"][k],dict) else "")) for k in SRC}
 out["title"]=spec.get("title"); out["domain"]=spec.get("domain")
+out=rules.enrich(out,spec,META,jointrec,U,kit.STOCK)
 json.dump(out,open(f"{V}/parts.json","w"),indent=1,default=float)
 VERB={"print":"Printing","wood":"Fitting","metal":"Fitting"}.get(spec.get("domain"),"Adding")
 stp=spec.get("steps") or []

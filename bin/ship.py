@@ -253,8 +253,9 @@ for nj in glob.glob(f"{F}/nest_*/nest.json"):
             elif t in("LINE","ARC","SPLINE","POLYLINE") and e.dxf.layer=="CUT": res("cut",os.path.basename(dx),"FAIL",f"loose {t} on CUT layer (contour not closed)"); okc=False; break
     for gj in glob.glob(f"{F}/gcode_{cls}/*.json"):
         g=json.load(open(gj)); mm=M.get(g["machine"],{}); bn=os.path.basename(gj)
-        exp=mm.get("kerf",0)/2 if g.get("type",mm.get("type"))!="router" else mm.get("tool_dia",0)/2
-        if g.get("comp") is None or g["comp"]<=0 or abs(g["comp"]-exp)>1e-6: res("cut",bn,"FAIL",f"kerf/tool offset not applied correctly (G-code offset {g.get('comp')}, machine needs {exp:g})"); okc=False; continue
+        import kerf as _kerf
+        kx,ksrc=_kerf.lookup(g["machine"],mm,g.get("material","steel"),g.get("thickness") or 0.25); exp=kx/2
+        if g.get("comp") is None or g["comp"]<=0 or abs(g["comp"]-exp)>1e-6: res("cut",bn,"FAIL",f"kerf/tool offset not applied correctly (G-code offset {g.get('comp')}, needs {exp:g} = half of {kx:g} from {ksrc})"); okc=False; continue
         W,H=g.get("sheet_size",[1e9,1e9]); W,H=float(W),float(H); nc=gj[:-5]+".nc"; xs=[];ys=[]
         for l in open(nc):
             if l[:2] in("G0","G1","G2","G3"):
@@ -327,6 +328,8 @@ if pp_all:
         sc_=25.4 if U=="in" else 1.0; m,T4=rot(m,pp.get("orient",[0,0,0]),True); fil=pp.get("material","PLA")
         bands=[(trimesh.transformations.transform_points([[b["c"][0]*sc_,b["c"][1]*sc_,b["z0"]*sc_]],T4)[0],trimesh.transformations.transform_points([[b["c"][0]*sc_,b["c"][1]*sc_,b["z1"]*sc_]],T4)[0],b["r"],b["depth"]) for b in pp.get("thread_bands",[])]; fil=fil if fil in PR["filaments"] else "PLA"
         g=gate_print(m,pp["name"],fil,pp.get("assembly"),len(pp["bodies"]) if isinstance(pp.get("bodies"),list) else pp.get("bodies"),pp.get("clearance"),prn,bands)
+        try: import rules as _rules; _rules.print_checks(m,pp["name"],pp,res,prn)
+        except Exception as ex: res("rules",pp["name"],"WARN",f"print rule checks could not run: {ex}")
         if g is None: continue
         g.export(f"{W_}/stl/{pp['name']}.stl"); newpp.append(dict(pp,stl=f"stl/{pp['name']}.stl",orient=[0,0,0]))
     if not any(r["status"]=="FAIL" and r["area"]=="print" for r in R):
@@ -344,6 +347,9 @@ if pp_all:
                 SL=dict(printer=prn["label"],plates=[{k:p.get(k) for k in ("plate","filament","parts","time","grams","cost","gcode")} for p in PJ.get("plates",[])],
                         parts=[{k:pc.get(k) for k in ("name","time","grams","cost","plate")} for q in PJ["parts"] for pc in q["pieces"]])
                 res("print","slicer","PASS",f"PrusaSlicer: {len(SL['plates'])} plate(s), "+", ".join(f"plate {p['plate']} {p['time']} {p['grams']} g ${p['cost']}" for p in SL["plates"]))
+# ---------------------------------------------------------------- shop rules (bin/ref/failure_modes.json -> rules.py)
+import rules as _rules
+_rules.gate(dict(d=d,spec=spec,F=F,V=V,U=U,M=M,res=res))
 # ---------------------------------------------------------------- verdict + delivery
 fails=[r for r in R if r["status"]=="FAIL"]
 if fails:

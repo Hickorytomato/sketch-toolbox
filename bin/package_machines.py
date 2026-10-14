@@ -42,7 +42,7 @@ def svg(f,path):
     for x,y,r in f.get("holes",[]): o.append(f'<circle cx="{x-x0+m:.4f}" cy="{H-(y-y0)+m:.4f}" r="{r:.4f}"/>')
     o.append('</g><g id="ENGRAVE" fill="#000000" stroke="none">')
     for pk in f.get("pockets",[]):
-        pts=pk.get("pts") if isinstance(pk,dict) else pk
+        pts=(pk.get("poly") or pk.get("pts")) if isinstance(pk,dict) else pk
         if pts: o.append(f'<path d="{P(pts)}"/>')
     o.append('</g><g id="SCORE" stroke="#0000FF" fill="none" stroke-width="0.005">')
     for ln in f.get("scores",[]): o.append(f'<path d="M{ln[0][0]-x0+m:.4f},{H-(ln[0][1]-y0)+m:.4f} L{ln[1][0]-x0+m:.4f},{H-(ln[1][1]-y0)+m:.4f}"/>')
@@ -119,6 +119,14 @@ if "hand" in FOR:
      "  Print templates at 100% / 'Actual size' (NOT 'fit to page') and measure the 1 in box before tracing or punching holes.",""]
 how+=["CAD  (step/): .step opens in Fusion, SolidWorks, Onshape, FreeCAD; model.stl in anything.","",
       "EVERYTHING IS AN ESTIMATE: simulate G-code, dry-run, check prints in your slicer, verify dimensions before cutting."]
-open(f"{F}/HOW_TO_USE.txt","w").write(f"WHICH FILE GOES INTO WHICH PROGRAM - {d.get('title')}\nPackaged for: {', '.join(FOR)}\n\n"+"\n".join(how)+"\n")
+sys.path.insert(0,os.path.dirname(os.path.abspath(__file__))); import rules as _rules
+_x=[]
+for fl_ in d.get("flags",[]): _x.append("!! "+fl_)
+for sf in _rules.safety(d,F): _x.append("!! "+sf)
+if any(m_ in FOR for m_ in ("plasma","laser","router")) and d.get("flats"): _x.append("TIP: do a test cut and measure kerf: cut a 2 in square with no kerf comp, measure it, run tools_setup.py --kerf-test <machine> <material> <thickness> --drawn 2 --measured <yours>.")
+if d.get("stock_plan"): _x.append(f'TIP: saw kerf {d["saw_kerf"]["kerf_in"]:.3f} in ({d["saw_kerf"]["src"]}): set your saw with tools_setup.py --saw "<your saw>" [--saw-kerf <measured>].')
+if any(str(p_.get("material","")).upper() in("ABS","ASA","PC") for p_ in d.get("print_parts",[])): _x.append("TIP: ABS/ASA/PC warp without an enclosure: print in an enclosure, add a brim/skirt, keep drafts off.")
+_x+=["TIP: "+t_ for _,t_ in _rules.tips(d,F)]
+open(f"{F}/HOW_TO_USE.txt","w").write(f"WHICH FILE GOES INTO WHICH PROGRAM - {d.get('title')}\nBuild {d.get('build_id','?')}\nPackaged for: {', '.join(FOR)}\n\n"+("\n".join(_x)+"\n\n" if _x else "")+"\n".join(how)+"\n")
 for m_ in made: print("[machine]",m_)
 print("[howto]",f"{F}/HOW_TO_USE.txt")

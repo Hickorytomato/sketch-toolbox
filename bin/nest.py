@@ -11,6 +11,8 @@ B=os.path.dirname(os.path.abspath(__file__)); a=sys.argv[1:]
 d=json.load(open(a[0])); o=a[1]; os.makedirs(o,exist_ok=True)
 mname=a[a.index("--machine")+1] if "--machine" in a else "plasma"
 M=json.load(open(f"{B}/machines.json")); st=json.load(open(f"{B}/stock.json")); mach=M[mname]
+sys.path.insert(0,B); import kerf as _kerf
+def _sp(k): return (max(0.25,k*4),max(0.25,k*4)/2+0.3) if mach.get("type")!="router" else (k+0.125,(k+0.125)/2)
 SP=max(0.25,mach.get("kerf",0.06)*4) if mach.get("type")!="router" else mach.get("tool_dia",0.25)+0.125   # gap between parts
 EM=SP/2+0.3 if mach.get("type")!="router" else SP/2   # sheet-edge margin (lead-in ~0.25 + kerf); was 0 -> cuts ran off the sheet edge
 def size(f):
@@ -114,8 +116,9 @@ def bbox_pack(fl,W,H):
         elif rot: res.append((b,rid,90,x+SP/2+f["h"],y+SP/2))
         else: res.append((b,rid,0,x+SP/2,y+SP/2))
     return res
+KERF={}
 for g,fl in groups.items():
-    best=None
+    best=None; f0=fl[0]; KERF[g]=_kerf.lookup(mname,mach,f0.get("material","steel"),f0.get("thickness") or 0.25); SP,EM=_sp(KERF[g][0])
     for W,H in sheets:
         if any(min(size(f))+SP>min(W,H) or max(size(f))+SP>max(W,H) for f in fl): continue
         pl=bbox_pack(fl,W,H) if BBOX else tshape_pack(fl,W-2*EM,H-2*EM,time.time()+TBUD/len(sheets))
@@ -173,7 +176,7 @@ for g,fl in groups.items():
         ax.set_aspect("equal"); ax.set_xlim(-2,W+2); ax.set_ylim(-2,H+2)
         ax.set_title(f'{g}  sheet {sh+1}/{n}: {W}" x {H}"   util {util:.0f}%  ({util_used:.0f}% of used {ymax:.1f}")  remnant {W}x{max(rem,0):.1f}   ({"bbox" if BBOX else "true-shape"})')
         fig.savefig(f"{o}/nest_{name}.png",dpi=80,bbox_inches="tight"); plt.close(fig); doc.saveas(f"{o}/sheet_{name}.dxf")
-        out["groups"].append(dict(name=name,group=g,sheet=[W,H],thickness=fl[0].get("thickness"),material=fl[0].get("material"),utilization=round(util,1),
+        out["groups"].append(dict(name=name,kerf=KERF[g][0],kerf_src=KERF[g][1],spacing=SP,group=g,sheet=[W,H],thickness=fl[0].get("thickness"),material=fl[0].get("material"),utilization=round(util,1),
             used_length=round(ymax,2),utilization_of_used=round(util_used,1),remnant=[W,round(max(rem,0),2)],parts=parts))
 json.dump(out,open(f"{o}/nest.json","w"),indent=1,default=float)
 for G in out["groups"]: print(f'{G["name"]}: {G["sheet"][0]}x{G["sheet"][1]} util {G["utilization"]}% (of used length {G["utilization_of_used"]}%) remnant {G["remnant"][0]}x{G["remnant"][1]} parts {len(G["parts"])}')

@@ -32,6 +32,21 @@ def angle(L,size="1.5x1.5x3/16",**k):
     return s,dict(stock="angle",section=f"{size} angle",length=L,leg=a,t=t)
 def gusset(a,b,t,**k):
     s=cq.Workplane("XY").polyline([(0,0),(a,0),(0,b)]).close().extrude(t); return s,dict(stock="plate",section=f'{t}" plate gusset',flat=True,t=t)
+def bent_plate(a,b,W,t,R=None,K=0.44,holes_a=(),holes_b=(),wb=None,relief_w=0,relief_d=0,material="steel",**k):
+    """sheet-metal L (90° brake bend). Outside leg a along +X (on the bed, z 0..t), outside leg b up +Z (x 0..t), width W along +Y,
+    inside radius R (default 1T). holes_a [{x,y,d}] x from the OUTSIDE corner; holes_b [{z,y,d}] z from the outside corner.
+    wb < W: leg b only spans y 0..wb (partial bend) -> needs relief_w x relief_d (catalog #194). K-factor is an estimate."""
+    R=t if R is None else R; wb=W if wb is None else wb
+    s=_box(a,W,t).union(_box(t,wb,b))
+    try: s=s.edges(cq.selectors.NearestToPointSelector((t,min(W,wb)/2,t))).fillet(R)
+    except Exception: pass
+    try: s=s.edges(cq.selectors.NearestToPointSelector((0,min(W,wb)/2,0))).fillet(R+t)
+    except Exception: pass
+    if wb<W and relief_w>0: s=s.cut(_box(max(relief_d,1e-3),relief_w,t*3).translate((0,wb,-t)))
+    for h in holes_a: s=s.cut(cq.Workplane("XY").circle(h["d"]/2).extrude(3*t).translate((h["x"],h["y"],-t)))
+    for h in holes_b: s=s.cut(cq.Workplane("YZ").circle(h["d"]/2).extrude(3*t).translate((-t,h["y"],h["z"])))
+    Af,Bf=a-(R+t),b-(R+t); BA=math.pi/2*(R+K*t); L=Af+Bf+BA
+    return s,dict(stock="plate",section=f'{t}" plate (bent)',t=t,bent=dict(a=a,b=b,W=W,wb=wb,t=t,R=R,K=K,Af=Af,Bf=Bf,BA=BA,L=L,holes_a=list(holes_a),holes_b=list(holes_b),relief_w=relief_w,relief_d=relief_d))
 # ---------- 3D print kit (mm) ----------
 def pbox(L,W,H,r=0,**k):
     s=cq.Workplane("XY").box(L,W,H,centered=False)
@@ -187,7 +202,7 @@ def custom_stl(file,**k):
             t=tempfile.NamedTemporaryFile(suffix=".stl",delete=False); trimesh.util.concatenate(r[0]).export(t.name); f=t.name
     except Exception: pass
     s,meta=imported(f,**k); meta["section"]=f"custom {os.path.basename(file)}"; return s,meta
-KINDS.update(imported=imported,profile=profile,custom_stl=custom_stl)
+KINDS.update(imported=imported,profile=profile,custom_stl=custom_stl,bent_plate=bent_plate)
 
 # ---------- soft-edge helpers (printed parts read as products, not blocks) ----------
 def soften(s,r=1.0,sel=None,chamfer_ok=True):
