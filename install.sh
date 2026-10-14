@@ -5,7 +5,7 @@
 set -euo pipefail
 VER=1.0.5
 URL="https://github.com/Hickorytomato/sketch-toolbox/releases/download/v$VER/sketch-toolbox-$VER.tar.gz"
-SHA=425e62405498bb3197d026d88fff8de34183b82330da8e2535d12173f5a2fcca
+SHA=afa9d3bb680ba08dc60e6e33e228bb8d605db6012f9dc6271f9460f298a18b8c
 ROOT=${SKETCH_ROOT:-/workspace/sketch}; mkdir -p "$ROOT/bin" "$ROOT/tools"
 TMP=$(mktemp -d); trap 'rm -rf "$TMP"' EXIT
 # preflight: free disk space (Blender + PrusaSlicer + python deps ~3.5 GB on a first install)
