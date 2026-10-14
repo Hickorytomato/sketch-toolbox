@@ -194,8 +194,8 @@ if d.get("welds"):
         c.setFont("Helvetica-Bold",9); c.drawString(0.3*inch,y-3,f"W{wi+1}")
         el=sym(0.9*inch,y,f'{w["part"]}: {w["weld"]}  (~{w["weld_in"]}" of weld) · {w.get("side","arrow")} side{"s" if w.get("side")=="both" else ""} · filler {w.get("filler","?")} · {w.get("prep","")}'[:150],w); y-=52
         META["welds"].append(dict(id=f"W{wi+1}",part=w["part"],type=w.get("type","fillet"),groove=w.get("groove"),side=w.get("side","arrow"),size=w.get("size"),filler=w.get("filler"),all_around=bool(w.get("all_around")),field=bool(w.get("field")),elements=[e if isinstance(e,str) else f"{e[0]}:{'arrow' if e[1]<0 else 'other'}" for e in el]))
-        if y<1.2*inch: c.showPage(); header(c,"Weld schedule (cont.)"); y=PH-1.3*inch
-    c.setFont("Helvetica-Oblique",8); c.drawString(0.9*inch,1.1*inch,"AWS A2.4 symbols from the model: below the line = arrow side, above = other side; no length = full joint; no size on a groove = CJP. Your WPS governs.")
+        if y<1.8*inch: c.showPage(); header(c,"Weld schedule (cont.)"); y=PH-1.3*inch
+    c.setFont("Helvetica-Oblique",8); c.drawString(0.9*inch,1.5*inch,"AWS A2.4 symbols from the model: below the line = arrow side, above = other side; no length = full joint; no size on a groove = CJP. Your WPS governs.")
     c.showPage()
 META["pages"]=len(c._pages); META["title_block_every_page"]=True; c.save(); json.dump(META,open(f"{O}/doc_meta.json","w"),indent=1)
 # ---- sanity checks

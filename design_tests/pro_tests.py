@@ -7,7 +7,7 @@
  5. live prices: local supplier page -> dated price on the quote; unreachable link -> build still ships with prices.json label"""
 import json,os,shutil,subprocess,sys,glob,hashlib,re,threading,http.server,functools
 ROOT=os.environ.get("SKETCH_ROOT") or os.path.dirname(os.path.dirname(os.path.abspath(__file__))); PY=sys.executable; B=f"{ROOT}/bin"
-ENV=dict(os.environ,SKETCH_ROOT=ROOT); ENV.pop("SKETCH_LIVE_PRICES",None)
+sys.path.insert(0,B); ENV=dict(os.environ,SKETCH_ROOT=ROOT); ENV.pop("SKETCH_LIVE_PRICES",None)
 ok=bad=0
 def rep(good,msg):
     global ok,bad
@@ -44,7 +44,11 @@ def cut_tag(F): J(f"{F}/cut_day.json",lambda d:d["tags"].update({k:"Z9" for k in
 def cp_drop(F): J(f"{F}/coupons.json",lambda d:d["coupons"].clear())
 def cp_steps(F): J(f"{F}/coupons.json",lambda d:d["coupons"][0].update(steps=[9,10,11]))
 def q_total(F): J(f"{F}/customer_quote.json",lambda d:d.update(total=d["total"]+50))
-def q_line(F): J(f"{F}/customer_quote.json",lambda d:d["lines"][0].update(amount=(d["lines"][0]["amount"] or 0)+5))
+def q_line(F):
+    def f(d):
+        sb={l["item"] for l in (d.get("stock_bought") or {}).get("lines",[])}
+        l=next(l for l in d["lines"] if l["section"]=="Materials" and l.get("amount") and not any(l["desc"].startswith(x) for x in sb)); l.update(amount=l["amount"]+5)
+    J(f"{F}/customer_quote.json",f)
 def q_shop(F): J(f"{F}/customer_quote.json",lambda d:d.update(shop={"name":"Somebody's Shop"}))
 def pr_fake(F): J(f"{F}/customer_quote.json",lambda d:d["lines"][0].update(source="Home Depot 2026-10-01"))
 def rv_letter(F): J(f"{F}/doc_meta.json",lambda d:d.update(rev="A"))
