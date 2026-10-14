@@ -117,6 +117,40 @@ if "hand" in FOR:
     how+=["HAND TOOLS  (FOR_HAND_TOOLS/)",
      "  build_plan.pdf: print it. Page 1 = tools checklist + cut list; then dimensioned drawings, step-by-step build, and 1:1 templates.",
      "  Print templates at 100% / 'Actual size' (NOT 'fit to page') and measure the 1 in box before tracing or punching holes.",""]
+# ---------- v1.0.6: the owner's exact machine + software (tools_setup.py --machine) picks the output profile
+import outputs as _O
+MY=[]; PROF_USED={}
+for kind,FN in (("printer","3D_PRINTER"),("laser","LASER"),("plasma","PLASMA"),("router","ROUTER")):
+    o=_O.selected(kind)
+    if not o or kind not in FOR: continue
+    old=[x for x in glob.glob(f"{F}/FOR_{FN}*") if os.path.isdir(x)]
+    if not old: continue
+    src=old[0]; lab=o["label"]; dst=f"{F}/FOR_{FN}_{lab}" if kind!="printer" else src
+    tmp=f"{F}/_{FN}_tmp"; shutil.rmtree(tmp,ignore_errors=True); shutil.move(src,tmp); os.makedirs(dst,exist_ok=True)
+    keep=set(o["files"])|{"png","txt"}
+    for f in glob.glob(f"{tmp}/*"):
+        ext=f.rsplit(".",1)[-1].lower()
+        if ext=="nc" and o.get("gcode"):
+            g=o["gcode"]; nm=os.path.basename(f)[:-3]+"."+g.get("ext","nc")
+            open(f"{dst}/{nm}","w").write("\n".join(_O.post(open(f).read().splitlines(),o,kind))+"\n")
+        elif ext in keep and not (ext=="nc" and not o.get("gcode")): shutil.copy(f,dst)
+    if "svg" in o["files"] and kind in("router","plasma","laser"):
+        for f_ in flats:
+            if not os.path.exists(f"{dst}/{f_['name']}.svg") and any(os.path.exists(f"{tmp}/{f_['name']}.dxf") for _ in [0]): svg(f_,f"{dst}/{f_['name']}.svg")
+    if "step" in o["files"]: cp([f"{F}/step/*.step"],dst)
+    if kind=="printer":
+        for f in glob.glob(f"{dst}/*"):
+            if f.rsplit(".",1)[-1].lower() not in keep: os.remove(f)
+    shutil.rmtree(tmp); made=[dst if m_==src else m_ for m_ in made]
+    old_hdr=f"(FOR_{os.path.basename(src)[4:]}/)"; i_=next((k for k,l in enumerate(how) if old_hdr in l),None)
+    if i_ is not None:
+        j_=next((k for k in range(i_,len(how)) if how[k]==""),len(how)); del how[i_:j_+1]
+    MY.append(f"{kind.upper()}: {o['model']}{' / '+o['software'] if o['software'] else ''} -> {os.path.basename(dst)}/ ({', '.join(sorted(set(o['files'])))}"+(f"; G-code {o['gcode']['flavor']}, {o['gcode']['units']}" if o.get("gcode") else "")+")")
+    MY.append(f"  {o['how']}.")
+    if o.get("msg"): MY.append(f"  !! {o['msg']}")
+    PROF_USED[kind]=dict(id=o["id"],label=lab,dir=os.path.basename(dst),files=o["files"],gcode=o.get("gcode"),msg=o.get("msg",""))
+if MY: how=["YOUR MACHINES (from tools_setup.py --machine)"]+MY+[""]+how
+json.dump(PROF_USED,open(f"{F}/output_profiles.json","w"),indent=1)
 how+=["CAD  (step/): .step opens in Fusion, SolidWorks, Onshape, FreeCAD; model.stl in anything.","",
       "EVERYTHING IS AN ESTIMATE: simulate G-code, dry-run, check prints in your slicer, verify dimensions before cutting."]
 sys.path.insert(0,os.path.dirname(os.path.abspath(__file__))); import rules as _rules

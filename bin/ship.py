@@ -372,7 +372,8 @@ def put(src,dst,where,check):
 pa=[r for r in R if r["area"]=="print" and r["status"]!="WARN"]
 if SL:
     WP=f"{V}/.ship_work/print"
-    for f in sorted(glob.glob(f"{WP}/plate_*.gcode")): put(f,f"PRINTER/{os.path.basename(f)}","G-code for your printer: share to your printer app, or copy to its SD card / USB stick","print")
+    import outputs as _OUT; _po=_OUT.selected("printer")
+    for f in ([] if _po and "gcode" not in _po["files"] else sorted(glob.glob(f"{WP}/plate_*.gcode"))): put(f,f"PRINTER/{os.path.basename(f)}","G-code for your printer: share to your printer app, or copy to its SD card / USB stick","print")
     for f in sorted(glob.glob(f"{WP}/plate_*.3mf")): put(f,f"PRINTER/{os.path.basename(f)}","open in PrusaSlicer / Bambu Studio / Orca (settings included), check, slice and send","print")
     for f in sorted(glob.glob(f"{WP}/plate_*.png")): put(f,f"PRINTER/{os.path.basename(f)}","picture of what goes on that print bed","print")
     for f in sorted(glob.glob(f"{WP}/*.stl")): put(f,f"PRINTER/parts_stl/{os.path.basename(f)}","single part for any slicer (Cura etc.)","print")
@@ -385,7 +386,7 @@ for D_ in sorted(glob.glob(f"{F}/FOR_*")):
         if not os.path.isfile(f): continue
         ext=f.rsplit(".",1)[-1].lower(); rel=os.path.relpath(f,D_)
         if mk=="HAND": put(f,f"HAND_TOOLS/{rel}",{"pdf":"build plan: print it at 100% (1:1 templates inside)","csv":"cut list","txt":"step-by-step plan (plain text)"}.get(ext,"hand-tool file"),"hand")
-        elif ext in("dxf","svg","nc","png"): put(f,f"{mk}/{rel}",(LAB.get(mk,"cut file") if ext!="png" else "preview of the toolpath/nest"),"cut")
+        elif ext in("dxf","svg","nc","tap","ngc","step","png"): put(f,f"{mk}/{rel}",(LAB.get(mk,"cut file") if ext!="png" else "preview of the toolpath/nest"),"cut")
 for f,where,c in (("drawings.pdf","DRAWINGS: print on normal paper at 100% (Actual size)","drawing"),("drawing.png","drawing to look at on a phone","drawing"),
                   ("bom_quote.pdf","bill of materials + price estimate (print or read)","bom"),("bom.csv","cut/parts list (spreadsheet)","bom"),
                   ("shopping_list.csv","shopping list: take it to the store","bom"),("build_steps.pdf","illustrated build steps","hand"),("HOW_TO_USE.txt","which file goes into which program","files"),

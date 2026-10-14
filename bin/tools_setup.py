@@ -13,17 +13,41 @@ and writes profile.json {tools, default_domain, units}. Only a printer -> defaul
   tools_setup.py --shop-clear
   tools_setup.py --rates                 optional quick step: set your real rates and prices (asks one by one; Enter keeps, 'y' = mine as is)
   tools_setup.py --rates labor_rate=65 margin_pct=20 machine_rate.router=30 price_per_ft.2x4=0.95 price_per_sqft.plywood=1.9 [confirm=all]
-        non-interactive form; confirm=all marks every current value as yours (no more 'Sketch default' flags)"""
+        non-interactive form; confirm=all marks every current value as yours (no more 'Sketch default' flags)
+  tools_setup.py --machine router "Shapeoko 4" [--software "Carbide Motion"] [--units mm]
+        your exact machine + software (printer/laser/plasma/router). Picks the output profile (G-code flavor+units or file type).
+        Unknown software or a format Sketch can't write -> it says so and uses plain DXF/SVG/STL. --machine router clear = forget.
+  tools_setup.py --machines              asks for each enabled machine in turn (Enter = skip)
+"""
 import sys,os,json
 B=os.path.dirname(os.path.abspath(__file__)); a=sys.argv[1:]
 M=json.load(open(f"{B}/machines.json")); PR=json.load(open(f"{B}/printers.json")); pf=f"{B}/profile.json"
 prof=json.load(open(pf)) if os.path.exists(pf) else {}
 if not a or a[0] in("-h","--help"): print(__doc__); sys.exit(0)
 def opt(k,d=None): return a[a.index(k)+1] if k in a else d
-KEEP=("kerf_measured","saws","shop","live_prices","confirmed_rates","tolerance_measured")
+KEEP=("machine_setup","kerf_measured","saws","shop","live_prices","confirmed_rates","tolerance_measured")
 def _save(): json.dump(M,open(f"{B}/machines.json","w"),indent=1); json.dump(prof,open(pf,"w"),indent=1)
 def _k(mn,mat,t): import kerf; return f"{mn}|{kerf.mcls(mat) if mat!='*' else '*'}|{round(float(t),4) if t!='*' else '*'}"
 def _confirm(k): c=prof.setdefault("confirmed_rates",[]); c.append(k) if k not in c else None
+if "--machine" in a or "--machines" in a:
+    import outputs as _o
+    ms=prof.setdefault("machine_setup",{})
+    def _set(kind,model,sw,units=None):
+        if kind not in("printer","laser","plasma","router"): sys.exit(f"machine kind must be printer, laser, plasma or router (got {kind})")
+        if model.lower()=="clear": ms.pop(kind,None); print(f"{kind}: forgotten (generic outputs)"); return
+        pid,msg=_o.match(kind,model,sw); ms[kind]=dict(model=model,software=sw,profile=pid,msg=msg,**({"units":units} if units else {}))
+        o=_o.selected(kind,prof); print(f"{kind}: {model}{' / '+sw if sw else ''} -> {o['label']} ({', '.join(o['files'])}"+(f"; G-code {o['gcode']['flavor']} {o['gcode']['units']}" if o.get('gcode') else "")+")")
+        if msg: print("   "+msg)
+    if "--machine" in a:
+        i=a.index("--machine"); _set(a[i+1],a[i+2] if len(a)>i+2 and not a[i+2].startswith("--") else "",opt("--software",""),opt("--units"))
+    else:
+        for kind in("printer","laser","plasma","router"):
+            if not M.get(kind,{}).get("enabled"): continue
+            cur=ms.get(kind,{}); mdl=input(f"{kind}: exact make/model [{cur.get('model','skip')}]: ").strip() or cur.get("model","")
+            if not mdl: continue
+            sw=input(f"  software you send files with (LightBurn, Bambu Studio, FireControl, Mach4, LinuxCNC, VCarve...) [{cur.get('software','')}]: ").strip() or cur.get("software","")
+            _set(kind,mdl,sw)
+    _save(); print(json.dumps(ms,indent=1)); sys.exit(0)
 if "--rates" in a:
     sys.path.insert(0,B); import defaults
     P=json.load(open(f"{B}/prices.json")); sh=M.setdefault("shop",{}); mr=sh.setdefault("machine_rate_per_h",{})

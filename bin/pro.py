@@ -345,7 +345,32 @@ def gate_load(d,F,res):
         if bad: res("load","drawings.pdf","FAIL",f"load note missing on sheet(s) {bad[:6]}"); ok=False
     else: res("load","drawings.pdf","FAIL","no drawings.pdf to carry the load note"); ok=False
     if ok: res("load","build","PASS",f'load-bearing ({L.why(spec)}): "{L.NOTE}" in HOW_TO_USE and on all {len(pages)} drawing sheets')
-GATES=[gate_crossmachine,gate_buy,gate_cutday,gate_coupons,gate_learn,gate_prices,gate_quote,gate_revision,gate_explode,gate_load]
+def gate_outputs(d,F,res):
+    """v1.0.6: files match the owner's machine/software profile (type, G-code flavor + units); unknown -> plain fallback said plainly."""
+    import outputs as O; J=f"{F}/output_profiles.json"; U=json.load(open(J)) if os.path.exists(J) else {}
+    sel={k:O.selected(k) for k in ("printer","laser","plasma","router")}; sel={k:v for k,v in sel.items() if v}
+    if not sel: res("outputs","machines","PASS","no exact machine set (tools_setup.py --machine ...): generic outputs for each machine type"); return
+    H=open(f"{F}/HOW_TO_USE.txt").read() if os.path.exists(f"{F}/HOW_TO_USE.txt") else ""; ok=True; said=[]
+    for k,o in sel.items():
+        u=U.get(k)
+        if not u:
+            if glob.glob(f"{F}/FOR_*"+{"printer":"3D_PRINTER","laser":"LASER","plasma":"PLASMA","router":"ROUTER"}[k]+"*"): res("outputs",k,"FAIL",f"{k} set to {o['label']} but its folder was not made from the profile"); ok=False
+            continue
+        if u["id"]!=o["id"]: res("outputs",k,"FAIL",f"files made for {u['label']} but your {k} is set to {o['label']}"); ok=False; continue
+        D=f"{F}/{u['dir']}"; fs=[f for f in glob.glob(f"{D}/**/*",recursive=True) if os.path.isfile(f)]
+        allow=set(o["files"])|{"png","txt"}|({o["gcode"].get("ext","nc")} if o.get("gcode") else set())
+        bad=[os.path.basename(f) for f in fs if f.rsplit(".",1)[-1].lower() not in allow]
+        if bad: res("outputs",u["dir"],"FAIL",f"{o['label']} gets only {sorted(allow-{'png','txt'})}; found {bad[:4]}"); ok=False
+        if not [f for f in fs if f.rsplit(".",1)[-1].lower() in set(o["files"])]: res("outputs",u["dir"],"FAIL",f"no {o['files']} file for your {o['label']}"); ok=False
+        if o.get("gcode"):
+            for f in [f for f in fs if f.endswith("."+o["gcode"].get("ext","nc"))]:
+                pr=O.check_nc(open(f).read(),o,k)
+                if pr: res("outputs",os.path.basename(f),"FAIL",f"{o['label']} G-code: {'; '.join(pr)}"); ok=False
+        if o.get("msg") and o["msg"] not in H: res("outputs",k,"FAIL",f"plain-language note missing from HOW_TO_USE: {o['msg'][:80]}"); ok=False
+        if f"-> {u['dir']}/" not in H: res("outputs",k,"FAIL",f"HOW_TO_USE does not say which folder goes to your {o['label']}"); ok=False
+        said.append(f"{k}={o['label']}"+(f" ({o['gcode']['flavor']} {o['gcode']['units']})" if o.get("gcode") else f" ({'/'.join(o['files'])})")+(" [plain fallback]" if not o["id"] else ""))
+    if ok: res("outputs","machines","PASS","output profiles: "+", ".join(said))
+GATES=[gate_crossmachine,gate_buy,gate_cutday,gate_coupons,gate_learn,gate_prices,gate_quote,gate_revision,gate_explode,gate_load,gate_outputs]
 def gate(ctx):
     for g in GATES:
         try: g(ctx["d"],ctx["F"],ctx["res"])
