@@ -25,15 +25,33 @@ def write(P,spec):
           "\n  assumed: "+(", ".join(f'{k}={spec["values"][k]["v"]}' for k in asm) or "none")+f"\nnext: bin/design.sh {P}")
 if a[0]=="--from-read":
     r=json.load(open(a[1])); P=os.path.abspath(a[2]); U=r.get("units","in"); dom=r.get("domain",prof.get("default_domain","metal"))
-    vals={}
+    vals={}; ASK=list(r.get("unclear",[]))+list(r.get("questions",[]))
+    def num(x):   # 3-1/2, 1 1/4", 2.5in, 64 mm, 1,5 -> float (None if not a number)
+        if isinstance(x,(int,float)) or x is None: return x
+        t=str(x).strip().replace('"',"").replace("in","").replace("mm","").replace("cm","").replace(",",".").strip()
+        m=re.fullmatch(r"(\d+(?:\.\d+)?)?(?:[\s-]*(\d+)/(\d+))?",t)
+        if not m or not (m[1] or m[2]): return x
+        return (float(m[1]) if m[1] else 0)+(int(m[2])/int(m[3]) if m[2] else 0)
     for k,v in r.get("values",{}).items():
-        v=v if isinstance(v,dict) else {"v":v}; vals[k]=V(v["v"],v.get("src","read"),v.get("unit",U),v.get("note",""))
+        v=v if isinstance(v,dict) else {"v":v}
+        if v.get("v") is None: continue   # not on the drawing -> becomes an assumption below (never a 'read' None)
+        x=num(v["v"])
+        if isinstance(x,(int,float)) and x<=0: ASK.append(f"{k} reads as {v['v']}: that can't be right, what is it?"); continue
+        vals[k]=V(x,v.get("src","read"),v.get("unit",U),v.get("note",""))
+        if v.get("unclear"): ASK.append(f"{k}: I read {v['v']} {U} but it's unclear ({v['unclear']}). Is that right?")
+    r["holes"]=[dict(h,**{k2:num(h.get(k2)) for k2 in ("x","y","d")}) for h in r.get("holes",[]) if all(h.get(k2) is not None for k2 in ("x","y","d"))]
     shape=r.get("shape","plate"); defaults={"in":dict(t=0.25,L=12,W=6,H=4),"mm":dict(t=3,L=100,W=50,H=30)}[U]
     if dom=="wood" and U=="in": defaults["t"]=0.75
     mat=r.get("material") or {"print":"PLA","wood":"plywood","laser":"acrylic"}.get(dom,"steel")
     need={"plate":["L","W","t"],"profile":["t"],"box":["L","W","H"]}.get(shape,[])
     for k in need:
         if k not in vals: vals[k]=V(defaults[k],"assumed",U,"not on the drawing - Sketch assumption")
+    for k in need:
+        if vals[k]["src"]=="assumed": ASK.append(f"{k} isn't on the drawing: I assumed {vals[k]['v']} {U}. What should it be?")
+    if "L" in vals and "W" in vals:
+        for i,h in enumerate(r.get("holes",[])):
+            if not (0<h["x"]<vals["L"]["v"] and 0<h["y"]<vals["W"]["v"]) or h["d"]>=min(vals["L"]["v"],vals["W"]["v"]): ASK.append(f"hole {i+1} at ({h['x']}, {h['y']}) d{h['d']} falls off or fills the {vals['L']['v']} x {vals['W']['v']} part: which dimension did I misread?")
+    if r.get("scale_from"): ASK.append(f"sizes scaled from {r['scale_from']} in the photo: measure one edge to confirm")
     holes=[{k2:(f"={h[k2]}" if False else h[k2]) for k2 in("x","y","d")} for h in r.get("holes",[])]
     for i,h in enumerate(r.get("holes",[])):   # each hole position/size becomes an editable read value
         for k2 in("x","y","d"): vals[f"h{i+1}_{k2}"]=V(h[k2],h.get("src_d" if k2=="d" else "src_pos",h.get("src","read")),U)
@@ -55,7 +73,8 @@ if a[0]=="--from-read":
         sp="=i*(L+1)" if "L" in vals else "=i*120"
         parts[0].update(repeat={"var":"i","n":"=qty"},name="part{i}",at=[sp,0,0]); parts[0].pop("group",None)
     write(P,dict(name=os.path.basename(P),title=r.get("title","Imported drawing"),domain=dom,units=U,ask=f"from drawing {r.get('source','')}",
-                 values=vals,derived=r.get("derived",{}),parts=parts,joints=r.get("joints",[]),dims=r.get("dims",dims),source=r.get("source")))
+                 values=vals,derived=r.get("derived",{}),parts=parts,joints=r.get("joints",[]),dims=r.get("dims",dims),source=r.get("source"),**({"questions":ASK} if ASK else {})))
+    for q_ in ASK: print("[ask] "+q_)
     sys.exit()
 F=os.path.abspath(a[0]); P=os.path.abspath(a[1]); ext=F.lower().rsplit(".",1)[-1]
 src=f"{P}/source"; os.makedirs(src,exist_ok=True); dst=f"{src}/{os.path.basename(F)}"
@@ -150,6 +169,10 @@ elif ext=="pdf" or ext in("png","jpg","jpeg","webp","bmp","tif","tiff"):
         for c in sorted(cs,key=cv2.contourArea,reverse=True)[:5]:
             ap=cv2.approxPolyDP(c,0.02*cv2.arcLength(c,True),True)
             if len(ap)==4 and cv2.contourArea(ap)>0.2*h*w:
+                inkall=cv2.adaptiveThreshold(cv2.GaussianBlur(g,(3,3),0),255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY_INV,31,12)
+                inkall=cv2.morphologyEx(inkall,cv2.MORPH_OPEN,np.ones((2,2),np.uint8)); qm=np.zeros_like(g); cv2.fillPoly(qm,[ap.reshape(-1,2)],255)
+                inside=cv2.countNonZero(cv2.bitwise_and(inkall,cv2.dilate(qm,np.ones((15,15),np.uint8)))); tot=max(1,cv2.countNonZero(inkall))
+                if inside<0.93*tot: note=f"a big rectangle ({100*inside/tot:.0f}% of the ink) is a drawn part, not the paper: kept the full image"; continue   # v1.0.6: never crop off the dimensions
                 p=ap.reshape(4,2).astype(np.float32); s_=p.sum(1); d_=np.diff(p,axis=1).ravel()
                 q=np.array([p[np.argmin(s_)],p[np.argmin(d_)],p[np.argmax(s_)],p[np.argmax(d_)]],np.float32)
                 Wd=int(max(np.linalg.norm(q[0]-q[1]),np.linalg.norm(q[2]-q[3]))); Hd=int(max(np.linalg.norm(q[0]-q[3]),np.linalg.norm(q[1]-q[2])))
@@ -161,11 +184,13 @@ elif ext=="pdf" or ext in("png","jpg","jpeg","webp","bmp","tif","tiff"):
             if ang:
                 r_=float(np.median(ang)); Mr=cv2.getRotationMatrix2D((warp.shape[1]/2,warp.shape[0]/2),r_,1); warp=cv2.warpAffine(warp,Mr,(warp.shape[1],warp.shape[0]),borderValue=255); note+=f", rotated {r_:.1f} deg"
         clean=cv2.adaptiveThreshold(cv2.GaussianBlur(warp,(3,3),0),255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY,31,12)
-        cv2.imwrite(f"{rd}/clean.png",clean); cv2.imwrite(f"{rd}/deskewed.png",warp); imgs=[f"{rd}/clean.png",f"{rd}/deskewed.png"]; print("image:",note)
+        cv2.imwrite(f"{rd}/clean.png",clean); cv2.imwrite(f"{rd}/deskewed.png",warp); shutil.copy(dst,f"{rd}/original.{ext}"); imgs=[f"{rd}/clean.png",f"{rd}/deskewed.png",f"{rd}/original.{ext}"]; print("image:",note)
+        print("  photo of a real part (tape/ruler)? read original.* and scale from the tape; set scale_from in read.json")
     cand=sorted(set(re.findall(r'(?:Ø|R|⌀)?\s*\d+(?:[.,]\d+)?(?:\s*-\s*\d+/\d+|\s+\d+/\d+)?\s*(?:"|in\b|mm\b|cm\b)?',text)),key=len,reverse=True)
     cand=[c.strip() for c in cand if re.search(r"\d",c) and (len(c.strip())>1)][:60]
     tpl=dict(source=dst,title=title,domain=prof.get("default_domain","metal"),units=prof.get("units","in"),shape="plate|profile|box|parts",
-             values={"L":{"v":None},"W":{"v":None},"t":{"v":None}},holes=[{"x":None,"y":None,"d":None}],
+             values={"L":{"v":None},"W":{"v":None},"t":{"v":None}},holes=[{"x":None,"y":None,"d":None}],unclear=[],scale_from=None,
+             _rules="v: number or fraction text ('3-1/2', '1 1/4\"'). Leave null what isn't shown (-> assumed + asked). Add 'unclear':'why' to a value you're not sure of, and free questions to unclear[]. Photo of a part with a tape/ruler: set scale_from to what you scaled from.",
              _how="Open the images, read every dimension yourself, fill this in as read.json (leave out what isn't shown; it becomes an assumption), then: import_file.py --from-read read.json PROJECT")
     json.dump(tpl,open(f"{rd}/read_template.json","w"),indent=1); open(f"{rd}/text.txt","w").write(text)
     print("READ WITH VISION:",*imgs,sep="\n  "); print("dimension-like text found:",cand[:25] if cand else "none (scanned/handwritten: read the image)")

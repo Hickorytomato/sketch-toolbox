@@ -1,0 +1,47 @@
+{
+ "title": "Shelf side",
+ "domain": "wood",
+ "units": "mm",
+ "shape": "plate",
+ "material": "plywood",
+ "qty": 2,
+ "values": {
+  "L": {
+   "v": 300
+  },
+  "W": {
+   "v": 200
+  },
+  "t": {
+   "v": 18
+  }
+ },
+ "holes": [
+  {
+   "x": 30,
+   "y": 30,
+   "d": 8
+  },
+  {
+   "x": 270,
+   "y": 30,
+   "d": 8,
+   "src_pos": "assumed"
+  },
+  {
+   "x": 30,
+   "y": 170,
+   "d": 8,
+   "src_pos": "assumed"
+  },
+  {
+   "x": 270,
+   "y": 170,
+   "d": 8,
+   "src_pos": "assumed"
+  }
+ ],
+ "unclear": [
+  "only one 30 mm edge distance is dimensioned; I used 30 mm from every edge for all 4 holes. Right?"
+ ]
+}

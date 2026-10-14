@@ -1,0 +1,4 @@
+{"title":"Bracket plate","domain":"metal","units":"in","shape":"plate","material":"steel",
+ "values":{"L":{"v":"6"},"W":{"v":"4"},"t":{"v":"1/4"}},
+ "holes":[{"x":1,"y":2,"d":"1/2"},{"x":5,"y":2,"d":"1/2"}],
+ "unclear":["the 1\" is only dimensioned on the left hole; I assumed the right hole is also 1\" from its end (symmetric). Right?"]}

@@ -1,0 +1,3 @@
+{"title":"Board from photo","domain":"wood","units":"in","shape":"plate","material":"pine",
+ "values":{"L":{"v":24,"note":"read from the tape in the photo, confirm"},"W":{"v":5.7,"unclear":"scaled from the tape: about 5-3/4, maybe a 1x6 (5-1/2 actual)"},"t":{"v":null}},
+ "scale_from":"the tape measure along the top edge (0-24 in)"}
