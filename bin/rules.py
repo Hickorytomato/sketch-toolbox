@@ -947,3 +947,12 @@ if __name__=="__main__" and "--coverage" in sys.argv:
     print(Counter(v[0] for v in st.values()))
     for i,(k,why) in st.items():
         if k=="skipped" or "-v" in sys.argv: print(i,cat()[i]["check_type"],cat()[i]["severity"],k,why,"|",cat()[i]["failure"])
+
+def part_tags(d):
+    """BOM tag per part name: mark + number in the order of the BOM row's names (A1, A2 ...). Same everywhere: cut day, plan, exploded steps."""
+    T={}
+    for r in d.get("cutlist",[]):
+        if r.get("mark")=="HW": continue
+        ns=r.get("names") or [r["part"]]
+        for i,n in enumerate(ns): T[n]=f'{r["mark"]}{i+1}' if len(ns)>1 or r.get("names") else r["mark"]
+    return T

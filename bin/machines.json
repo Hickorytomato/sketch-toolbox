@@ -1,6 +1,81 @@
-{"_note":"Your machines. Edit beds/kerf/feeds to match. All G-code is a STARTING POINT: verify in your controller's sim and dry-run before cutting.",
-"plasma":{"type":"plasma","bed":[48,96],"kerf":0.06,"lead_in":0.25,"feed_ipm":110,"pierce_delay_s":0.5,"pierce_height":0.15,"cut_height":0.06,"max_thickness":0.5,"min_hole_ratio":1.0,"enabled":true},
-"laser":{"type":"laser","bed":[60,120],"kerf":0.008,"lead_in":0.08,"feed_ipm":150,"pierce_delay_s":0.3,"max_thickness":0.375,"min_hole_ratio":0.6,"enabled":true},
-"router":{"type":"router","bed":[48,96],"tool_dia":0.25,"depth_per_pass":0.125,"feed_ipm":100,"plunge_ipm":30,"rpm":18000,"safe_z":0.5,"materials":["wood","plastic","aluminum"],"enabled":true},
-"printer":{"type":"printer","bed_mm":[250,210,210],"slicer":"prusaslicer","nozzle":0.4,"layer":0.2,"filament":"PLA","desk_model_max_mm":120,"enabled":true},
-"shop":{"labor_rate":75,"margin_pct":25,"weld_ipm":6,"fit_hours_per_part":0.15,"finish_hours":1.0}}
+{
+ "_note": "Your machines. Edit beds/kerf/feeds to match. All G-code is a STARTING POINT: verify in your controller's sim and dry-run before cutting.",
+ "plasma": {
+  "type": "plasma",
+  "bed": [
+   48,
+   96
+  ],
+  "kerf": 0.06,
+  "lead_in": 0.25,
+  "feed_ipm": 110,
+  "pierce_delay_s": 0.5,
+  "pierce_height": 0.15,
+  "cut_height": 0.06,
+  "max_thickness": 0.5,
+  "min_hole_ratio": 1.0,
+  "enabled": true
+ },
+ "laser": {
+  "type": "laser",
+  "bed": [
+   60,
+   120
+  ],
+  "kerf": 0.008,
+  "lead_in": 0.08,
+  "feed_ipm": 150,
+  "pierce_delay_s": 0.3,
+  "max_thickness": 0.375,
+  "min_hole_ratio": 0.6,
+  "enabled": true
+ },
+ "router": {
+  "type": "router",
+  "bed": [
+   48,
+   96
+  ],
+  "tool_dia": 0.25,
+  "depth_per_pass": 0.125,
+  "feed_ipm": 100,
+  "plunge_ipm": 30,
+  "rpm": 18000,
+  "safe_z": 0.5,
+  "materials": [
+   "wood",
+   "plastic",
+   "aluminum"
+  ],
+  "enabled": true
+ },
+ "printer": {
+  "type": "printer",
+  "bed_mm": [
+   250,
+   210,
+   210
+  ],
+  "slicer": "prusaslicer",
+  "nozzle": 0.4,
+  "layer": 0.2,
+  "filament": "PLA",
+  "desk_model_max_mm": 120,
+  "enabled": true
+ },
+ "shop": {
+  "labor_rate": 75,
+  "margin_pct": 25,
+  "weld_ipm": 6,
+  "fit_hours_per_part": 0.15,
+  "finish_hours": 1.0,
+  "machine_rate_per_h": {
+   "printer": 3,
+   "laser": 30,
+   "plasma": 40,
+   "router": 35,
+   "_src": "Sketch default (rough shop-rate guess) - set yours: tools_setup.py --shop machine_rate.plasma=45"
+  },
+  "shop_hours_per_day": 6
+ }
+}

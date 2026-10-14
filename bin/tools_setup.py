@@ -7,16 +7,34 @@ and writes profile.json {tools, default_domain, units}. Only a printer -> defaul
   tools_setup.py --kerf-test plasma steel 0.25 --drawn 2.000 --measured 1.938
         cut a square drawn 2.000 with NO kerf comp, measure it: kerf = drawn - measured. Beats the table every time.
   tools_setup.py --kerf plasma steel 0.25 0.062             or enter a kerf you already know ('*' for any material/thickness)
-  tools_setup.py --laser-source co2|fiber  --plasma-amps 45"""
+  tools_setup.py --laser-source co2|fiber  --plasma-amps 45
+  tools_setup.py --shop name="Your Shop" logo=/path/logo.png drawn_by="J. Smith" tax_pct=8.25 lead_time="2-3 weeks" valid_days=30 terms="..." address="..." phone=... email=...
+        your shop details for the customer quote + title blocks (blank = neutral quote). machine_rate.plasma=45 labor_rate=75 margin_pct=25 go to machines.json shop
+  tools_setup.py --shop-clear"""
 import sys,os,json
 B=os.path.dirname(os.path.abspath(__file__)); a=sys.argv[1:]
 M=json.load(open(f"{B}/machines.json")); PR=json.load(open(f"{B}/printers.json")); pf=f"{B}/profile.json"
 prof=json.load(open(pf)) if os.path.exists(pf) else {}
+if not a or a[0] in("-h","--help"): print(__doc__); sys.exit(0)
 def opt(k,d=None): return a[a.index(k)+1] if k in a else d
-KEEP=("kerf_measured","saws")
+KEEP=("kerf_measured","saws","shop","live_prices")
 def _save(): json.dump(M,open(f"{B}/machines.json","w"),indent=1); json.dump(prof,open(pf,"w"),indent=1)
 def _k(mn,mat,t): import kerf; return f"{mn}|{kerf.mcls(mat) if mat!='*' else '*'}|{round(float(t),4) if t!='*' else '*'}"
-if "--saw" in a or "--kerf-test" in a or "--kerf" in a or "--laser-source" in a or "--plasma-amps" in a:
+if "--shop" in a or "--shop-clear" in a or "--live-prices" in a:
+    if "--shop-clear" in a: prof.pop("shop",None)
+    if "--live-prices" in a: prof["live_prices"]=opt("--live-prices")=="on"
+    if "--shop" in a:
+        sh=prof.setdefault("shop",{})
+        for kv in a[a.index("--shop")+1:]:
+            if kv.startswith("--") or "=" not in kv: break
+            k,v=kv.split("=",1)
+            try: v=float(v) if k in("tax_pct","valid_days","labor_rate","margin_pct") or k.startswith("machine_rate.") else v
+            except ValueError: sys.exit(f"{k} must be a number")
+            if k.startswith("machine_rate."): M["shop"].setdefault("machine_rate_per_h",{})[k.split(".",1)[1]]=v
+            elif k in("labor_rate","margin_pct"): M["shop"][k]=v
+            else: sh[k]=v
+    _save()
+elif "--saw" in a or "--kerf-test" in a or "--kerf" in a or "--laser-source" in a or "--plasma-amps" in a:
     km=prof.setdefault("kerf_measured",{})
     if "--saw" in a:
         prof.setdefault("saws",{})[opt("--saw")]={}

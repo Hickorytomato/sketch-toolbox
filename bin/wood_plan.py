@@ -19,6 +19,7 @@ if _buy:
     L.append("0. BUY (store-bought - not printed or cut from sheet):")
     for r in _buy: L.append(f'   - {r["qty"]} x {r["part"]}: {r["material"]}, {r["length"]}  ({r.get("est. cost","")})')
     L.append("")
+TAG=rules.part_tags(d)
 SP=d.get("stock_plan") or []
 if SP:
     sk=d.get("saw_kerf",{}); L.append(f'LUMBER CUT LIST (kerf {sk.get("kerf_in",0):.3f} in per cut from: {sk.get("src","?")}). Grain runs along the length of every board.')
@@ -26,13 +27,13 @@ if SP:
         tot=sum(b["stock"] for b in st_["boards"]); used=sum(sum(p_[1] for p_ in b["parts"]) for b in st_["boards"])
         L.append(f'   {st_["section"]}: buy {len(st_["boards"])} board(s) - yield {100*used/max(tot,1e-9):.0f}%')
         for k,b in enumerate(st_["boards"]):
-            L.append(f'     board {k+1}: {b["stock"]/12:g} ft ({b["stock"]:g} in) -> '+", ".join(f'{n} {l:.3f}"{frac(l)}' for n,l in b["parts"])+f'  [+{len(b["parts"])} kerf = {b["used_with_kerf"]:.3f} in, offcut {b["offcut"]:.2f} in]'+(f' ({b["note"]})' if b.get("note") else ""))
+            L.append(f'     board {k+1}: {b["stock"]/12:g} ft ({b["stock"]:g} in) -> '+", ".join(f'[{TAG.get(n,"?")}] {n} {l:.3f}"{frac(l)}' for n,l in b["parts"])+f'  [+{len(b["parts"])} kerf = {b["used_with_kerf"]:.3f} in, offcut {b["offcut"]:.2f} in]'+(f' ({b["note"]})' if b.get("note") else ""))
     L.append("")
 if d["flats"]:
   L.append("Sheet parts: face grain runs along each part's first (long) dimension." if d.get("domain")=="wood" else "")
   L.append("1. BREAK DOWN THE SHEETS (circular saw + straightedge or table saw). Rip to width first, then crosscut to length:" if d.get("domain")=="wood" else "1. FLAT PARTS (plasma/laser files in FOR_*/, or lay out, saw and drill by hand):")
   for f in sorted(d["flats"],key=lambda f:-f["w"]*f["h"]):
-    L.append(f'   - {f["name"]:10} {f3(max(f["w"],f["h"]))}{frac(max(f["w"],f["h"]))} x {f3(min(f["w"],f["h"]))}{frac(min(f["w"],f["h"]))}  from {f.get("thickness")} {f.get("material")}')
+    L.append(f'   - {f["name"]:10} {f3(max(f["w"],f["h"]))}{frac(max(f["w"],f["h"]))} x {f3(min(f["w"],f["h"]))}{frac(min(f["w"],f["h"]))}  from {f.get("thickness")} {f.get("material")}  [tag {TAG.get(f["name"],"?")}]')
 pk=[(f,p) for f in d["flats"] for p in f.get("pockets",[])]
 if pk:
     L+=["","2. LAY OUT AND CUT THE DADOS / RABBETS (mark both edges of each with a knife, test-fit with an offcut):"]

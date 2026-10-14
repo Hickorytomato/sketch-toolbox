@@ -102,7 +102,13 @@ done
 if $PY -c "import json,sys;d=json.load(open('$V/parts.json'));sys.exit(0 if any(j.get('type')=='cope' for j in d['joints']) else 1)"; then log "cope templates"; $PY $B/cope.py $V/parts.json $F/cope_templates.pdf >/dev/null; fi
 if $PY -c "import json,sys;sys.exit(0 if json.load(open('$V/parts.json')).get('print_parts') else 1)"; then log "3D print: checks, split, slice, 3MF"; $PY $B/print3d.py $V $F/print | sed 's/^/      /'; fi
 if [ "$($PY -c "import json;d=json.load(open('$V/parts.json'));print(int(d.get('domain')!='print' and any(r.get('stock')!='print' for r in d['cutlist'])))")" = 1 ]; then $PY $B/wood_plan.py $V $F/hand_tool_plan.txt >/dev/null; fi
+if [ "$($PY -c "import json;d=json.load(open('$V/parts.json'));print(int(any(r.get('stock') not in('print','buy',None) and r.get('mark')!='HW' for r in d['cutlist'])))")" = 1 ]; then log "cut-day sheets (1D stock + 2D guillotine sheet plan, checklist, offcuts)"; $PY $B/cutday.py $V $F | sed 's/^/      /'; fi
+log "fit-test coupons"; $PY $B/coupons.py $V $F 2>$V/coupons.log | sed 's/^/      /' || log "coupons failed (see $V/coupons.log)"
+log "exploded step pictures (Blender workbench)"; T1=$(date +%s); $PY $B/explode.py $V > $V/explode.log 2>&1 && sed 's/^/      /' $V/explode.log | tail -1 || log "exploded views failed (see $V/explode.log) - build_steps.pdf falls back to text steps"
+rm -rf $F/build_steps; if [ -f $V/explode/explode.json ]; then mkdir -p $F/build_steps; cp $V/explode/*.png $F/build_steps/; fi
 log "drawings.pdf, BOM, quote, sanity"; $PY $B/fabdocs.py $V $F >/dev/null
+log "material prices (live only if turned on; never blocks)"; timeout 120 $PY $B/prices_live.py $V $F 2>$V/prices.log | sed 's/^/      /' || true; [ -f $F/live_prices.json ] || echo '{"enabled":false,"lines":{},"search":{},"note":"price check crashed or timed out: prices.json used"}' > $F/live_prices.json
+log "customer quote"; $PY $B/customer_quote.py $V $F | sed 's/^/      /'
 FOR=""; [ "$3" = "--for" ] && FOR="--for $4"; [ -n "$SKETCH_FOR" ] && FOR="--for $SKETCH_FOR"
 log "per-machine packages + HOW_TO_USE.txt ${FOR:-(machines.json enabled + hand)}"; $PY $B/package_machines.py $V $F $FOR | sed 's/^/      /'
 cat > $F/README.txt <<TXT

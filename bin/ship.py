@@ -111,7 +111,8 @@ def gate_print(m,name,fil="PLA",assembly=None,nbodies=None,clearance=None,prn=No
     """returns fused, gated mesh or None (FAIL recorded)"""
     np.random.seed(20261014)   # same mesh -> same verdict every run
     prn=prn or PR["printers"][PR["active"]]
-    clr=float(clearance if clearance is not None else prn.get("pip_clearance_mm",PR.get("rules",{}).get("pip_clearance_mm",0.5)))
+    import learn as _ln; _lg=_ln.get("printer",fil).get("pip_gap_mm")   # shop learning: the owner's measured print-in-place gap
+    clr=float(clearance if clearance is not None else (_lg if _lg is not None else prn.get("pip_clearance_mm",PR.get("rules",{}).get("pip_clearance_mm",0.5))))
     r,err=fuse(m,name)
     if err: res("print",name,"FAIL",err); return None
     bodies,nshell=r
@@ -350,6 +351,8 @@ if pp_all:
 # ---------------------------------------------------------------- shop rules (bin/ref/failure_modes.json -> rules.py)
 import rules as _rules
 _rules.gate(dict(d=d,spec=spec,F=F,V=V,U=U,M=M,res=res))
+import pro as _pro   # v1.0.5 pro outputs: cut day, coupons, customer quote, live prices, revisions, exploded steps, learning
+_pro.gate(dict(d=d,spec=spec,F=F,V=V,P=P,n=n,U=U,M=M,res=res))
 # ---------------------------------------------------------------- verdict + delivery
 fails=[r for r in R if r["status"]=="FAIL"]
 if fails:
@@ -383,7 +386,8 @@ for f,where,c in (("drawings.pdf","DRAWINGS: print on normal paper at 100% (Actu
                   ("shopping_list.csv","shopping list: take it to the store","bom"),("build_steps.pdf","illustrated build steps","hand"),("HOW_TO_USE.txt","which file goes into which program","files"),
                   ("quote.json","price estimate data","cost"),("assumptions.txt","values Sketch guessed: confirm them","files")):
     if os.path.exists(f"{F}/{f}"): put(f"{F}/{f}",("DRAWINGS/" if c=="drawing" else "")+f,where,c)
-CK={k:[f"{r['area']} {r['target']}: {r['status']}" for r in R if r["area"] in (k,"files")] for k in ("print","cut","hand","drawing","bom","cost","files")}
+for src,dst,where,c in _pro.deliverables(F): put(src,dst,where,c)
+CK={k:[f"{r['area']} {r['target']}: {r['status']}" for r in R if r["area"] in (k,"files")] for k in ("print","cut","hand","drawing","bom","cost","files","cutday","coupon","quote","prices","revision","explode","learn")}
 files=[dict(path=dst,sha256=sha(f"{SH}/{dst}"),bytes=os.path.getsize(f"{SH}/{dst}"),where=where,checks=CK.get(c,[])) for dst,where,c in SEND]
 Z=f"{os.path.basename(P)}_v{n}_all.zip"
 man=dict(project=os.path.basename(P),version=n,shipped=True,time=time.strftime("%Y-%m-%d %H:%M %Z"),units=U,min_print_feature_mm=MIN,

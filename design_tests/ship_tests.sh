@@ -19,4 +19,5 @@ want pass  plant_stand                       # welded angle stand
 want block ply_nominal "23/32"               # 3/4 plywood drawn at 0.750 nominal
 $P design_tests/ship_tamper_test.py || bad=$((bad+1))
 $P design_tests/rules_tests.py | tail -1; [ ${PIPESTATUS[0]} = 0 ] || bad=$((bad+1))   # every new FAIL rule: break blocks, clean ships
+$P design_tests/pro_tests.py | grep -v "^ok" ; [ ${PIPESTATUS[0]} = 0 ] || bad=$((bad+1))   # v1.0.5: cut day, coupons, quote, live prices, revisions, exploded steps, shop learning
 echo "ship tests: $ok ok, $bad bad"; [ $bad = 0 ]

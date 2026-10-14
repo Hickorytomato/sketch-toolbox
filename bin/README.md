@@ -60,3 +60,27 @@ import_file.py FILE PROJECT   STEP/IGES/STL/3MF/OBJ -> spec; DXF/SVG -> profile 
 from_photo.py composite PHOTO RENDER OUT  (render with --cutout first)   taste.py show|add kept|rejected <cat> "<v>"|set units
 build_replay.py, render_views.py, steps.py  build replay    turntable.py  clay fallback if Blender fails
 Settings (kept on reinstall): prices.json, printers.json, machines.json, profile.json, stock.json, taste.json.
+
+
+## Pro outputs (v1.0.5) - all go through the ship gate and into send_list.txt (phone PNG + PDF)
+- **Cut day** (`cutday.py`, saw/stock builds): 1D stock plan from stock lengths with your saw kerf, 2D guillotine sheet plan
+  (RIP strips with the grain, then crosscuts, then trim rips), numbered cuts tagged with the BOM marks (A1, A2 ...), tick-off
+  checklist, offcut list -> `cut_day.pdf`, `cut_day-N.png`, `offcuts.csv`.
+- **Fit-test coupons** (`coupons.py`): thread rings (c-0.2/c/c+0.2 mm), print-in-place gap gauge, slot gauge, dado step gauge,
+  laser/plasma kerf comb, saw-kerf card -> `coupons.pdf`, `coupons-N.png`, `coupons/*.stl|dxf`. Each says how to read it and
+  the command to store the result.
+- **Shop learning** (`feedback.py PROJECT --coupon thread --pick 3` or `feedback.py PROJECT "slot tight"`): stored per
+  machine|material in `bin/learned.json` (kept on reinstall), used for ASSUMED values in later builds (values you typed win);
+  every build says which corrections it applied (assumptions.txt, HOW_TO_USE.txt, gate). `feedback.py --list | --undo KEY`.
+- **Customer quote** (`customer_quote.py`): materials (with sources), hardware, machine time (slicer / G-code x
+  machines.json shop machine_rate_per_h), labor, margin, tax, lead time, valid-until, terms. Shop name/logo/address/drawn-by only
+  from `tools_setup.py --shop name=... logo=... tax_pct=...`; none set = neutral quote. Always stamped ESTIMATE.
+- **Live prices** (`prices_live.py`, off by default: `tools_setup.py --live-prices on`): reads the price from supplier product
+  pages you list in `bin/price_links.json` (JSON-LD / itemprop / og:price), with store, link and 'as of' date; cache 7 days
+  (`bin/price_cache.json`), robots.txt, 3 s between requests, 12 per build; failure = prices.json price, labelled. Home Depot /
+  Lowe's / Menards search pages block automated reads, so they are given as search links only (never scraped, never faked).
+- **Shop drawings**: every sheet has part, Rev letter (v1=A, v2=B ...), date, units, scale, tolerance block, drawn-by (profile
+  shop.drawn_by or blank), "Sheet i of N"; a revision table auto-diffed against the previous version; weld callout sheet
+  (W1.., AWS A2.4-style symbols from the model, WPS tail).
+- **Exploded build steps** (`explode.py`): Blender workbench, one picture per assembly step, BOM-tagged parts, assembled into
+  build_steps.pdf with a parts legend. About 1.4-1.9 s total (Blender start included) for 3-4 steps at 720 px on the box.
