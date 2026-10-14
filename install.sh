@@ -4,9 +4,9 @@
 # keeps your settings, removes scripts that are no longer in this version, sets up the light venv deps, then installs
 # PrusaSlicer, Blender and the PDF/video libs in the background (bin/install_heavy.sh; SKETCH_INSTALL_WAIT=1 = wait for them).
 set -euo pipefail
-VER=1.0.5
+VER=1.0.6
 URL="https://github.com/Hickorytomato/sketch-toolbox/releases/download/v$VER/sketch-toolbox-$VER.tar.gz"
-SHA=afa9d3bb680ba08dc60e6e33e228bb8d605db6012f9dc6271f9460f298a18b8c
+SHA=f2f438abc670eb282ee4806a18b16b2fef457b9f15cc9427a0cbb09f72dc5999
 ROOT=${SKETCH_ROOT:-/workspace/sketch}; mkdir -p "$ROOT/bin" "$ROOT/tools"
 TMP=$(mktemp -d); trap 'rm -rf "$TMP"' EXIT
 # preflight: free disk space (Blender + PrusaSlicer + python deps ~3.5 GB on a first install)
