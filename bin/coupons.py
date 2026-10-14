@@ -112,6 +112,38 @@ for mn in ("laser","plasma"):
               "Measure the square with calipers across the flats: kerf = 1.000 - measured.",
               "Check: push the 5 strips together in their frame slot; the leftover gap / 5 = kerf. Hole row = 1/8..3/8 in: smallest clean hole."],
         feedback=f"bin/tools_setup.py --kerf-test {mn} {mat} {th} --drawn 1.0 --measured M   (or bin/feedback.py {PROJ} --coupon kerf_{mn} --measured M)"))
+# ---- v1.0.6 tolerance coupon: parts bolted across machines -> measure each machine's real hole position/size error
+try:
+    import pro as _pro; _P=_pro._procs(d,O); toin_=1 if U=="in" else 1/25.4; _tm={}
+    for j in d.get("jointrec",[]):
+        if j.get("type")!="bolted": continue
+        ms_={m_ for n_ in j["parts"] for m_,p_,_g in _P.get(n_,[])}
+        if len(ms_)<2: continue
+        for n_ in j["parts"]:
+            for m_,p_,_g in _P.get(n_,[]):
+                if p_!="drill": _tm.setdefault(m_,(float(j.get("d"))*toin_,(_g or {}).get("material") or FIL,(_g or {}).get("thickness")))
+    for mn,(hd,mat,th) in sorted(_tm.items()):
+        hd=round(hd,4); L_=learn.get(mn,"*")
+        if mn=="printer":
+            sp=40.0; pl=box(0,0,0,60,60,3)
+            import manifold3d as mf
+            P_=mf.Manifold(mf.Mesh(vert_properties=np.asarray(pl.vertices,np.float32),tri_verts=np.asarray(pl.faces,np.uint32)))
+            for cx,cy in ((10,10),(50,10),(10,50),(50,50)):
+                cyl=trimesh.creation.cylinder(radius=hd*25.4/2,height=10,sections=64); cyl.apply_translation([cx,cy,1.5])
+                P_=P_-mf.Manifold(mf.Mesh(vert_properties=np.asarray(cyl.vertices,np.float32),tri_verts=np.asarray(cyl.faces,np.uint32)))
+            fn=f"coupons/tolerance_{mn}.stl"; mesh_of(P_).export(f"{O}/{fn}"); uu="mm"; dd=round(hd*25.4,2)
+        else:
+            sp=2.0; doc=ezdxf.new("R2010"); ms=doc.modelspace(); lay={"layer":"CUT"}
+            for cx,cy in ((0.5,0.5),(2.5,0.5),(0.5,2.5),(2.5,2.5)): ms.add_circle((cx,cy),hd/2,dxfattribs=lay)
+            ms.add_lwpolyline([(0,0),(3,0),(3,3),(0,3)],close=True,dxfattribs=lay)
+            fn=f"coupons/tolerance_{mn}.dxf"; doc.saveas(f"{O}/{fn}"); uu="in"; dd=hd
+        C.append(dict(id=f"tol_{mn}",part="bolt holes shared with other machines",machine=mn,material=mat,process=f"{mn} hole position/size",files=[fn],steps=[],
+            current=dict(pos=_pro.xtol(mn,"printer" if mn=="printer" else ("router" if mn=="router" else mn))[0],size=_pro.xtol(mn,mn)[1],src=_pro.xtol(mn,mn)[2]),unit=uu,drawn_spacing=sp,drawn_dia=dd,
+            read=[f"Make {os.path.basename(fn)} on the {mn} exactly like a real part ({'normal print settings' if mn=='printer' else 'kerf compensation ON, as the real program'}).",
+                  f"Calipers: measure the 4 hole diameters (drawn {dd:g} {uu}) and the 4 side spacings centre to centre (drawn {sp:g} {uu}; = outside-to-outside of two holes minus one diameter).",
+                  "The cross-machine bolt check then uses your machine's measured error (x1.25 margin) instead of Sketch's default tolerance."],
+            feedback=f"bin/feedback.py {PROJ} --coupon tol_{mn} --dia D1,D2,D3,D4 --spacing S1,S2,S3,S4"))
+except Exception as e: print("tolerance coupon skipped:",e)
 # ---- saw kerf (hand / saw builds) when the owner never measured it
 if os.path.exists(f"{O}/cut_day.json"):
     wk,ws=_k.saw()

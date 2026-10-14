@@ -1,0 +1,64 @@
+{
+ "_note": "Sketch's shipped rates/prices (v1.0.6). A value still equal to these and not confirmed by the owner is flagged 'Sketch default' on quotes and HOW_TO_USE. Set real ones: python3 bin/tools_setup.py --rates",
+ "shop": {
+  "labor_rate": 75,
+  "margin_pct": 25,
+  "shop_hours_per_day": 6
+ },
+ "machine_rate_per_h": {
+  "printer": 3,
+  "laser": 30,
+  "plasma": 40,
+  "router": 35
+ },
+ "prices": {
+  "price_per_ft": {
+   "2x6 cedar": 3.25,
+   "4x4 cedar": 4.5,
+   "2x6 pine": 1.1,
+   "2x4": 0.85,
+   "1.5x1.5x3/16 angle": 2.4,
+   "2x2x1/4 angle": 3.6,
+   "1.5x1.5x3/16": 2.4
+  },
+  "price_per_sqft": {
+   "plywood": 2.6,
+   "baltic_birch": 3.4,
+   "mdf": 1.3,
+   "acrylic": 6.0
+  },
+  "price_per_lb": {
+   "plate": 1.1,
+   "tube": 1.4,
+   "sheet": 1.6,
+   "aluminum": 4.0
+  },
+  "buy_each": {}
+ },
+ "prices_default": {
+  "price_per_ft": {
+   "2x6 cedar": 3.25,
+   "4x4 cedar": 4.5,
+   "2x6 pine": 1.1,
+   "2x4": 0.85,
+   "1.5x1.5x3/16 angle": 2.4,
+   "2x2x1/4 angle": 3.6,
+   "1.5x1.5x3/16": 2.4,
+   "2x8": 1.65,
+   "2x10": 2.1
+  },
+  "price_per_sqft": {
+   "plywood": 2.6,
+   "baltic_birch": 3.4,
+   "mdf": 1.3,
+   "acrylic": 6.0
+  },
+  "price_per_lb": {
+   "plate": 1.1,
+   "tube": 1.4,
+   "sheet": 1.6,
+   "aluminum": 4.0
+  },
+  "buy_each": {}
+ }
+}

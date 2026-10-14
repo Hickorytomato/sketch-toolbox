@@ -84,3 +84,13 @@ Settings (kept on reinstall): prices.json, printers.json, machines.json, profile
   (W1.., AWS A2.4-style symbols from the model, WPS tail).
 - **Exploded build steps** (`explode.py`): Blender workbench, one picture per assembly step, BOM-tagged parts, assembled into
   build_steps.pdf with a parts legend. About 1.4-1.9 s total (Blender start included) for 3-4 steps at 720 px on the box.
+
+## v1.0.6
+- **Whole stock bought** (buy.py): quote, shopping list and bom_quote.pdf price full boards/sticks, whole sheets and plate drops, with the offcut left over. Gate `buy`.
+- **Sketch defaults flagged**: any rate/price that is still Sketch's default carries `[SKETCH DEFAULT - not your price yet]` and a red * on the quote, and a line in HOW_TO_USE. Set yours: `python3 bin/tools_setup.py --rates` (interactive) or `--rates labor_rate=65 margin_pct=20 price_per_ft.2x4=0.95 confirm=all`. Live prices stay link mode; links are exact product searches ("2 in. x 4 in. x 8 ft. lumber").
+- **Exploded steps**: labels never overlap (leader lines when moved). Gate `explode`.
+- **Measured tolerance**: `tol_<machine>` coupon for cross-machine bolted joints; `bin/feedback.py P --coupon tol_laser --dia D1,..,D4 --spacing S1,..,S4`; the cross-machine check then uses it.
+- **Relief/emboss**: kit kind `relief_vase` (text and/or image heightmap displaced on the vase mesh, emboss + or deboss -). Sample design_tests/vase_emboss.
+- **AWS A2.4 weld symbols**: fillet, V/bevel/square/U/J groove, both sides, size/length, angle, root, all-around, field weld, back weld, break arrow; text like "1/4 bevel groove 45 deg, root 1/8, field weld" or "CJP V-groove 60 deg, back weld". Sample design_tests/steel_groove.
+- **Your exact machine + software**: `bin/tools_setup.py --machine router "Shapeoko 4" --software "Carbide Motion" [--units mm]` (or `--machines` to be asked). Output profiles (bin/outputs.py): PrusaSlicer, Bambu Studio, OrcaSlicer, Cura; LightBurn, Glowforge, xTool Creative Space, LaserGRBL; Langmuir FireControl, Mach3/Mach4/LinuxCNC (plasma + router), GRBL; Fusion, VCarve, SheetCAM, Carbide Create, Easel. Unknown software or a format Sketch can't write (ShopBot .sbp, Trotec/Epilog jobs, Ruida .rd...) -> said plainly, plain DXF/SVG/STL instead. Gate `outputs`; design_tests/profile_tests.py.
+- **Load note**: anything that holds weight (shelf, stand, seat, bracket, rack, hook, or weight mentioned) gets "Not load-rated. Test it before trusting it with weight or people." in HOW_TO_USE and on every drawing sheet. Gate `load`.

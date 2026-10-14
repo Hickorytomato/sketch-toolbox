@@ -102,6 +102,12 @@ def gate_quote(d,F,res):
         if "ESTIMATE" not in txt: res("quote","customer_quote.pdf","FAIL","quote is not marked ESTIMATE"); ok=False
         if not shop.get("name") and not txt.lstrip().startswith("QUOTE"): res("quote","customer_quote.pdf","FAIL","no shop set in your profile but the quote carries a shop name"); ok=False
         if f'{q["total"]:,.2f}' not in txt: res("quote","customer_quote.pdf","FAIL","the PDF total is not the computed total"); ok=False
+    import defaults as _df   # v1.0.6: every Sketch-default rate/price is flagged on the quote, with the one-line fix
+    for l in q["lines"]:
+        if l["amount"] is None: continue
+        dflt=(l["section"]=="Materials" and _df.src_default(l["source"].replace(" [SKETCH DEFAULT - not your price yet]",""))) or (l["section"]=="Machine time" and _df.is_default("machine_rate."+l["desc"].split()[0],l["rate"])) or (l["section"]=="Labor" and _df.is_default("labor_rate",l["rate"]))
+        if dflt and "SKETCH DEFAULT" not in l["source"]: res("quote",l["desc"],"FAIL",f'{l["desc"]} uses a Sketch default rate/price but is not flagged as one'); ok=False
+    if txt is not None and (q.get("defaults_flagged")) and "tools_setup.py --rates" not in txt: res("quote","customer_quote.pdf","FAIL","defaults on the quote but no line telling the owner how to set real ones"); ok=False
     if not q["valid_until"]>q["date"] or not q.get("terms") or not q.get("lead_time"): res("quote","customer_quote.json","FAIL","missing validity date, terms or lead time"); ok=False
     if ok: res("quote","customer_quote.pdf","PASS",f'{len(q["lines"])} lines add up to ${q["total"]:,.2f} (estimate, valid to {q["valid_until"]}); '+(f'shop "{shop["name"]}"' if shop.get("name") else "neutral (no shop in profile)")+(f'; {len(q["unpriced"])} item(s) not priced and listed' if q["unpriced"] else ""))
 def gate_prices(d,F,res):
@@ -115,8 +121,15 @@ def gate_prices(d,F,res):
             res("prices",k,"FAIL","live price without store, link, date or a positive number"); ok=False; continue
         age=(datetime.date.today()-datetime.date.fromisoformat(v["date"])).days
         if age>8: res("prices",k,"FAIL",f"live price is {age} days old (cache is 7 days): rerun with --refresh"); ok=False
+    SB=[x["item"] for x in (q.get("stock_bought") or {}).get("lines",[])]
     for l in q["lines"]:
         v=L["lines"].get(l["desc"])
+        if v is None and any(l["desc"].startswith(x) for x in SB):   # v1.0.6 whole-stock line: priced from a live per-length price (amount checked by gate_buy)
+            src_=l.get("source","")
+            hit=[v_ for v_ in L["lines"].values() if v_.get("usd") is not None and v_.get("date","") in src_ and str(v_.get("store","")) in src_]
+            dated=bool(re.search(r"\d{4}-\d\d-\d\d",src_))
+            if dated and not hit: res("prices",l["desc"],"FAIL","quote claims a dated store price that live_prices.json does not have"); ok=False
+            continue
         live=v and v.get("usd") is not None
         dated=bool(re.search(r"\d{4}-\d\d-\d\d",l.get("source","")))
         if dated and not live: res("prices",l["desc"],"FAIL","quote claims a dated store price that live_prices.json does not have"); ok=False
@@ -149,6 +162,14 @@ def gate_revision(d,F,res):
         if dr and f"Drawn: {dr}" not in txt: res("revision","drawings.pdf","FAIL","drawn-by from your profile is missing"); ok=False
     W=d.get("welds",[]); MW=M.get("welds",[])
     if len(W)!=len(MW) or any(w.get("side","arrow")!=m_.get("side") or str(w.get("size"))!=str(m_.get("size")) for w,m_ in zip(W,MW)): res("revision","weld sheet","FAIL",f"weld callout sheet ({len(MW)}) does not match the model welds ({len(W)}) side/size"); ok=False
+    for w,m_ in zip(W,MW):   # v1.0.6: AWS A2.4 symbol elements actually drawn
+        e=set(m_.get("elements",[])); kind=w.get("type","fillet"); g=w.get("groove","v") if kind=="groove" else "fillet"
+        need={f"{g}:{s_}" for s_ in (("arrow","other") if w.get("side")=="both" else (w.get("side","arrow"),))}
+        if w.get("all_around"): need.add("all_around")
+        if w.get("field"): need.add("field_flag")
+        if w.get("size") and not w.get("cjp"): need.add("size")
+        if w.get("break_arrow"): need.add("break_arrow")
+        if "elements" in m_ and need-e: res("revision",f'weld {m_["id"]}',"FAIL",f'AWS A2.4 symbol missing {sorted(need-e)} for "{w["weld"]}"'); ok=False
     if ok: res("revision","drawings.pdf","PASS",f'Rev {M["rev"]}, {M.get("pages")} sheets numbered "Sheet i of N", revision table '+(f'vs v{prev}: {"; ".join(M["revisions"][-1]["changes"])[:120]}' if prev else "first issue")+(f', {len(MW)} weld callout(s) W1..W{len(MW)} match the model' if MW else ""))
 def gate_explode(d,F,res):
     V=os.path.dirname(F); J=f"{V}/explode/explode.json"
@@ -161,6 +182,10 @@ def gate_explode(d,F,res):
     for s_ in E["steps"]:
         for l in s_["labels"]:
             if l["tag"] and T.get(l["part"]) and T[l["part"]]!=l["tag"]: res("explode",l["part"],"FAIL",f'{l["part"]} is tagged {l["tag"]} in the picture but {T[l["part"]]} in the BOM'); ok=False
+    for s_ in E["steps"]:   # v1.0.6: labels never overlap each other
+        bx=[l["label_box"] for l in s_["labels"] if l.get("label_box")]
+        hit=[(i,k) for i in range(len(bx)) for k in range(i+1,len(bx)) if not (bx[i][2]<=bx[k][0] or bx[k][2]<=bx[i][0] or bx[i][3]<=bx[k][1] or bx[k][3]<=bx[i][1])]
+        if hit: res("explode",f'step {s_["n"]}',"FAIL",f'{len(hit)} overlapping label(s) on step {s_["n"]} picture'); ok=False
     imgs=sorted(glob.glob(f"{F}/build_steps/*.png"))
     if len(imgs)!=len(E["steps"]): res("explode","build_steps","FAIL",f"{len(imgs)} step image(s) shipped for {len(E['steps'])} steps"); ok=False
     try:
@@ -172,6 +197,13 @@ def gate_explode(d,F,res):
 # position / diameter tolerance per process, inches (Sketch defaults - typical hobby/small-shop CNC; measure yours)
 XTOL={"plasma":(0.030,0.030),"laser":(0.008,0.005),"router":(0.010,0.005),"drill":(1/32,0.005),
       "printer":(0.2/25.4,0.2/25.4),"hand":(1/32,0.005),"_src":"Sketch default process tolerances (position, hole size)"}
+def xtol(machine,process):
+    """(position, size, source) in inches: the owner's measured tolerance coupon (feedback.py --coupon tol_<machine>) beats the Sketch default"""
+    try:
+        import learn; L=learn.get(machine,"*")
+        if "tol_pos_in" in L and "tol_size_in" in L and process!="drill": return float(L["tol_pos_in"]),float(L["tol_size_in"]),f"measured on your {machine} (tolerance coupon)"
+    except Exception: pass
+    t=XTOL.get(process,XTOL["hand"]); return t[0],t[1],"Sketch default"
 def _procs(d,F):
     """part -> list of (machine, process) that can make it, from the shipped programs"""
     P={}
@@ -215,7 +247,7 @@ def gate_crossmachine(d,F,res):
     P=_procs(d,F); types={pr for v in P.values() for _,pr,_g in v}-{"drill"}
     mach={m for v in P.values() for m,_,_ in v}
     if len(mach)<2: return
-    ok=True; n=0; worst=None
+    ok=True; n=0; worst=None; MEAS=set()
     # 1. holes / mating features across machines
     for j in d.get("jointrec",[]):
         if j.get("type")!="bolted": continue
@@ -229,8 +261,11 @@ def gate_crossmachine(d,F,res):
             h,err=_hole_at(V,nm,j["at"],j.get("axis",[0,0,1]),j.get("d",b/toin))
             if not h: res("crossmachine",nm,"FAIL",f"{nm} has no hole on the {j.get('bolt')} line at {j['at']} ({err or 'not found in the model'}): it can't be bolted to {', '.join(x for x in ps if x!=nm)}"); ok=False; got=None; break
             rts=sorted({(m+(" + hand drill" if p_=="drill" else ""),p_) for m,p_,_ in pr})
-            got.append(dict(part=nm,c=h[0],d=h[1]*toin,off=h[2]*toin,routes=[(hw,p_,XTOL.get(p_,XTOL["hand"])[0],XTOL.get(p_,XTOL["hand"])[1]) for hw,p_ in rts],
-                            dt=max(XTOL.get(p_,XTOL["hand"])[1] for _,p_ in rts),how="/".join(hw for hw,_ in rts)))
+            mof={hw:m for m,p_,_g in pr for hw in [m+(" + hand drill" if p_=="drill" else "")]}
+            rr_=[(hw,p_)+xtol(mof.get(hw,hw.split()[0]),p_) for hw,p_ in rts]
+            got.append(dict(part=nm,c=h[0],d=h[1]*toin,off=h[2]*toin,routes=[(hw+(" [measured]" if "measured" in src_ else ""),p_,pt_,dt_) for hw,p_,pt_,dt_,src_ in rr_],
+                            dt=max(x[3] for x in rr_),how="/".join(hw for hw,_ in rts)))
+            MEAS.update(x[0].split()[0] for x in rr_ if "measured" in x[4])
         if not got: continue
         n+=1
         for g in got:
@@ -281,9 +316,68 @@ def gate_crossmachine(d,F,res):
         if len(runs)!=len(set(runs)): res("crossmachine","send_list.txt","FAIL",f"send list mixes machines: {' > '.join(runs)} (each machine's files must be together)"); ok=False
     if ok:
         w=f'; tightest {worst[1]}+{worst[2]} ({worst[6]} / {worst[7]}): {fmt(worst[3])} offset + tolerances uses {fmt(worst[5])} of {fmt(worst[4])} clearance' if worst else ""
-        res("crossmachine","all machines","PASS",f'{n} bolted joint(s) across {"/".join(sorted(mach))} line up after kerf + {XTOL["_src"].lower()}{w}; kerf per machine+material: '+", ".join(f"{k[0]} {k[1]} {k[2]:g}: {v[0]:g}" for k,v in seen.items())+"; one BOM/cut list/cost; send list grouped by machine")
+        res("crossmachine","all machines","PASS",f'{n} bolted joint(s) across {"/".join(sorted(mach))} line up after kerf + {("MEASURED tolerances for "+"/".join(sorted(MEAS))+", ") if MEAS else ""}{XTOL["_src"].lower()}{w}; kerf per machine+material: '+", ".join(f"{k[0]} {k[1]} {k[2]:g}: {v[0]:g}" for k,v in seen.items())+"; one BOM/cut list/cost; send list grouped by machine")
 
-GATES=[gate_crossmachine,gate_cutday,gate_coupons,gate_learn,gate_prices,gate_quote,gate_revision,gate_explode]
+def gate_buy(d,F,res):
+    """v1.0.6: the quote bills whole stock bought (boards/sticks at stock length, whole sheets, plate drops), once, with offcuts"""
+    if not os.path.exists(f"{F}/cut_day.json") or not os.path.exists(f"{F}/customer_quote.json"): return
+    import buy; R=buy.stock_buy(d,F); q=json.load(open(f"{F}/customer_quote.json")); C=json.load(open(f"{F}/cut_day.json")); ok=True
+    if not R["lines"]: return
+    nb=sum(len(s_["boards"]) for s_ in C.get("linear",[]))+len(C.get("sheets",[])); got=sum(l["qty"] for l in R["lines"])
+    if nb!=got: res("buy","stock","FAIL",f"cut day uses {nb} boards/sheets but {got} are on the buy list"); ok=False
+    QB=(q.get("stock_bought") or {}).get("lines",[])
+    if [(l["item"],l["qty"],l["usd"]) for l in QB]!=[(l["item"],l["qty"],l["usd"]) for l in R["lines"]]: res("buy","customer_quote.json","FAIL","stock on the quote is not the whole stock from the cut-day plan (regenerate, don't edit)"); ok=False
+    ms=[l for l in q["lines"] if l["section"]=="Materials"]
+    for l in R["lines"]:
+        if l["usd"] is not None and not any(abs((m_["amount"] or 0)-l["usd"])<0.011 and m_["desc"].startswith(l["item"]) for m_ in ms): res("buy",l["item"],"FAIL",f'{l["item"]} (${l["usd"]}) is not billed on the quote'); ok=False
+        if l["usd"] is not None and abs(l["each"]*l["qty"]-l["usd"])>0.011: res("buy",l["item"],"FAIL","each x qty != total"); ok=False
+    cov={f'{r["part"]} ({r["material"]}) x{r["qty"]}' for r in d["cutlist"] if r.get("mark") in R["covered"] and r.get("stock")!="buy"}
+    dbl=[m_["desc"] for m_ in ms if m_["desc"] in cov]
+    if dbl: res("buy","customer_quote.json","FAIL",f"billed twice (used length AND whole stock): {dbl[:3]}"); ok=False
+    if ok:
+        used=sum(float(r.get("cost_usd") or 0) for r in d["cutlist"] if r.get("mark") in R["covered"] and r.get("stock")!="buy")
+        res("buy","stock","PASS",f'{got} whole board(s)/sheet(s)/drop(s) billed ${R["total"]:.2f} (length used would be ${used:.2f}); offcuts listed'+(f'; not priced: {R["unpriced"]}' if R["unpriced"] else ""))
+
+def gate_load(d,F,res):
+    """v1.0.6: load-bearing builds carry the one-line load note in HOW_TO_USE and on every drawing sheet."""
+    import loadnote as L; spec=json.load(open(f"{F}/spec.json"))
+    if not L.needed(spec): res("load","build","PASS","not load-bearing (no shelf/stand/seat/bracket/rack/hook/weight words): no load note needed"); return
+    ok=True; H=glob.glob(f"{F}/**/HOW_TO_USE.txt",recursive=True)
+    if not H or not all(L.NOTE in open(h).read() for h in H): res("load","HOW_TO_USE.txt","FAIL",f'load-bearing ({L.why(spec)}) but HOW_TO_USE lacks "{L.NOTE}"'); ok=False
+    D=glob.glob(f"{F}/**/drawings.pdf",recursive=True)
+    if D:
+        import subprocess as _sp
+        pages=[p_ for p_ in _sp.run(["pdftotext","-layout",D[0],"-"],capture_output=True,text=True).stdout.split("\f") if p_.strip()]
+        bad=[i+1 for i,p_ in enumerate(pages) if L.NOTE not in " ".join(p_.split())]
+        if bad: res("load","drawings.pdf","FAIL",f"load note missing on sheet(s) {bad[:6]}"); ok=False
+    else: res("load","drawings.pdf","FAIL","no drawings.pdf to carry the load note"); ok=False
+    if ok: res("load","build","PASS",f'load-bearing ({L.why(spec)}): "{L.NOTE}" in HOW_TO_USE and on all {len(pages)} drawing sheets')
+def gate_outputs(d,F,res):
+    """v1.0.6: files match the owner's machine/software profile (type, G-code flavor + units); unknown -> plain fallback said plainly."""
+    import outputs as O; J=f"{F}/output_profiles.json"; U=json.load(open(J)) if os.path.exists(J) else {}
+    sel={k:O.selected(k) for k in ("printer","laser","plasma","router")}; sel={k:v for k,v in sel.items() if v}
+    if not sel: res("outputs","machines","PASS","no exact machine set (tools_setup.py --machine ...): generic outputs for each machine type"); return
+    H=open(f"{F}/HOW_TO_USE.txt").read() if os.path.exists(f"{F}/HOW_TO_USE.txt") else ""; ok=True; said=[]
+    for k,o in sel.items():
+        u=U.get(k)
+        if not u:
+            if glob.glob(f"{F}/FOR_*"+{"printer":"3D_PRINTER","laser":"LASER","plasma":"PLASMA","router":"ROUTER"}[k]+"*"): res("outputs",k,"FAIL",f"{k} set to {o['label']} but its folder was not made from the profile"); ok=False
+            continue
+        if u["id"]!=o["id"]: res("outputs",k,"FAIL",f"files made for {u['label']} but your {k} is set to {o['label']}"); ok=False; continue
+        D=f"{F}/{u['dir']}"; fs=[f for f in glob.glob(f"{D}/**/*",recursive=True) if os.path.isfile(f)]
+        allow=set(o["files"])|{"png","txt"}|({o["gcode"].get("ext","nc")} if o.get("gcode") else set())
+        bad=[os.path.basename(f) for f in fs if f.rsplit(".",1)[-1].lower() not in allow]
+        if bad: res("outputs",u["dir"],"FAIL",f"{o['label']} gets only {sorted(allow-{'png','txt'})}; found {bad[:4]}"); ok=False
+        if not [f for f in fs if f.rsplit(".",1)[-1].lower() in set(o["files"])]: res("outputs",u["dir"],"FAIL",f"no {o['files']} file for your {o['label']}"); ok=False
+        if o.get("gcode"):
+            for f in [f for f in fs if f.endswith("."+o["gcode"].get("ext","nc"))]:
+                pr=O.check_nc(open(f).read(),o,k)
+                if pr: res("outputs",os.path.basename(f),"FAIL",f"{o['label']} G-code: {'; '.join(pr)}"); ok=False
+        if o.get("msg") and o["msg"] not in H: res("outputs",k,"FAIL",f"plain-language note missing from HOW_TO_USE: {o['msg'][:80]}"); ok=False
+        if f"-> {u['dir']}/" not in H: res("outputs",k,"FAIL",f"HOW_TO_USE does not say which folder goes to your {o['label']}"); ok=False
+        said.append(f"{k}={o['label']}"+(f" ({o['gcode']['flavor']} {o['gcode']['units']})" if o.get("gcode") else f" ({'/'.join(o['files'])})")+(" [plain fallback]" if not o["id"] else ""))
+    if ok: res("outputs","machines","PASS","output profiles: "+", ".join(said))
+GATES=[gate_crossmachine,gate_buy,gate_cutday,gate_coupons,gate_learn,gate_prices,gate_quote,gate_revision,gate_explode,gate_load,gate_outputs]
 def gate(ctx):
     for g in GATES:
         try: g(ctx["d"],ctx["F"],ctx["res"])

@@ -1,0 +1,30 @@
+{
+ "title": "Acrylic plate",
+ "domain": "laser",
+ "units": "mm",
+ "shape": "plate",
+ "material": "acrylic",
+ "values": {
+  "L": {
+   "v": 120
+  },
+  "W": {
+   "v": 80,
+   "unclear": "smudged: reads 8? - 80 or 85"
+  },
+  "t": {
+   "v": 3
+  }
+ },
+ "holes": [
+  {
+   "x": 60,
+   "y": 40,
+   "d": 20,
+   "src_pos": "assumed"
+  }
+ ],
+ "unclear": [
+  "the hole position isn't dimensioned: I put it in the center (60, 40). Right?"
+ ]
+}

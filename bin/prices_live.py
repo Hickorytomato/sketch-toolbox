@@ -83,6 +83,31 @@ for s in Q["sources"]:
     if m: items.append((s["line"],m.group(2),m.group(1),s["usd"]))
 for r in d["cutlist"]:
     if r.get("mark")=="HW": items.append((r["material"],r["material"],"ea",None))
+def _frac(x):
+    from fractions import Fraction
+    f=Fraction(x).limit_denominator(32); w,r=divmod(f.numerator,f.denominator)
+    return (f"{w}-" if w and r else f"{w}" if w else "")+(f"{r}/{f.denominator}" if r else "")
+NOMPLY={0.219:"1/4",0.469:"1/2",0.719:"3/4",0.594:"5/8",0.344:"3/8"}
+def exact_query(item):
+    """v1.0.6: the exact product as the store names it (size + length + material), from the buy list line"""
+    m=re.match(r"(\d+)x(\d+)(?: (\w+))? x ([\d.]+) ft",item)
+    if m: return f'{m[1]} in. x {m[2]} in. x {m[4]} ft. {m[3]+" " if m[3] else ""}lumber'
+    m=re.match(r"plywood ([\d.]+) sheet ([\d.]+) x ([\d.]+) in",item)
+    if m:
+        t=float(m[1]); nom=NOMPLY.get(round(t,3)) or _frac(t)
+        return f'{nom} in. x {float(m[2])/12:g} ft. x {float(m[3])/12:g} ft. plywood sheathing'
+    m=re.match(r"(?:steel )?([\d.]+) in plate, cut-to-size drop (\d+) x (\d+) in",item)
+    if m: return f'{_frac(float(m[1]))} in. hot rolled steel plate {m[2]} in. x {m[3]} in.'
+    m=re.match(r"([\d.]+)x([\d.]+)x(\d+)ga sq tube x ([\d.]+) ft",item)
+    if m: return f'{_frac(float(m[1]))} in. x {_frac(float(m[2]))} in. x {m[4]} ft. {m[3]} gauge steel square tube'
+    m=re.match(r"([\d.]+)x([\d.]+)x([\d/]+) angle x ([\d.]+) ft",item)
+    if m: return f'{_frac(float(m[1]))} in. x {_frac(float(m[2]))} in. x {m[3]} in. x {m[4]} ft. steel angle'
+    return item
+try:
+    sys.path.insert(0,os.path.dirname(os.path.abspath(__file__))); import buy as _buy
+    for l in _buy.stock_buy(d,O)["lines"]:
+        q=exact_query(l["item"]); out.setdefault("buy_search",{})[l["item"]]=dict(query=q,links=search_links(q))
+except Exception as e: out["buy_search_error"]=str(e)
 seen=set()
 for line,key,unit,usd in items:
     if line in seen: continue

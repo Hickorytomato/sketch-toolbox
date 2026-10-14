@@ -51,17 +51,36 @@ if bpy is None:
     DONE_SO_FAR=[]
     for st in E["steps"]:
         im=Image.open(st["png"]).convert("RGB"); W,H=im.size; dr=ImageDraw.Draw(im)
-        for lb in st["labels"]:
+        for lb in st["labels"]:   # dashed lines first, labels on top
             (x0,y0),(x1,y1)=[(p[0]*W,(1-p[1])*H) for p in (lb["from"],lb["to"])]
             if lb["moved"]:   # dashed line from the exploded part back to its place
                 n=max(int(math.hypot(x1-x0,y1-y0)/9),1)
                 for i in range(0,n,2): dr.line([(x0+(x1-x0)*i/n,y0+(y1-y0)*i/n),(x0+(x1-x0)*min(i+1,n)/n,y0+(y1-y0)*min(i+1,n)/n)],fill=(200,40,30),width=2)
+        # v1.0.6 label placement: greedy, no two labels overlap, none leave the picture or cover header/footer; leader line when moved
+        TOP=int(size/16)+4; BOT=H-int(size/26)*4-10; placed=[]
+        def free(bx): return bx[0]>=4 and bx[1]>=TOP and bx[2]<=W-4 and bx[3]<=BOT and all(bx[2]+3<=p[0] or bx[0]>=p[2]+3 or bx[3]+3<=p[1] or bx[1]>=p[3]+3 for p in placed)
+        show_pr=len(st["labels"])<=6 or any(l_["moved"] for l_ in st["labels"])
+        order=sorted(range(len(st["labels"])),key=lambda q:(not st["labels"][q]["moved"],st["labels"][q]["tag"]))
+        for q in order:
+            lb=st["labels"][q]; x0,y0=lb["from"][0]*W,(1-lb["from"][1])*H
             t=lb["tag"]; bb=dr.textbbox((0,0),t,font=FT); w_,h_=bb[2]-bb[0]+10,bb[3]-bb[1]+8
-            dr.ellipse([x0-w_/2,y0-h_/2,x0+w_/2,y0+h_/2],fill=(255,255,255) if not lb["moved"] else (255,236,150),outline=(30,30,30),width=2); dr.text((x0-w_/2+5,y0-h_/2+2),t,fill=(0,0,0),font=FT)
             pr=PROC.get(lb["part"],""); lb["proc"]=pr
-            if pr and (lb["moved"] or not any(l_["moved"] for l_ in st["labels"]) and len(st["labels"])<=4):   # finished view: tags only (legend page lists material/machine)
-                bb2=dr.textbbox((0,0),pr,font=FS); tw=bb2[2]-bb2[0]; xc=min(max(x0,tw/2+5),W-tw/2-5)   # keep the label inside the picture
-                dr.rectangle([xc-tw/2-3,y0+h_/2+1,xc+tw/2+3,y0+h_/2+bb2[3]-bb2[1]+5],fill=(255,255,255),outline=(120,120,120)); dr.text((xc-tw/2,y0+h_/2+2),pr,fill=(30,30,30),font=FS)
+            if not (pr and (lb["moved"] or show_pr)): pr=""
+            bb2=dr.textbbox((0,0),pr or "x",font=FS); tw,th_=(bb2[2]-bb2[0],bb2[3]-bb2[1]) if pr else (0,0)
+            wb=max(w_,tw+8); hb=h_+(th_+6 if pr else 0)
+            box=lambda cx,cy:[cx-wb/2,cy-h_/2,cx+wb/2,cy-h_/2+hb]
+            cand=[(x0,y0)]+[(x0+r*math.cos(a*math.pi/8),y0+r*math.sin(a*math.pi/8)) for r in range(28,int(W*0.7),14) for a in range(16)]
+            cx,cy=next(((cx,cy) for cx,cy in cand if free(box(cx,cy))),(None,None))
+            if cx is None and pr:   # no room with the material line: tag only (the legend page has it)
+                pr=""; hb=h_; wb=w_; cx,cy=next(((cx,cy) for cx,cy in cand if free(box(cx,cy))),(x0,y0))
+            elif cx is None: cx,cy=x0,y0
+            bx=box(cx,cy); placed.append(bx); lb["label_box"]=[round(v,1) for v in bx]; lb["leader"]=bool(math.hypot(cx-x0,cy-y0)>1)
+            if lb["leader"]:
+                ex,ey=min(max(x0,bx[0]),bx[2]),min(max(y0,bx[1]),bx[3]); dr.line([(x0,y0),(ex,ey)],fill=(60,60,60),width=1); dr.ellipse([x0-3,y0-3,x0+3,y0+3],fill=(30,30,30))
+            dr.ellipse([cx-w_/2,cy-h_/2,cx+w_/2,cy+h_/2],fill=(255,255,255) if not lb["moved"] else (255,236,150),outline=(30,30,30),width=2); dr.text((cx-w_/2+5,cy-h_/2+2),t,fill=(0,0,0),font=FT)
+            if pr:
+                dr.rectangle([cx-tw/2-3,cy+h_/2+1,cx+tw/2+3,cy+h_/2+th_+5],fill=(255,255,255),outline=(120,120,120)); dr.text((cx-tw/2,cy+h_/2+2-bb2[1]),pr,fill=(30,30,30),font=FS)
+            lb["shown_proc"]=pr
         hdr=f'Step {st["n"]} of {len(E["steps"])}: {st["caption"]}'; dr.rectangle([0,0,W,int(size/16)],fill=(255,255,255)); dr.text((10,6),hdr,fill=(0,0,0),font=FT)
         foot=[]
         if st["tags"]: foot.append("this step: "+", ".join(st["tags"]))

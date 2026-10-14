@@ -16,6 +16,14 @@ B=$(cd "$(dirname "$0")" && pwd); R=${SKETCH_ROOT:-$(dirname "$B")}; export SKET
 P=$1; [ -d "$P" ] || P=$R/$1; P=$(cd "$P" && pwd); [ -f "$P/spec.json" ] || { echo "no spec.json in $P"; exit 2; }
 MODE=${2:---sketch}; [ "$MODE" = "--preview" ] && MODE=--sketch
 case "$MODE" in --sketch|--show|--final) ;; *) echo "unknown mode $MODE (use --sketch | --show | --final)"; exit 2;; esac
+# v1.0.6: heavy tools may still be installing in the background (install_heavy.sh). --sketch never waits; --show/--final do.
+HS="$R/.heavy_install"
+if [ "$MODE" != --sketch ] && [ -f "$HS" ] && grep -q '^running' "$HS"; then
+  hp=$(awk '{print $2}' "$HS"); echo "[design] PrusaSlicer/Blender still installing in the background (log $R/install_heavy.log): waiting for them (sketches work meanwhile)..."
+  W=0; while grep -q '^running' "$HS" && kill -0 "$hp" 2>/dev/null && [ $W -lt ${SKETCH_HEAVY_WAIT_S:-1500} ]; do sleep 5; W=$((W+5)); done
+  grep -q '^running' "$HS" && ! kill -0 "$hp" 2>/dev/null && echo "failed: installer stopped" > "$HS"
+  grep -q '^done' "$HS" || { echo "[design] heavy install not finished ($(cat "$HS")). Rerun the installer (see SKILL.md) or wait, then rerun $MODE."; exit 6; }
+fi
 L=0; for d in "$P"/v*/; do x=$(basename "$d"); x=${x#v}; [[ "$x" =~ ^[0-9]+$ ]] && [ -f "$d/model.glb" ] && [ "$x" -gt "$L" ] && L=$x; done
 NEW=1; if [ "$MODE" = --show ] || [ "$MODE" = --final ]; then
   [ "$L" -gt 0 ] && cmp -s "$P/spec.json" "$P/v$L/spec.json" && NEW=0
@@ -31,7 +39,7 @@ if [ $NEW = 1 ]; then
 fi
 if [ "$MODE" = "--sketch" ]; then
   T0=$(date +%s.%N); log "quick 3D sketch (4 angles, workbench) - stage 1 of 3"
-  $PY $B/sketch3d.py $V/model.glb $V/sketch.png --size ${SKETCH_SIZE:-360} --title "$(basename $P) v$n - rough 3D sketch (stage 1 of 3)" >/dev/null 2>$V/sketch.log || log "sketch render failed (see $V/sketch.log)"
+  $PY $B/sketch3d.py $V/model.glb $V/sketch.png --size ${SKETCH_SIZE:-360} --units "$($PY -c "import json,sys;print(json.load(open(sys.argv[1])).get('units','mm'))" $V/spec.json)" --title "$(basename $P) v$n - rough 3D sketch (stage 1 of 3)" >/dev/null 2>$V/sketch.log || log "sketch render failed (see $V/sketch.log)"
   touch $V/.sketch
   $PY - "$P" "$n" <<'PYX'
 import json,sys,os,glob

@@ -31,10 +31,10 @@ def metal_kerf():
         lo,hi=[float(x) for x in str(S[0]["kerf_in"]).split("-")]; return round((lo+hi)/2,4),f'metal bandsaw {S[0]["kerf_in"]} in midpoint ({S[0].get("src","")}) - measure yours: tools_setup.py --saw bandsaw --saw-kerf X'
     return 0.0625,"metal saw unknown: assumed 1/16 in (Sketch default)"
 WK,WKS=kerf.saw(); MK,MKS=metal_kerf()
-def iswood(r): return rules.mcls(r["material"]) in("wood","plywood","mdf") or r.get("stock") in("lumber","sheet_good")
+def iswood(r): return rules.mcls(r["material"]) in("wood","plywood","mdf") or r.get("_orig",r.get("stock")) in("lumber","sheet_good")   # v1.0.6 fix: metal tube/angle got wood kerf + lumber lengths
 out=dict(units=U,kerf={"wood":[WK,WKS],"metal":[MK,MKS]},linear=[],sheets=[],cuts=[],offcuts=[])
 # ---- 1D
-lin=[dict(r,stock="lumber") for r in rows if r.get("stock") in LINEAR]
+lin=[dict(r,stock="lumber",_orig=r.get("stock")) for r in rows if r.get("stock") in LINEAR]
 for wood in (True,False):
     rr=[r for r in lin if iswood(r)==wood]
     if not rr: continue
